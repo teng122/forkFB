@@ -1,5 +1,238 @@
 html {
   font-size: 14px;
+  font-family: "Montserrat", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji", sans-serif;
+}
+.text-green {
+  color: #1dd75b !important;
+}
+.text-gray {
+  color: #6c757d !important;
+}
+.text-none {
+  text-decoration: none !important;
+}
+
+/* Navigation Styling */
+.navbar {
+  padding: 1rem 0;
+}
+
+.navbar-brand {
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.navbar-nav .nav-link {
+  font-weight: 500;
+  margin: 0 0.5rem;
+  padding: 0.5rem 1rem !important;
+}
+
+.navbar-nav .nav-link:hover {
+  color: #1dd75b !important;
+}
+
+.search-container .input-group {
+  width: 300px;
+}
+
+.search-container .input-group-text {
+  border-color: #dee2e6;
+  background-color: white;
+}
+
+.search-container .form-control {
+  border-color: #dee2e6;
+  box-shadow: none;
+}
+
+.search-container .form-control:focus {
+  border-color: #1dd75b;
+  box-shadow: 0 0 0 0.2rem rgba(29, 215, 91, 0.25);
+}
+
+.btn-danger {
+  background-color: #dc3545;
+  border-color: #dc3545;
+  padding: 0.5rem 1rem;
+}
+
+.btn-danger:hover {
+  background-color: #c82333;
+  border-color: #bd2130;
+}
+
+/* Outlined logout button */
+.btn-logout {
+  background-color: transparent !important;
+  color: #dc3545 !important;
+  border: 1px solid rgba(220, 53, 69, 0.5) !important;
+}
+
+.btn-logout:hover {
+  color: #ffffff !important;
+  background-color: #dc3545 !important;
+  border-color: #dc3545 !important;
+}
+
+.user-profile img {
+  border: 2px solid #e9ecef;
+  transition: border-color 0.3s ease;
+}
+
+.user-profile img:hover {
+  border-color: #1dd75b;
+}
+
+/* Footer Styling */
+.footer-section {
+  background-color: #f8f9fa;
+  border-top: 1px solid #dee2e6;
+  padding: 2rem 0;
+  margin-top: auto;
+}
+
+.footer-section .nav {
+  margin-bottom: 0;
+}
+
+.footer-section .nav-link {
+  color: #6c757d !important;
+  font-weight: 500;
+  padding: 0.5rem 1rem !important;
+  text-decoration: none;
+}
+
+.footer-section .nav-link:hover {
+  color: #1dd75b !important;
+}
+
+.social-link {
+  color: #6c757d;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.social-link:hover {
+  color: #1dd75b;
+}
+
+/* Body layout for sticky footer */
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+main {
+  flex: 1;
+}
+
+/* Balanced one-line-to-two-lines message on login */
+.balance-hero {
+  display: block;
+  overflow-wrap: anywhere;
+  white-space: nowrap;
+}
+
+/* Login card sizing */
+.login-card {
+  width: 100%;
+  max-width: 460px;
+}
+
+@media (min-width: 768px) {
+  .login-card {
+    max-width: 600px;
+  }
+  
+  .login-card .card-body {
+    padding: 3rem !important;
+  }
+  
+  .login-card h4 {
+    font-size: 1.75rem;
+    margin-bottom: 1rem !important;
+  }
+  
+  .login-card .balance-hero {
+    font-size: 1.1rem !important;
+    margin-bottom: 2rem !important;
+  }
+  
+  .login-card .form-label {
+    font-size: 1.1rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  .login-card .form-control {
+    font-size: 1.1rem;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .login-card .btn {
+    font-size: 1.1rem;
+    padding: 0.75rem 1.5rem;
+  }
+  
+  .login-card .btn-success {
+    margin-bottom: 1.5rem;
+  }
+  
+  .login-card .text-center.text-muted.my-3 {
+    font-size: 1rem;
+    margin: 2rem 0 !important;
+  }
+  
+  .login-card .d-grid .btn {
+    font-size: 1rem;
+    padding: 0.75rem 1rem;
+  }
+  
+  .login-card .text-center.mt-4 {
+    font-size: 1rem;
+    margin-top: 2rem !important;
+  }
+}
+
+@media (min-width: 992px) {
+  .login-card {
+    max-width: 650px;
+  }
+  
+  .login-card .card-body {
+    padding: 3.5rem !important;
+  }
+  
+  .login-card h4 {
+    font-size: 2rem;
+  }
+  
+  .login-card .balance-hero {
+    font-size: 1.2rem !important;
+  }
+  
+  .login-card .form-label {
+    font-size: 1.15rem;
+  }
+  
+  .login-card .form-control {
+    font-size: 1.15rem;
+    padding: 0.875rem 1.125rem;
+  }
+  
+  .login-card .btn {
+    font-size: 1.15rem;
+    padding: 0.875rem 1.75rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .balance-hero {
+    white-space: normal;
+    text-wrap: balance;
+  }
 }
 
 @media (min-width: 768px) {
