@@ -26,7 +26,6 @@ C:\Users\huhum\Documents\GitHub\foodbook\foodbook\obj\Debug\net8.0\staticwebasse
 C:\Users\huhum\Documents\GitHub\foodbook\foodbook\obj\Debug\net8.0\staticwebassets.build.json.cache
 C:\Users\huhum\Documents\GitHub\foodbook\foodbook\obj\Debug\net8.0\staticwebassets.development.json
 C:\Users\huhum\Documents\GitHub\foodbook\foodbook\obj\Debug\net8.0\staticwebassets.build.endpoints.json
-C:\Users\huhum\Documents\GitHub\foodbook\foodbook\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt
 C:\Users\huhum\Documents\GitHub\foodbook\foodbook\obj\Debug\net8.0\foodbook.dll
 C:\Users\huhum\Documents\GitHub\foodbook\foodbook\obj\Debug\net8.0\refint\foodbook.dll
 C:\Users\huhum\Documents\GitHub\foodbook\foodbook\obj\Debug\net8.0\foodbook.pdb
