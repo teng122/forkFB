@@ -1,0 +1,47 @@
+@model foodbook.Models.LoginViewModel
+@{
+    ViewData["Title"] = "Đăng nhập";
+}
+
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 80vh;">
+    <div class="card shadow-sm" style="max-width: 460px; width: 100%;">
+        <div class="card-body p-4">
+            <h4 class="text-center mb-1 fw-bold">Đăng nhập vào <span class="text-success">Foodbook</span></h4>
+            <p class="text-center text-muted mb-4" style="font-size: .95rem;">Chào mừng trở lại! Vui lòng đăng nhập vào tài khoản của bạn.</p>
+
+            <form asp-action="Login" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <div class="mb-3">
+                    <label asp-for="EmailOrPhone" class="form-label"></label>
+                    <input asp-for="EmailOrPhone" class="form-control" placeholder="ten@example.com hoặc số điện thoại" />
+                    <span asp-validation-for="EmailOrPhone" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Password" class="form-label"></label>
+                    <input asp-for="Password" class="form-control" placeholder="Mật khẩu của bạn" />
+                    <span asp-validation-for="Password" class="text-danger"></span>
+                </div>
+                <button type="submit" class="btn btn-success w-100">Đăng nhập</button>
+            </form>
+
+            <div class="text-center text-muted my-3">Hoặc</div>
+
+            <div class="d-grid gap-2">
+                <button class="btn btn-light border d-flex align-items-center justify-content-center" type="button" disabled>
+                    <span class="me-2 bi bi-google"></span> Tiếp tục với Google
+                </button>
+                <button class="btn btn-light border d-flex align-items-center justify-content-center" type="button" disabled>
+                    <span class="me-2 bi bi-facebook"></span> Tiếp tục với Facebook
+                </button>
+            </div>
+
+            <p class="text-center mt-4 mb-0">Chưa có tài khoản? <a asp-controller="Account" asp-action="Register">Đăng ký</a></p>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
+
+
