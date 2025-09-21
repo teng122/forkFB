@@ -21,6 +21,6 @@ jobs:
       with:
         dotnet-version: 8.0.x
     - name: Restore dependencies
-      run: dotnet restore
+      run: dotnet restore foodbook/foodbook.csproj
     - name: Build
-      run: dotnet build --no-restore --configuration Release
+      run: dotnet build foodbook/foodbook.csproj --no-restore --configuration Release
