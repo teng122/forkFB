@@ -10,6 +10,14 @@
             </h4>
             <p class="text-center text-muted mb-4 balance-hero" style="font-size: .95rem;">Chào mừng trở lại! Vui lòng đăng nhập vào tài khoản của bạn.</p>
 
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    @TempData["SuccessMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
             <form asp-action="Login" method="post">
                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                 <div class="mb-3">

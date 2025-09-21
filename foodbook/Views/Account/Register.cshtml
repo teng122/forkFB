@@ -1,0 +1,78 @@
+@model foodbook.Models.RegisterViewModel
+@{
+    ViewData["Title"] = "Đăng ký";
+}
+
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 80vh;">
+    <div class="card shadow-sm register-card">
+        <div class="card-body p-4">
+            <h4 class="text-center mb-1 fw-bold">Đăng ký tài khoản <span class="text-success text-green">Foodbook</span>
+            </h4>
+            <p class="text-center text-muted mb-4 balance-hero" style="font-size: .95rem;">Tạo tài khoản mới để khám phá thế giới ẩm thực tuyệt vời.</p>
+
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    @TempData["SuccessMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            <form asp-action="Register" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                
+                <div class="mb-3">
+                    <label asp-for="FullName" class="form-label"><b>Họ và tên</b></label>
+                    <input asp-for="FullName" class="form-control" placeholder="Nhập họ và tên của bạn" />
+                    <span asp-validation-for="FullName" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Username" class="form-label"><b>Tên đăng nhập</b></label>
+                    <input asp-for="Username" class="form-control" placeholder="Chọn tên đăng nhập" />
+                    <span asp-validation-for="Username" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Email" class="form-label"><b>Email</b></label>
+                    <input asp-for="Email" class="form-control" placeholder="ten@example.com" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Password" class="form-label"><b>Mật khẩu</b></label>
+                    <input asp-for="Password" class="form-control" placeholder="Tạo mật khẩu mạnh" />
+                    <span asp-validation-for="Password" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="ConfirmPassword" class="form-label"><b>Xác nhận mật khẩu</b></label>
+                    <input asp-for="ConfirmPassword" class="form-control" placeholder="Nhập lại mật khẩu" />
+                    <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                </div>
+
+                <button type="submit" class="btn btn-success w-100">Đăng ký</button>
+            </form>
+
+            <div class="text-center text-muted my-3">Hoặc</div>
+
+            <div class="d-grid gap-2">
+                <button class="btn btn-light border d-flex align-items-center justify-content-center" type="button" disabled>
+                    <span class="me-2 bi bi-google"></span> <b>Tiếp tục với Google</b>
+                </button>
+
+                <button class="btn btn-light border d-flex align-items-center justify-content-center" type="button"
+                    disabled>
+                    <span class="me-2 bi bi-facebook"></span> <b>Tiếp tục với Facebook</b>
+                </button>
+            </div>
+
+            <p class="text-center mt-4 mb-0">Đã có tài khoản? <a asp-controller="Account" asp-action="Login"
+                    class="text-green text-none">Đăng nhập</a></p>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -22,9 +22,9 @@
                     <i class="text-green bi bi-book"><b>Foodbook</b></i>
                 </a>
                 
-                @{ var currentController = ViewContext.RouteData.Values["Controller"] as string; var currentAction = ViewContext.RouteData.Values["Action"] as string; var isLoginPage = string.Equals(currentController, "Account", StringComparison.OrdinalIgnoreCase) && string.Equals(currentAction, "Login", StringComparison.OrdinalIgnoreCase); }
+                @{ var currentController = ViewContext.RouteData.Values["Controller"] as string; var currentAction = ViewContext.RouteData.Values["Action"] as string; var isAccountPage = string.Equals(currentController, "Account", StringComparison.OrdinalIgnoreCase) && (string.Equals(currentAction, "Login", StringComparison.OrdinalIgnoreCase) || string.Equals(currentAction, "Register", StringComparison.OrdinalIgnoreCase)); }
 
-                @if (!isLoginPage)
+                @if (!isAccountPage)
                 {
                     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse"
                             aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">

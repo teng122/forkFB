@@ -135,94 +135,113 @@ main {
   white-space: nowrap;
 }
 
-/* Login card sizing */
-.login-card {
+/* Login and Register card sizing */
+.login-card,
+.register-card {
   width: 100%;
   max-width: 460px;
 }
 
 @media (min-width: 768px) {
-  .login-card {
+  .login-card,
+  .register-card {
     max-width: 600px;
   }
   
-  .login-card .card-body {
+  .login-card .card-body,
+  .register-card .card-body {
     padding: 3rem !important;
   }
   
-  .login-card h4 {
+  .login-card h4,
+  .register-card h4 {
     font-size: 1.75rem;
     margin-bottom: 1rem !important;
   }
   
-  .login-card .balance-hero {
+  .login-card .balance-hero,
+  .register-card .balance-hero {
     font-size: 1.1rem !important;
     margin-bottom: 2rem !important;
   }
   
-  .login-card .form-label {
+  .login-card .form-label,
+  .register-card .form-label {
     font-size: 1.1rem;
     margin-bottom: 0.75rem;
   }
   
-  .login-card .form-control {
+  .login-card .form-control,
+  .register-card .form-control {
     font-size: 1.1rem;
     padding: 0.75rem 1rem;
     margin-bottom: 1.5rem;
   }
   
-  .login-card .btn {
+  .login-card .btn,
+  .register-card .btn {
     font-size: 1.1rem;
     padding: 0.75rem 1.5rem;
   }
   
-  .login-card .btn-success {
+  .login-card .btn-success,
+  .register-card .btn-success {
     margin-bottom: 1.5rem;
   }
   
-  .login-card .text-center.text-muted.my-3 {
+  .login-card .text-center.text-muted.my-3,
+  .register-card .text-center.text-muted.my-3 {
     font-size: 1rem;
     margin: 2rem 0 !important;
   }
   
-  .login-card .d-grid .btn {
+  .login-card .d-grid .btn,
+  .register-card .d-grid .btn {
     font-size: 1rem;
     padding: 0.75rem 1rem;
   }
   
-  .login-card .text-center.mt-4 {
+  .login-card .text-center.mt-4,
+  .register-card .text-center.mt-4 {
     font-size: 1rem;
     margin-top: 2rem !important;
   }
 }
 
 @media (min-width: 992px) {
-  .login-card {
+  .login-card,
+  .register-card {
     max-width: 650px;
   }
   
-  .login-card .card-body {
+  .login-card .card-body,
+  .register-card .card-body {
     padding: 3.5rem !important;
   }
   
-  .login-card h4 {
+  .login-card h4,
+  .register-card h4 {
     font-size: 2rem;
   }
   
-  .login-card .balance-hero {
+  .login-card .balance-hero,
+  .register-card .balance-hero {
     font-size: 1.2rem !important;
   }
   
-  .login-card .form-label {
+  .login-card .form-label,
+  .register-card .form-label {
     font-size: 1.15rem;
   }
   
-  .login-card .form-control {
+  .login-card .form-control,
+  .register-card .form-control {
     font-size: 1.15rem;
     padding: 0.875rem 1.125rem;
   }
   
-  .login-card .btn {
+  .login-card .btn,
+  .register-card .btn {
     font-size: 1.15rem;
     padding: 0.875rem 1.75rem;
   }
