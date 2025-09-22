@@ -64,3 +64,4 @@ C:\Users\huhum\Documents\GitHub\foodbook\foodbook-1\foodbook\obj\Debug\net8.0\re
 C:\Users\huhum\Documents\GitHub\foodbook\foodbook-1\foodbook\obj\Debug\net8.0\foodbook.pdb
 C:\Users\huhum\Documents\GitHub\foodbook\foodbook-1\foodbook\obj\Debug\net8.0\foodbook.genruntimeconfig.cache
 C:\Users\huhum\Documents\GitHub\foodbook\foodbook-1\foodbook\obj\Debug\net8.0\ref\foodbook.dll
+C:\Users\huhum\Documents\GitHub\foodbook\foodbook\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt

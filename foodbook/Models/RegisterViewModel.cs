@@ -18,6 +18,16 @@ namespace foodbook.Models
         [Display(Name = "Email")]
         public string Email { get; set; } = string.Empty;
 
+
+
+        [Required(ErrorMessage = "Phone là bắt buộc")]
+        [Phone(ErrorMessage = "Phone không hợp lệ")]
+        [Display(Name = "Phone")]
+        public string Phone { get; set; } = string.Empty;
+
+
+
+
         [Required(ErrorMessage = "Mật khẩu là bắt buộc")]
         [StringLength(100, MinimumLength = 6, ErrorMessage = "Mật khẩu phải có ít nhất 6 ký tự")]
         [DataType(DataType.Password)]
