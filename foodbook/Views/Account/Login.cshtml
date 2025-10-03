@@ -31,6 +31,11 @@
                     <input asp-for="Password" class="form-control" placeholder="Mật khẩu của bạn" />
                     <span asp-validation-for="Password" class="text-danger"></span>
                 </div>
+                <div class="mb-3 text-end">
+                    <a asp-controller="Account" asp-action="ForgotPassword" class="text-green text-decoration-none">
+                        Quên mật khẩu?
+                    </a>
+                </div>
                 <button type="submit" class="btn btn-success w-100">Đăng nhập</button>
             </form>
 

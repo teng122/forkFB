@@ -50,6 +50,27 @@ namespace foodbook.Controllers
             TempData["SuccessMessage"] = "Đăng ký thành công! Vui lòng đăng nhập.";
             return RedirectToAction("Login");
         }
+
+        [HttpGet]
+        public IActionResult ForgotPassword()
+        {
+            return View(new ForgotPasswordViewModel());
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult ForgotPassword(ForgotPasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            // TODO: Replace with real password reset logic
+            // For now, just show success message
+            TempData["SuccessMessage"] = "Chúng tôi đã gửi liên kết đặt lại mật khẩu đến email của bạn.";
+            return RedirectToAction("ForgotPassword");
+        }
     }
 }
 
