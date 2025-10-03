@@ -42,12 +42,7 @@
               "RelativeToolTip": "Views\\Shared\\Error.cshtml",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-<<<<<<< HEAD
               "WhenOpened": "2025-09-22T01:44:44.325Z"
-=======
-              "WhenOpened": "2025-09-22T01:44:44.325Z",
-              "EditorCaption": ""
->>>>>>> main
             },
             {
               "$type": "Document",
@@ -59,12 +54,7 @@
               "RelativeToolTip": "Views\\Account\\Login.cshtml",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-<<<<<<< HEAD
               "WhenOpened": "2025-09-22T01:43:42.72Z"
-=======
-              "WhenOpened": "2025-09-22T01:43:42.72Z",
-              "EditorCaption": ""
->>>>>>> main
             },
             {
               "$type": "Document",
@@ -76,12 +66,7 @@
               "RelativeToolTip": "Models\\RegisterViewModel.cs",
               "ViewState": "AgIAAAUAAAAAAAAAAAAIwBAAAAAUAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-<<<<<<< HEAD
               "WhenOpened": "2025-09-22T01:17:29.672Z"
-=======
-              "WhenOpened": "2025-09-22T01:17:29.672Z",
-              "EditorCaption": ""
->>>>>>> main
             },
             {
               "$type": "Document",
@@ -91,11 +76,7 @@
               "RelativeDocumentMoniker": "Views\\Account\\Register.cshtml",
               "ToolTip": "C:\\Users\\huhum\\Documents\\GitHub\\foodbook\\foodbook\\Views\\Account\\Register.cshtml",
               "RelativeToolTip": "Views\\Account\\Register.cshtml",
-<<<<<<< HEAD
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAACUAAABMAAAAAAAAAA==",
-=======
-              "ViewState": "AgIAAAYAAAAAAAAAAAAAACMAAAAAAAAAAAAAAA==",
->>>>>>> main
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABcAAAAiAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
               "WhenOpened": "2025-09-22T01:16:10.245Z",
               "EditorCaption": ""

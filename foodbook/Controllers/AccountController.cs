@@ -50,6 +50,48 @@ namespace foodbook.Controllers
             TempData["SuccessMessage"] = "Đăng ký thành công! Vui lòng đăng nhập.";
             return RedirectToAction("Login");
         }
+
+        [HttpGet]
+        public IActionResult ForgotPassword()
+        {
+            return View(new ForgotPasswordViewModel());
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult ForgotPassword(ForgotPasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            // TODO: Replace with real password reset logic
+            // For now, just show success message
+            TempData["SuccessMessage"] = "Chúng tôi đã gửi liên kết đặt lại mật khẩu đến email của bạn.";
+            return RedirectToAction("ForgotPassword");
+        }
+
+        [HttpGet]
+        public IActionResult ChangePassword()
+        {
+            return View(new ChangePasswordViewModel());
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult ChangePassword(ChangePasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            // TODO: Replace with real password change logic
+            // For now, just show success message
+            TempData["SuccessMessage"] = "Mật khẩu đã được thay đổi thành công!";
+            return RedirectToAction("ChangePassword");
+        }
     }
 }
 
