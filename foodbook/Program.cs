@@ -8,6 +8,18 @@ namespace foodbook
 
             // Add services to the container.
             builder.Services.AddControllersWithViews();
+            
+            // Add session support
+            builder.Services.AddDistributedMemoryCache();
+            builder.Services.AddSession(options =>
+            {
+                options.IdleTimeout = TimeSpan.FromMinutes(30);
+                options.Cookie.HttpOnly = true;
+                options.Cookie.IsEssential = true;
+            });
+            
+            // Add Supabase service
+            builder.Services.AddSingleton<foodbook.Services.SupabaseService>();
 
             var app = builder.Build();
 
@@ -23,6 +35,8 @@ namespace foodbook
             app.UseStaticFiles();
 
             app.UseRouting();
+            
+            app.UseSession();
 
             app.UseAuthorization();
 

@@ -307,6 +307,16 @@ html {
   min-height: 100%;
 }
 
+/* Verify Success Card */
+.verify-success-card {
+    max-width: 500px;
+    width: 100%;
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+}
+
 body {
   margin-bottom: 60px;
 }
