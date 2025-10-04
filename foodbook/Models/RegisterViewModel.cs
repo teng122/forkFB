@@ -20,10 +20,6 @@ namespace foodbook.Models
 
 
 
-        [Required(ErrorMessage = "Phone là bắt buộc")]
-        [Phone(ErrorMessage = "Phone không hợp lệ")]
-        [Display(Name = "Phone")]
-        public string Phone { get; set; } = string.Empty;
 
 
 

@@ -21,9 +21,9 @@
             <form asp-action="Login" method="post">
                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                 <div class="mb-3">
-                    <label asp-for="EmailOrPhone" class="form-label"><b>Email hoặc số điện thoại</b></label>
+                    <label asp-for="EmailOrPhone" class="form-label"><b>Tên đăng nhập hoặc Email</b></label>
                     <input asp-for="EmailOrPhone" class="form-control"
-                        placeholder="ten@example.com hoặc số điện thoại" />
+                        placeholder="Tên đăng nhập hoặc email" />
                     <span asp-validation-for="EmailOrPhone" class="text-danger"></span>
                 </div>
                 <div class="mb-3">
@@ -39,22 +39,6 @@
                 <button type="submit" class="btn btn-success w-100">Đăng nhập</button>
             </form>
 
-            <div class="text-center text-muted my-3">Hoặc</div>
-
-            <div class="d-grid gap-2">
-                <button class="btn btn-light border d-flex align-items-center justify-content-center" type="button" disabled>
-                    <span class="me-2 bi bi-google"></span> <b>Tiếp tục với Google</b>
-                </button>
-                @* <button class="btn btn-light border d-flex align-items-center justify-content-center" type="button">
-                    <img src="google-logo.png" alt="Google" width="20" height="20" class="me-2">
-                    <b>Tiếp tục với Google</b>
-                </button> *@
-
-                <button class="btn btn-light border d-flex align-items-center justify-content-center" type="button"
-                    disabled>
-                    <span class="me-2 bi bi-facebook"></span> <b>Tiếp tục với Facebook</b>
-                </button>
-            </div>
 
             <p class="text-center mt-4 mb-0">Chưa có tài khoản? <a asp-controller="Account" asp-action="Register"
                     class="text-green text-none">Đăng ký</a></p>
