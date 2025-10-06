@@ -17,8 +17,13 @@ namespace foodbook.Services
             };
 
             // Use environment variables for production, fallback to configuration
-            var url = Environment.GetEnvironmentVariable("SUPABASE_URL") ?? configuration["Supabase:Url"];
-            var anonKey = Environment.GetEnvironmentVariable("SUPABASE_ANON_KEY") ?? configuration["Supabase:AnonKey"];
+            var url = Environment.GetEnvironmentVariable("SUPABASE_URL") ?? configuration["Supabase:Url"] ?? "";
+            var anonKey = Environment.GetEnvironmentVariable("SUPABASE_ANON_KEY") ?? configuration["Supabase:AnonKey"] ?? "";
+
+            if (string.IsNullOrEmpty(url) || string.IsNullOrEmpty(anonKey))
+            {
+                throw new InvalidOperationException("Supabase URL and AnonKey must be configured");
+            }
 
             _client = new Supabase.Client(url, anonKey, options);
         }
@@ -164,13 +169,13 @@ namespace foodbook.Services
             }
         }
 
-        public async Task<bool> UpdatePasswordAsync(string newPassword)
+        public Task<bool> UpdatePasswordAsync(string newPassword)
         {
             try
             {
                 // For now, just return true - this would need proper implementation
                 // based on Supabase documentation for password updates
-                return true;
+                return Task.FromResult(true);
             }
             catch (Exception ex)
             {
@@ -212,29 +217,40 @@ namespace foodbook.Services
             }
         }
 
-        public async Task<UserModel?> LoginFromUserTableAsync(string emailOrPhone, string password)
+        public async Task<UserLogin?> LoginFromUserTableAsync(string emailOrPhone, string password)
         {
             try
             {
                 // Chuyển input thành lowercase để so sánh
                 var lowercaseInput = emailOrPhone.ToLower();
+                Console.WriteLine($"Searching for user in User table: {lowercaseInput}");
                 
-                // Query user từ bảng User custom
+                // Query user từ bảng User (không phải User-Trigger)
                 var userResult = await _client
-                    .From<UserModel>()
+                    .From<UserLogin>()
                     .Where(x => x.email == lowercaseInput || x.username == lowercaseInput)
                     .Single();
 
-                // Kiểm tra password (có thể hash password nếu cần)
+                Console.WriteLine($"Found user: {userResult?.username}, Email: {userResult?.email}");
+                Console.WriteLine($"Stored password: {userResult?.password}");
+                Console.WriteLine($"Input password: {password}");
+                Console.WriteLine($"Password match: {userResult?.password == password}");
+
+                // Kiểm tra password (so sánh trực tiếp vì password được lưu plain text)
                 if (userResult != null && userResult.password == password)
                 {
+                    Console.WriteLine("Login successful!");
                     return userResult;
                 }
 
+                Console.WriteLine("Login failed: Password mismatch");
                 return null;
             }
             catch (Exception ex)
             {
+                // Log lỗi để debug
+                Console.WriteLine($"Login error: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
                 throw new Exception($"Đăng nhập thất bại: {ex.Message}");
             }
         }
