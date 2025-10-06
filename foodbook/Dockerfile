@@ -6,10 +6,10 @@ EXPOSE 8080
 # Use the official .NET 8 SDK for building
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
-COPY ["foodbook.csproj", "."]
-RUN dotnet restore "foodbook.csproj"
+COPY ["foodbook/foodbook.csproj", "foodbook/"]
+RUN dotnet restore "foodbook/foodbook.csproj"
 COPY . .
-WORKDIR "/src"
+WORKDIR "/src/foodbook"
 RUN dotnet build "foodbook.csproj" -c Release -o /app/build
 
 FROM build AS publish
