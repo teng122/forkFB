@@ -1,0 +1,99 @@
+@model IEnumerable<foodbook.Models.User>
+@{
+    ViewData["Title"] = "Admin Dashboard";
+    var users = ViewBag.Users as IEnumerable<foodbook.Models.User>;
+    var currentUser = ViewBag.CurrentUser as string;
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h2>Admin Dashboard</h2>
+            <p>Chào mừng, @currentUser!</p>
+            
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    @TempData["SuccessMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+            
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    @TempData["ErrorMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+        </div>
+    </div>
+    
+    <div class="row mt-4">
+        <div class="col-12">
+            <h3>Quản lý Users</h3>
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Full Name</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th>Created At</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (users != null)
+                        {
+                            @foreach (var user in users)
+                            {
+                                <tr>
+                                    <td>@user.username</td>
+                                    <td>@user.email</td>
+                                    <td>@user.full_name</td>
+                                    <td>
+                                        <span class="badge @(user.role == "admin" ? "bg-danger" : user.role == "moderator" ? "bg-warning" : "bg-primary")">
+                                            @user.role
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge @(user.status == "active" ? "bg-success" : "bg-secondary")">
+                                            @user.status
+                                        </span>
+                                    </td>
+                                    <td>@user.created_at.ToString("dd/MM/yyyy")</td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <form method="post" action="@Url.Action("UpdateUserRole", "Admin")" class="d-inline">
+                                                <input type="hidden" name="userId" value="@user.username" />
+                                                <select name="newRole" class="form-select form-select-sm" onchange="this.form.submit()">
+                                                    <option value="user" selected="@(user.role == "user")">User</option>
+                                                    <option value="moderator" selected="@(user.role == "moderator")">Moderator</option>
+                                                    <option value="admin" selected="@(user.role == "admin")">Admin</option>
+                                                </select>
+                                            </form>
+                                            
+                                            @if (user.username != currentUser)
+                                            {
+                                                <form method="post" action="@Url.Action("DeleteUser", "Admin")" class="d-inline ms-2">
+                                                    <input type="hidden" name="userId" value="@user.username" />
+                                                    <button type="submit" class="btn btn-danger btn-sm" 
+                                                            onclick="return confirm('Bạn có chắc muốn xóa user này?')">
+                                                        Xóa
+                                                    </button>
+                                                </form>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

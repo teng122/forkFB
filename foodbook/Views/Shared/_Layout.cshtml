@@ -1,4 +1,5 @@
-﻿<!DOCTYPE html>
+﻿@using foodbook.Helpers
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -42,6 +43,14 @@
                             <li class="nav-item">
                                 <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Search">Tìm kiếm</a>
                             </li>
+                            @if (Context.Session.IsAdmin())
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link text-danger fw-bold" asp-area="" asp-controller="Admin" asp-action="Dashboard">
+                                        <i class="bi bi-shield-check"></i> Admin
+                                    </a>
+                                </li>
+                            }
                         </ul>
                         
                         <div class="d-flex align-items-center">
@@ -54,16 +63,25 @@
                                 </div>
                             </div>
                             
-                            <button class="btn btn-danger rounded-pill me-3 d-flex align-items-center">
+                            <a href="@Url.Action("Logout", "Account")" class="btn btn-danger rounded-pill me-3 d-flex align-items-center">
                                 <i class="bi bi-arrow-right me-1"></i>
                                 Đăng xuất
-                            </button>
+                            </a>
                             
-                            <div class="user-profile">
-                                <img src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" 
-                                     alt="User Profile" 
-                                     class="rounded-circle" 
-                                     style="width: 40px; height: 40px; object-fit: cover;">
+                            <div class="user-profile dropdown">
+                                <a class="dropdown-toggle d-flex align-items-center text-decoration-none" href="#" role="button" data-bs-toggle="dropdown">
+                                    <img src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" 
+                                         alt="User Profile" 
+                                         class="rounded-circle me-2" 
+                                         style="width: 40px; height: 40px; object-fit: cover;">
+                                    <span class="text-dark">@Context.Session.GetUsername()</span>
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="@Url.Action("Profile", "Account")">Profile</a></li>
+                                    <li><a class="dropdown-item" href="@Url.Action("ChangePassword", "Account")">Đổi mật khẩu</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="@Url.Action("Logout", "Account")">Đăng xuất</a></li>
+                                </ul>
                             </div>
                         </div>
                     </div>

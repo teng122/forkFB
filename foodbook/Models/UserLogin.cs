@@ -4,8 +4,8 @@ using Supabase.Postgrest.Attributes;
 
 namespace foodbook.Models
 {
-    [Table("User-Trigger")]
-    public class User : BaseModel
+    [Table("User")]
+    public class UserLogin : BaseModel
     {
         [Required]
         public string username { get; set; } = string.Empty;

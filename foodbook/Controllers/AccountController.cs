@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Mvc;
 using foodbook.Models;
 using foodbook.Services;
 using Supabase.Gotrue;
+using Microsoft.AspNetCore.Http;
+using foodbook.Helpers;
 
 namespace foodbook.Controllers
 {
@@ -30,21 +32,29 @@ namespace foodbook.Controllers
 
             try
             {
-                // Đăng nhập trực tiếp từ bảng User
+                // Đăng nhập trực tiếp từ bảng User (có hỗ trợ admin)
+                Console.WriteLine($"Attempting login for: {model.EmailOrPhone}");
                 var user = await _supabaseService.LoginFromUserTableAsync(model.EmailOrPhone, model.Password);
                 if (user != null)
                 {
-                    // Store user session
+                    Console.WriteLine($"Login successful for user: {user.username}");
+                    // Store user session với thông tin từ bảng User
                     HttpContext.Session.SetString("user_id", user.username);
                     HttpContext.Session.SetString("user_email", user.email);
                     HttpContext.Session.SetString("username", user.username);
                     HttpContext.Session.SetString("full_name", user.full_name ?? "");
+                    HttpContext.Session.SetString("role", user.role ?? "user"); // Lưu role để kiểm tra admin
                     
                     return RedirectToAction("Index", "Home");
+                }
+                else
+                {
+                    Console.WriteLine("Login failed: User not found or password incorrect");
                 }
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"Login exception: {ex.Message}");
                 ModelState.AddModelError(string.Empty, ex.Message);
                 return View(model);
             }
@@ -155,7 +165,7 @@ namespace foodbook.Controllers
                     
                     // Lấy thông tin user từ Supabase Auth
                     var currentUser = _supabaseService.GetCurrentUser();
-                    if (currentUser != null)
+                    if (currentUser != null && !string.IsNullOrEmpty(currentUser.Email))
                     {
                         // Query thông tin user từ bảng User custom
                         var userResult = await _supabaseService.GetUserByEmailAsync(currentUser.Email);
@@ -185,6 +195,24 @@ namespace foodbook.Controllers
         [HttpGet]
         public IActionResult VerifySuccess()
         {
+            return View();
+        }
+
+        [HttpGet]
+        public IActionResult Logout()
+        {
+            HttpContext.Session.Clear();
+            return RedirectToAction("Login");
+        }
+
+        [HttpGet]
+        public IActionResult Profile()
+        {
+            if (!HttpContext.Session.IsLoggedIn())
+            {
+                return RedirectToAction("Login");
+            }
+            
             return View();
         }
 
