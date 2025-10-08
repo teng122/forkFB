@@ -125,33 +125,6 @@ namespace foodbook.Controllers
             return RedirectToAction("ForgotPassword");
         }
 
-        [HttpGet]
-        public IActionResult ChangePassword()
-        {
-            return View(new ChangePasswordViewModel());
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ChangePassword(ChangePasswordViewModel model)
-        {
-            if (!ModelState.IsValid)
-            {
-                return View(model);
-            }
-
-            try
-            {
-                await _supabaseService.UpdatePasswordAsync(model.NewPassword);
-                TempData["SuccessMessage"] = "Mật khẩu đã được thay đổi thành công!";
-            }
-            catch (Exception ex)
-            {
-                TempData["ErrorMessage"] = ex.Message;
-            }
-
-            return RedirectToAction("ChangePassword");
-        }
 
         [HttpGet]
         public async Task<IActionResult> AuthCallback(string access_token, string refresh_token, string expires_in, string token_type, string type)

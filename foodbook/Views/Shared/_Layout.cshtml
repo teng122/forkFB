@@ -23,7 +23,7 @@
                     <i class="text-green bi bi-book"><b>Foodbook</b></i>
                 </a>
                 
-                @{ var currentController = ViewContext.RouteData.Values["Controller"] as string; var currentAction = ViewContext.RouteData.Values["Action"] as string; var isAccountPage = string.Equals(currentController, "Account", StringComparison.OrdinalIgnoreCase) && (string.Equals(currentAction, "Login", StringComparison.OrdinalIgnoreCase) || string.Equals(currentAction, "Register", StringComparison.OrdinalIgnoreCase) || string.Equals(currentAction, "ForgotPassword", StringComparison.OrdinalIgnoreCase) || string.Equals(currentAction, "ChangePassword", StringComparison.OrdinalIgnoreCase)); }
+                @{ var currentController = ViewContext.RouteData.Values["Controller"] as string; var currentAction = ViewContext.RouteData.Values["Action"] as string; var isAccountPage = string.Equals(currentController, "Account", StringComparison.OrdinalIgnoreCase) && (string.Equals(currentAction, "Login", StringComparison.OrdinalIgnoreCase) || string.Equals(currentAction, "Register", StringComparison.OrdinalIgnoreCase) || string.Equals(currentAction, "ForgotPassword", StringComparison.OrdinalIgnoreCase)); }
 
                 @if (!isAccountPage)
                 {
@@ -63,25 +63,19 @@
                                 </div>
                             </div>
                             
-                            <a href="@Url.Action("Logout", "Account")" class="btn btn-danger rounded-pill me-3 d-flex align-items-center">
+                            <a href="@Url.Action("Logout", "Account")" class="btn btn-logout rounded-pill me-3 d-flex align-items-center">
                                 <i class="bi bi-arrow-right me-1"></i>
                                 Đăng xuất
                             </a>
                             
-                            <div class="user-profile dropdown">
-                                <a class="dropdown-toggle d-flex align-items-center text-decoration-none" href="#" role="button" data-bs-toggle="dropdown">
+                            <div class="user-profile">
+                                <a class="d-flex align-items-center text-decoration-none" href="@Url.Action("Profile", "Account")">
                                     <img src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" 
                                          alt="User Profile" 
                                          class="rounded-circle me-2" 
                                          style="width: 40px; height: 40px; object-fit: cover;">
                                     <span class="text-dark">@Context.Session.GetUsername()</span>
                                 </a>
-                                <ul class="dropdown-menu">
-                                    <li><a class="dropdown-item" href="@Url.Action("Profile", "Account")">Profile</a></li>
-                                    <li><a class="dropdown-item" href="@Url.Action("ChangePassword", "Account")">Đổi mật khẩu</a></li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item" href="@Url.Action("Logout", "Account")">Đăng xuất</a></li>
-                                </ul>
                             </div>
                         </div>
                     </div>

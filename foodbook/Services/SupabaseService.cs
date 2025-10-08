@@ -169,19 +169,6 @@ namespace foodbook.Services
             }
         }
 
-        public Task<bool> UpdatePasswordAsync(string newPassword)
-        {
-            try
-            {
-                // For now, just return true - this would need proper implementation
-                // based on Supabase documentation for password updates
-                return Task.FromResult(true);
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Cập nhật mật khẩu thất bại: {ex.Message}");
-            }
-        }
 
         public Supabase.Gotrue.User? GetCurrentUser()
         {
@@ -204,6 +191,7 @@ namespace foodbook.Services
         {
             try
             {
+                // Tìm trong bảng User-Trigger trước
                 var userResult = await _client
                     .From<UserModel>()
                     .Where(x => x.email == email)
@@ -216,6 +204,7 @@ namespace foodbook.Services
                 throw new Exception($"Không thể lấy thông tin user: {ex.Message}");
             }
         }
+
 
         public async Task<UserLogin?> LoginFromUserTableAsync(string emailOrPhone, string password)
         {
