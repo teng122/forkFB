@@ -42,7 +42,7 @@ namespace foodbook.Controllers
                 Console.WriteLine("=== USER-TRIGGER TABLE (Register) ===");
                 foreach (var user in registerUsers.Models)
                 {
-                    Console.WriteLine($"User: {user.username}, Email: {user.email}, Role: {user.role}, Password: {user.password}");
+                    Console.WriteLine($"User: {user.username}, Email: {user.email}, Role: User, Password: {user.password}");
                 }
                 
                 return View();

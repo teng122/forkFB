@@ -25,7 +25,5 @@ namespace foodbook.Models
         public DateTime created_at { get; set; }
         
         public string status { get; set; } = "active";
-        
-        public string role { get; set; } = "user"; // user, admin, moderator
     }
 }
