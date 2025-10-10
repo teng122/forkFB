@@ -10,10 +10,12 @@ namespace foodbook.Controllers
     public class AccountController : Controller
     {
         private readonly SupabaseService _supabaseService;
+        private readonly EmailService _emailService;
 
-        public AccountController(SupabaseService supabaseService)
+        public AccountController(SupabaseService supabaseService, EmailService emailService)
         {
             _supabaseService = supabaseService;
+            _emailService = emailService;
         }
         [HttpGet]
         public IActionResult Login()
@@ -83,6 +85,18 @@ namespace foodbook.Controllers
                 var success = await _supabaseService.SignUpAsync(model.Email, model.Password, model.FullName, model.Username);
                 if (success)
                 {
+                    // Gửi email xác thực bằng EmailService
+                    try
+                    {
+                        var verificationLink = $"{Request.Scheme}://{Request.Host}/Account/VerifyEmail?email={model.Email}";
+                        await _emailService.SendEmailVerificationAsync(model.Email, model.Username, verificationLink);
+                    }
+                    catch (Exception emailEx)
+                    {
+                        // Log lỗi email nhưng không làm fail đăng ký
+                        Console.WriteLine($"Không thể gửi email xác thực: {emailEx.Message}");
+                    }
+                    
                     TempData["SuccessMessage"] = "Đăng ký thành công! Vui lòng kiểm tra email để xác thực tài khoản.";
                     return RedirectToAction("Login");
                 }
@@ -114,7 +128,12 @@ namespace foodbook.Controllers
 
             try
             {
-                await _supabaseService.ResetPasswordAsync(model.UsernameOrEmail);
+                // Tạo link reset password (có thể tạo token và lưu vào database)
+                var resetLink = $"{Request.Scheme}://{Request.Host}/Account/ResetPassword?token=temp_token&email={model.UsernameOrEmail}";
+                
+                // Gửi email reset password
+                await _emailService.SendPasswordResetEmailAsync(model.UsernameOrEmail, resetLink);
+                
                 TempData["SuccessMessage"] = "Chúng tôi đã gửi liên kết đặt lại mật khẩu đến email của bạn.";
             }
             catch (Exception ex)
@@ -126,44 +145,6 @@ namespace foodbook.Controllers
         }
 
 
-        [HttpGet]
-        public async Task<IActionResult> AuthCallback(string access_token, string refresh_token, string expires_in, string token_type, string type)
-        {
-            try
-            {
-                if (type == "signup" && !string.IsNullOrEmpty(access_token))
-                {
-                    // Set session với Supabase Auth
-                    await _supabaseService.SetSessionAsync(access_token, refresh_token);
-                    
-                    // Lấy thông tin user từ Supabase Auth
-                    var currentUser = _supabaseService.GetCurrentUser();
-                    if (currentUser != null && !string.IsNullOrEmpty(currentUser.Email))
-                    {
-                        // Query thông tin user từ bảng User custom
-                        var userResult = await _supabaseService.GetUserByEmailAsync(currentUser.Email);
-                        if (userResult != null)
-                        {
-                            // Store user session
-                            HttpContext.Session.SetString("user_id", userResult.username);
-                            HttpContext.Session.SetString("user_email", userResult.email);
-                            HttpContext.Session.SetString("username", userResult.username);
-                            HttpContext.Session.SetString("full_name", userResult.full_name ?? "");
-                            HttpContext.Session.SetString("access_token", access_token);
-                            
-                            TempData["SuccessMessage"] = "Đăng ký thành công! Chào mừng bạn đến với Foodbook!";
-                            return RedirectToAction("VerifySuccess");
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                TempData["ErrorMessage"] = $"Xác thực thất bại: {ex.Message}";
-            }
-
-            return RedirectToAction("Login");
-        }
 
         [HttpGet]
         public IActionResult VerifySuccess()
@@ -187,6 +168,67 @@ namespace foodbook.Controllers
             }
             
             return View();
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> VerifyEmail(string email)
+        {
+            var model = new EmailVerificationViewModel
+            {
+                Email = email ?? "",
+
+                IsSuccess = false,
+                Message = ""
+            };
+
+            try
+            {
+                if (string.IsNullOrEmpty(email) )
+                {
+                    model.Message = "Link xác thực không hợp lệ.";
+                    return View(model);
+                }
+
+                // Tìm tất cả users có email này trong bảng User-Trigger
+                if (!string.IsNullOrEmpty(email))
+                {
+                    // Chuyển email thành lowercase để so sánh
+                    var lowercaseEmail = email.ToLower();
+                    Console.WriteLine($"Searching for email: {lowercaseEmail}");
+                    
+                    // Tìm tất cả users có email này (có thể có nhiều hàng)
+                    var users = await _supabaseService.Client
+                        .From<foodbook.Models.UserTrigger>()
+                        .Where(x => x.email == lowercaseEmail)
+                        .Get();
+                        
+                    Console.WriteLine($"Found {users.Models.Count} users with email: {lowercaseEmail}");
+                    
+                    if (users.Models.Count == 0)
+                    {
+                        model.Message = "Không tìm thấy tài khoản với email này.";
+                        return View(model);
+                    }
+
+                    // Cập nhật is_verified = true cho TẤT CẢ users có email này
+                    var updateResult = await _supabaseService.Client
+                        .From<foodbook.Models.UserTrigger>()
+                        .Where(x => x.email == lowercaseEmail)
+                        .Set(x => x.is_verified, true)
+                        .Update();
+                        
+                    Console.WriteLine($"Updated {updateResult.Models.Count} users");
+                }
+
+                model.IsSuccess = true;
+                model.Message = "Email đã được xác thực thành công! Bạn có thể đăng nhập vào tài khoản.";
+            }
+            catch (Exception ex)
+            {
+                model.Message = $"Lỗi xác thực email: {ex.Message}";
+            }
+
+            return View(model);
         }
 
     }

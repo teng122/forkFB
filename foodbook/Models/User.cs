@@ -4,9 +4,11 @@ using Supabase.Postgrest.Attributes;
 
 namespace foodbook.Models
 {
-    [Table("User-Trigger")]
+    [Table("User")]
     public class User : BaseModel
     {
+        public int? user_id { get; set; }
+        
         [Required]
         public string username { get; set; } = string.Empty;
         
@@ -25,5 +27,9 @@ namespace foodbook.Models
         public DateTime created_at { get; set; }
         
         public string status { get; set; } = "active";
+        
+        public string role { get; set; } = "user"; // user, admin, moderator
+        
+        public bool? is_verified { get; set; } = false;
     }
 }
