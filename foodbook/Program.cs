@@ -20,6 +20,9 @@ namespace foodbook
             
             // Add Supabase service
             builder.Services.AddSingleton<foodbook.Services.SupabaseService>();
+            
+            // Add Email service
+            builder.Services.AddScoped<foodbook.Services.EmailService>();
 
             var app = builder.Build();
 

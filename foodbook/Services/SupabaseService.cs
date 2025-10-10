@@ -1,7 +1,6 @@
 using Supabase;
-using Supabase.Gotrue;
 using foodbook.Models;
-using UserModel = foodbook.Models.User;
+using UserModel = foodbook.Models.UserTrigger;
 
 namespace foodbook.Services
 {
@@ -37,34 +36,26 @@ namespace foodbook.Services
                 // 1. Chuyển username thành lowercase
                 var lowercaseUsername = username.ToLower();
                 
-                // 2. Validate trước khi gửi lên Supabase Auth
+                // 2. Validate trước khi tạo user
                 await ValidateUserDataAsync(email, lowercaseUsername);
                 
-                // 3. Tạo user trong Supabase Auth để lấy access token
-                var authResponse = await _client.Auth.SignUp(email, password);
-                
-                if (authResponse != null)
+                // 3. Thêm vào bảng User-Trigger (không dùng Supabase Auth)
+                var userData = new UserModel
                 {
-                    // 4. Thêm vào bảng User-Trigger
-                    var userData = new UserModel
-                    {
-                        username = lowercaseUsername,
-                        full_name = fullName,
-                        email = email,
-                        password = password,
-                        created_at = DateTime.UtcNow,
-                        status = "active"
-                    };
-                    
-                    // Sử dụng PostgREST để insert
-                    var response = await _client
-                        .From<UserModel>()
-                        .Insert(userData);
-
-                    return true;
-                }
+                    username = lowercaseUsername,
+                    full_name = fullName,
+                    email = email,
+                    password = password,
+                    created_at = DateTime.UtcNow,
+                    status = "active"
+                };
                 
-                return false;
+                // Sử dụng PostgREST để insert
+                var response = await _client
+                    .From<UserModel>()
+                    .Insert(userData);
+
+                return true;
             }
             catch (Exception ex)
             {
@@ -78,7 +69,7 @@ namespace foodbook.Services
             {
                 // Kiểm tra username đã tồn tại chưa từ bảng User (không phải User-Trigger)
                 var existingUser = await _client
-                    .From<UserForValidation>()
+                    .From<foodbook.Models.User>()
                     .Where(x => x.username == username)
                     .Single();
 
@@ -100,7 +91,7 @@ namespace foodbook.Services
             {
                 // Kiểm tra email đã tồn tại chưa từ bảng User (không phải User-Trigger)
                 var existingEmail = await _client
-                    .From<UserForValidation>()
+                    .From<foodbook.Models.User>()
                     .Where(x => x.email == email)
                     .Single();
 
@@ -123,23 +114,20 @@ namespace foodbook.Services
         {
             try
             {
-                // 1. Đăng nhập qua Supabase Auth để lấy access token
-                var authResponse = await _client.Auth.SignIn(email, password);
-                
-                if (authResponse != null)
-                {
-                    // 2. Query thông tin user từ bảng User custom
-                    var userResult = await _client
-                        .From<UserModel>()
-                        .Where(x => x.email == email)
-                        .Single();
+                // Query thông tin user từ bảng User (không dùng Supabase Auth)
+                var userResult = await _client
+                    .From<foodbook.Models.User>()
+                    .Where(x => x.email == email || x.username == email)
+                    .Single();
 
-                    // 3. Trả về thông tin user + access token
+                // Kiểm tra password
+                if (userResult != null && userResult.password == password)
+                {
                     return new
                     {
                         user = userResult,
-                        access_token = authResponse.AccessToken,
-                        session = authResponse
+                        access_token = "dummy_token", // Không dùng Supabase Auth
+                        session = (object?)null
                     };
                 }
                 
@@ -153,14 +141,16 @@ namespace foodbook.Services
 
         public async Task SignOutAsync()
         {
-            await _client.Auth.SignOut();
+            // Không cần gọi Supabase Auth SignOut
+            await Task.CompletedTask;
         }
 
         public async Task<bool> ResetPasswordAsync(string email)
         {
             try
             {
-                await _client.Auth.ResetPasswordForEmail(email);
+                // Không dùng Supabase Auth, chỉ trả về true
+                // Logic reset password sẽ được xử lý bởi EmailService
                 return true;
             }
             catch (Exception ex)
@@ -170,16 +160,18 @@ namespace foodbook.Services
         }
 
 
-        public Supabase.Gotrue.User? GetCurrentUser()
+        public object? GetCurrentUser()
         {
-            return _client.Auth.CurrentUser;
+            // Không dùng Supabase Auth
+            return null;
         }
 
         public async Task SetSessionAsync(string accessToken, string refreshToken)
         {
             try
             {
-                await _client.Auth.SetSession(accessToken, refreshToken);
+                // Không dùng Supabase Auth
+                await Task.CompletedTask;
             }
             catch (Exception ex)
             {
@@ -206,7 +198,7 @@ namespace foodbook.Services
         }
 
 
-        public async Task<UserLogin?> LoginFromUserTableAsync(string emailOrPhone, string password)
+        public async Task<foodbook.Models.User?> LoginFromUserTableAsync(string emailOrPhone, string password)
         {
             try
             {
@@ -216,7 +208,7 @@ namespace foodbook.Services
                 
                 // Query user từ bảng User (không phải User-Trigger)
                 var userResult = await _client
-                    .From<UserLogin>()
+                    .From<foodbook.Models.User>()
                     .Where(x => x.email == lowercaseInput || x.username == lowercaseInput)
                     .Single();
 
