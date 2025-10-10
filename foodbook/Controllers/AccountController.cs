@@ -57,11 +57,19 @@ namespace foodbook.Controllers
             catch (Exception ex)
             {
                 Console.WriteLine($"Login exception: {ex.Message}");
-                ModelState.AddModelError(string.Empty, ex.Message);
+                // Kiểm tra nếu lỗi là do email chưa xác thực
+                if (ex.Message.Contains("chưa được xác thực email"))
+                {
+                    TempData["ErrorMessage"] = ex.Message;
+                }
+                else
+                {
+                    ModelState.AddModelError(string.Empty, ex.Message);
+                }
                 return View(model);
             }
 
-            ModelState.AddModelError(string.Empty, "Email/Số điện thoại hoặc mật khẩu không đúng.");
+            ModelState.AddModelError(string.Empty, "Tên đăng nhập/Email hoặc mật khẩu không đúng.");
             return View(model);
         }
 

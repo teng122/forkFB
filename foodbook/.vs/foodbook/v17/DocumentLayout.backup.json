@@ -50,8 +50,8 @@
               "Title": "TestController.cs",
               "DocumentMoniker": "C:\\Users\\huhum\\Documents\\GitHub\\foodbook\\foodbook\\Controllers\\TestController.cs",
               "RelativeDocumentMoniker": "Controllers\\TestController.cs",
-              "ToolTip": "C:\\Users\\huhum\\Documents\\GitHub\\foodbook\\foodbook\\Controllers\\TestController.cs*",
-              "RelativeToolTip": "Controllers\\TestController.cs*",
+              "ToolTip": "C:\\Users\\huhum\\Documents\\GitHub\\foodbook\\foodbook\\Controllers\\TestController.cs",
+              "RelativeToolTip": "Controllers\\TestController.cs",
               "ViewState": "AgIAAGMAAAAAAAAAAAAmwHwAAAAQAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-10-10T04:02:21.502Z",
@@ -67,8 +67,7 @@
               "RelativeToolTip": "Services\\EmailService.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-10T02:13:35.028Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-10-10T02:13:35.028Z"
             },
             {
               "$type": "Document",
@@ -80,8 +79,7 @@
               "RelativeToolTip": "Controllers\\AccountController.cs",
               "ViewState": "AgIAALMAAAAAAAAAAAAAwMAAAAAQAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-04T11:13:15.859Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-10-04T11:13:15.859Z"
             },
             {
               "$type": "Document",

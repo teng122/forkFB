@@ -220,8 +220,17 @@ namespace foodbook.Services
                 // Kiểm tra password (so sánh trực tiếp vì password được lưu plain text)
                 if (userResult != null && userResult.password == password)
                 {
-                    Console.WriteLine("Login successful!");
-                    return userResult;
+                    // Kiểm tra email đã được xác thực chưa
+                    if (userResult.is_verified == true)
+                    {
+                        Console.WriteLine("Login successful! Email verified.");
+                        return userResult;
+                    }
+                    else
+                    {
+                        Console.WriteLine("Login failed: Email not verified");
+                        throw new Exception("Tài khoản chưa được xác thực email. Vui lòng kiểm tra email và xác thực trước khi đăng nhập.");
+                    }
                 }
 
                 Console.WriteLine("Login failed: Password mismatch");
