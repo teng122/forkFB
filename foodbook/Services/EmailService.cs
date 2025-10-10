@@ -26,6 +26,8 @@ namespace foodbook.Services
                 email.Body = new TextPart("html") { Text = body };
 
                 using var client = new SmtpClient();
+                client.Timeout = 10000; // 10 seconds timeout
+                
                 await client.ConnectAsync(
                     _configuration["EmailSettings:SmtpServer"] ?? "smtp.gmail.com", 
                     int.Parse(_configuration["EmailSettings:SmtpPort"] ?? "587"), 

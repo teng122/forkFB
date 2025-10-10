@@ -9,6 +9,11 @@ namespace foodbook
             // Add services to the container.
             builder.Services.AddControllersWithViews();
             
+            // Add Data Protection
+            builder.Services.AddDataProtection()
+                .SetApplicationName("Foodbook")
+                .PersistKeysToFileSystem(new DirectoryInfo("/tmp/keys"));
+
             // Add session support
             builder.Services.AddDistributedMemoryCache();
             builder.Services.AddSession(options =>

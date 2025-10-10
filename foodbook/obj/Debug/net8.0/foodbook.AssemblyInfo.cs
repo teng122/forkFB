@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("foodbook")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+600831454ab17696fbeaa849f7890a3b89255e40")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b7871a5c9b2b4b66d4342d191bb0b398649ee19d")]
 [assembly: System.Reflection.AssemblyProductAttribute("foodbook")]
 [assembly: System.Reflection.AssemblyTitleAttribute("foodbook")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
