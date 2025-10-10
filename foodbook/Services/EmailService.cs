@@ -30,8 +30,8 @@ namespace foodbook.Services
                 
                 await client.ConnectAsync(
                     _configuration["EmailSettings:SmtpServer"] ?? "smtp.gmail.com", 
-                    int.Parse(_configuration["EmailSettings:SmtpPort"] ?? "587"), 
-                    false);
+                    int.Parse(_configuration["EmailSettings:SmtpPort"] ?? "465"), 
+                    true); // Use SSL for port 465
                 
                 await client.AuthenticateAsync(
                     _configuration["EmailSettings:SmtpUsername"] ?? "huhume147@gmail.com", 
