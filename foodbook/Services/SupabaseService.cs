@@ -245,5 +245,151 @@ namespace foodbook.Services
             }
         }
 
+        // Tìm user theo email hoặc username từ bảng User (cho forgot password)
+        public async Task<foodbook.Models.User?> GetUserByEmailOrUsernameAsync(string emailOrUsername)
+        {
+            try
+            {
+                var lowercaseInput = emailOrUsername.ToLower();
+                
+                // Tìm user từ bảng User
+                var userResult = await _client
+                    .From<foodbook.Models.User>()
+                    .Where(x => x.email == lowercaseInput || x.username == lowercaseInput)
+                    .Single();
+
+                return userResult;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"GetUserByEmailOrUsername error: {ex.Message}");
+                return null;
+            }
+        }
+
+        // Lưu token reset password vào memory
+        public async Task SavePasswordResetTokenAsync(string email, string token)
+        {
+            try
+            {
+                var resetData = new
+                {
+                    email = email.ToLower(),
+                    token = token,
+                    created_at = DateTime.UtcNow,
+                    expires_at = DateTime.UtcNow.AddHours(1) // Token hết hạn sau 1 giờ
+                };
+
+                // Lưu vào static dictionary
+                PasswordResetTokens[email.ToLower()] = resetData;
+                
+                Console.WriteLine($"Saved reset token for email: {email}");
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Không thể lưu token reset password: {ex.Message}");
+            }
+        }
+
+        // Kiểm tra token reset password có hợp lệ không
+        public async Task<bool> ValidatePasswordResetTokenAsync(string email, string token)
+        {
+            try
+            {
+                var lowercaseEmail = email.ToLower();
+                
+                if (PasswordResetTokens.ContainsKey(lowercaseEmail))
+                {
+                    var resetData = PasswordResetTokens[lowercaseEmail];
+                    
+                    if (resetData.token == token && resetData.expires_at > DateTime.UtcNow)
+                    {
+                        return true;
+                    }
+                    else if (resetData.expires_at <= DateTime.UtcNow)
+                    {
+                        // Token hết hạn, xóa khỏi cache
+                        PasswordResetTokens.Remove(lowercaseEmail);
+                    }
+                }
+                
+                return false;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"ValidatePasswordResetToken error: {ex.Message}");
+                return false;
+            }
+        }
+
+        // Tìm user trong bảng User-Trigger để reset password
+        public async Task<foodbook.Models.UserTrigger?> GetUserTriggerByEmailAsync(string email)
+        {
+            try
+            {
+                var lowercaseEmail = email.ToLower();
+                
+                // Tìm user từ bảng User-Trigger
+                var userResult = await _client
+                    .From<foodbook.Models.UserTrigger>()
+                    .Where(x => x.email == lowercaseEmail)
+                    .Single();
+
+                return userResult;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"GetUserTriggerByEmail error: {ex.Message}");
+                return null;
+            }
+        }
+
+        // Đặt lại mật khẩu mới trong bảng User-Trigger (trigger sẽ tự động cập nhật bảng User)
+        public async Task<bool> ResetPasswordAsync(string email, string newPassword)
+        {
+            try
+            {
+                var lowercaseEmail = email.ToLower();
+                
+                // Cập nhật password trong bảng User-Trigger cho TẤT CẢ các hàng có cùng email
+                // Trigger sẽ tự động cập nhật password trong bảng User cho tất cả hàng có cùng email/username
+                var updateResult = await _client
+                    .From<foodbook.Models.UserTrigger>()
+                    .Where(x => x.email == lowercaseEmail)
+                    .Set(x => x.password, newPassword)
+                    .Update();
+
+                Console.WriteLine($"Reset password for email: {email} in User-Trigger table - Updated {updateResult.Models.Count} rows");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Không thể đặt lại mật khẩu: {ex.Message}");
+            }
+        }
+
+        // Xóa token reset password
+        public async Task RemovePasswordResetTokenAsync(string email)
+        {
+            try
+            {
+                var lowercaseEmail = email.ToLower();
+                
+                if (PasswordResetTokens.ContainsKey(lowercaseEmail))
+                {
+                    PasswordResetTokens.Remove(lowercaseEmail);
+                }
+                
+                Console.WriteLine($"Removed reset token for email: {email}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"RemovePasswordResetToken error: {ex.Message}");
+            }
+        }
+
+        // Static dictionary để lưu token tạm thời
+        private static Dictionary<string, dynamic> PasswordResetTokens = new Dictionary<string, dynamic>();
+
     }
 }

@@ -136,11 +136,30 @@ namespace foodbook.Controllers
 
             try
             {
-                // Tạo link reset password (có thể tạo token và lưu vào database)
-                var resetLink = $"{Request.Scheme}://{Request.Host}/Account/ResetPassword?token=temp_token&email={model.UsernameOrEmail}";
+                // Kiểm tra user có tồn tại không từ bảng User (cho forgot password)
+                var user = await _supabaseService.GetUserByEmailOrUsernameAsync(model.UsernameOrEmail);
+                if (user == null)
+                {
+                    TempData["ErrorMessage"] = "Không tìm thấy tài khoản với thông tin này.";
+                    return View(model);
+                }
+
+                // Kiểm tra tài khoản đã được xác thực email chưa
+                if (user.is_verified != true)
+                {
+                    TempData["ErrorMessage"] = "Tài khoản chưa được xác thực email. Vui lòng kiểm tra email và xác thực tài khoản trước khi đặt lại mật khẩu.";
+                    return View(model);
+                }
+
+                // Tạo token reset password
+                var resetToken = Guid.NewGuid().ToString();
+                var resetLink = $"{Request.Scheme}://{Request.Host}/Account/ResetPassword?token={resetToken}&email={user.email}";
+                
+                // Lưu token vào database (có thể tạo bảng riêng hoặc dùng session)
+                await _supabaseService.SavePasswordResetTokenAsync(user.email, resetToken);
                 
                 // Gửi email reset password
-                await _emailService.SendPasswordResetEmailAsync(model.UsernameOrEmail, resetLink);
+                await _emailService.SendPasswordResetEmailAsync(user.email, resetLink);
                 
                 TempData["SuccessMessage"] = "Chúng tôi đã gửi liên kết đặt lại mật khẩu đến email của bạn.";
             }
@@ -150,6 +169,82 @@ namespace foodbook.Controllers
             }
 
             return RedirectToAction("ForgotPassword");
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ResetPassword(string token, string email)
+        {
+            if (string.IsNullOrEmpty(token) || string.IsNullOrEmpty(email))
+            {
+                TempData["ErrorMessage"] = "Link đặt lại mật khẩu không hợp lệ.";
+                return RedirectToAction("ForgotPassword");
+            }
+
+            try
+            {
+                // Kiểm tra token có hợp lệ không
+                var isValidToken = await _supabaseService.ValidatePasswordResetTokenAsync(email, token);
+                if (!isValidToken)
+                {
+                    TempData["ErrorMessage"] = "Link đặt lại mật khẩu đã hết hạn hoặc không hợp lệ.";
+                    return RedirectToAction("ForgotPassword");
+                }
+
+                var model = new ResetPasswordViewModel
+                {
+                    Token = token,
+                    Email = email
+                };
+
+                return View(model);
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = $"Lỗi xác thực: {ex.Message}";
+                return RedirectToAction("ForgotPassword");
+            }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            try
+            {
+                // Kiểm tra token có hợp lệ không
+                var isValidToken = await _supabaseService.ValidatePasswordResetTokenAsync(model.Email, model.Token);
+                if (!isValidToken)
+                {
+                    TempData["ErrorMessage"] = "Link đặt lại mật khẩu đã hết hạn hoặc không hợp lệ.";
+                    return RedirectToAction("ForgotPassword");
+                }
+
+                // Cập nhật mật khẩu mới
+                var success = await _supabaseService.ResetPasswordAsync(model.Email, model.NewPassword);
+                if (success)
+                {
+                    // Xóa token sau khi reset thành công
+                    await _supabaseService.RemovePasswordResetTokenAsync(model.Email);
+                    
+                    TempData["SuccessMessage"] = "Đặt lại mật khẩu thành công! Bạn có thể đăng nhập với mật khẩu mới.";
+                    return RedirectToAction("Login");
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = "Không thể đặt lại mật khẩu. Vui lòng thử lại.";
+                }
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = $"Lỗi đặt lại mật khẩu: {ex.Message}";
+            }
+
+            return View(model);
         }
 
 

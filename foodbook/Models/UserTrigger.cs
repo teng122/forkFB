@@ -16,6 +16,7 @@ namespace foodbook.Models
         public string email { get; set; } = string.Empty;
         
         [Required]
+        [Column("password")]
         public string password { get; set; } = string.Empty;
         
         public byte[]? avatar_img { get; set; }
