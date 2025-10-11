@@ -4,6 +4,7 @@ using foodbook.Services;
 using Supabase.Gotrue;
 using Microsoft.AspNetCore.Http;
 using foodbook.Helpers;
+using foodbook.Attributes;
 
 namespace foodbook.Controllers
 {
@@ -263,13 +264,9 @@ namespace foodbook.Controllers
         }
 
         [HttpGet]
+        [LoginRequired]
         public IActionResult Profile()
         {
-            if (!HttpContext.Session.IsLoggedIn())
-            {
-                return RedirectToAction("Login");
-            }
-            
             return View();
         }
 
