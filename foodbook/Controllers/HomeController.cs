@@ -1,9 +1,11 @@
 using System.Diagnostics;
 using foodbook.Models;
 using Microsoft.AspNetCore.Mvc;
+using foodbook.Attributes;
 
 namespace foodbook.Controllers
 {
+    [LoginRequired]
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
