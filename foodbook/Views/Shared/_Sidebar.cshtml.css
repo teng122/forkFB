@@ -1,0 +1,126 @@
+﻿/* ==================== SIDEBAR STYLES ==================== */
+/* Thêm đoạn này vào cuối file site.css */
+
+/* Sidebar Container - MUST BE STICKY */
+.sidebar-container {
+    position: -webkit-sticky !important;
+    position: sticky !important;
+    top: 76px !important;
+    height: calc(100vh - 76px) !important;
+    overflow-y: auto !important;
+    z-index: 100;
+}
+
+/* Sidebar */
+.sidebar {
+    background-color: #fff;
+    border-right: 1px solid #e9ecef;
+    padding: 1.5rem 1rem;
+    min-height: 100%;
+}
+
+.sidebar-header {
+    padding-bottom: 1rem;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid #dee2e6;
+}
+
+    .sidebar-header h5 {
+        font-size: 0.75rem;
+        color: #6c757d;
+        letter-spacing: 0.5px;
+        margin-bottom: 0;
+        font-weight: 700;
+    }
+
+/* Sidebar Links - FORCE GRAY COLOR */
+.sidebar-nav .nav-link {
+    color: #6c757d !important;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+    white-space: nowrap;
+    text-decoration: none !important;
+}
+
+    .sidebar-nav .nav-link:hover {
+        background-color: #f8f9fa !important;
+        color: #1dd75b !important;
+        text-decoration: none !important;
+    }
+
+    .sidebar-nav .nav-link.active {
+        background-color: #1dd75b !important;
+        color: #ffffff !important;
+    }
+
+    /* Sidebar Icons - FORCE GRAY COLOR */
+    .sidebar-nav .nav-link i {
+        font-size: 1.25rem;
+        width: 24px;
+        color: #6c757d !important;
+    }
+
+    .sidebar-nav .nav-link:hover i {
+        color: #1dd75b !important;
+    }
+
+    .sidebar-nav .nav-link.active i {
+        color: #ffffff !important;
+    }
+
+/* Scrollbar */
+.sidebar-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.sidebar-container::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.sidebar-container::-webkit-scrollbar-thumb {
+    background: #dee2e6;
+    border-radius: 3px;
+}
+
+    .sidebar-container::-webkit-scrollbar-thumb:hover {
+        background: #adb5bd;
+    }
+
+/* Responsive */
+@media (max-width: 991.98px) {
+    .sidebar-container {
+        position: relative !important;
+        top: auto !important;
+        height: auto !important;
+        overflow-y: visible !important;
+    }
+
+    .sidebar {
+        border-right: none;
+        border-bottom: 1px solid #e9ecef;
+        min-height: auto;
+    }
+}
+
+/* ==================== STICKY FOOTER FIX ==================== */
+html {
+    height: 100%;
+}
+
+body {
+    min-height: 100vh !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+.main-content-wrapper {
+    flex: 1 !important;
+}
+
+.footer-section {
+    flex-shrink: 0 !important;
+    margin-top: 0 !important;
+}
