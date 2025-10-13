@@ -1,4 +1,4 @@
-@model IEnumerable<foodbook.Models.UserTrigger>
+@model IEnumerable<foodbook.Models.User>
 @{
     ViewData["Title"] = "Test Database";
 }
@@ -27,17 +27,6 @@
                 </div>
                 <button type="submit" class="btn btn-primary">Test Login</button>
             </form>
-            
-            <hr>
-            
-            <h3>Test Email Verification</h3>
-            <form method="get" action="@Url.Action("TestEmailVerification", "Test")">
-                <div class="mb-3">
-                    <label for="email" class="form-label">Email để xác thực:</label>
-                    <input type="email" class="form-control" id="email" name="email" required>
-                </div>
-                <button type="submit" class="btn btn-success">Test Email Verification</button>
-            </form>
         </div>
         
         <div class="col-md-6">
@@ -52,19 +41,17 @@
                                 <th>Email</th>
                                 <th>Role</th>
                                 <th>Status</th>
-                                <th>Verified</th>
                                 <th>Password (first 5 chars)</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach (var user in ViewBag.LoginUsers as IEnumerable<foodbook.Models.User>)
+                            @foreach (var user in ViewBag.LoginUsers as IEnumerable<foodbook.Models.UserLogin>)
                             {
                                 <tr>
                                     <td>@user.username</td>
                                     <td>@user.email</td>
-                                    <td>User</td>
+                                    <td>@user.role</td>
                                     <td>@user.status</td>
-                                    <td>@(user.is_verified == true ? "✅" : "❌")</td>
                                     <td>@(user.password?.Substring(0, Math.Min(5, user.password.Length)) ?? "null")</td>
                                 </tr>
                             }
@@ -84,19 +71,17 @@
                                 <th>Email</th>
                                 <th>Role</th>
                                 <th>Status</th>
-                                <th>Verified</th>
                                 <th>Password (first 5 chars)</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach (var user in ViewBag.RegisterUsers as IEnumerable<foodbook.Models.UserTrigger>)
+                            @foreach (var user in ViewBag.RegisterUsers as IEnumerable<foodbook.Models.User>)
                             {
                                 <tr>
                                     <td>@user.username</td>
                                     <td>@user.email</td>
-                                    <td>User</td>
+                                    <td>@user.role</td>
                                     <td>@user.status</td>
-                                    <td>@(user.is_verified == true ? "✅" : "❌")</td>
                                     <td>@(user.password?.Substring(0, Math.Min(5, user.password.Length)) ?? "null")</td>
                                 </tr>
                             }
