@@ -1,7 +1,6 @@
 using Supabase;
-using Supabase.Gotrue;
 using foodbook.Models;
-using UserModel = foodbook.Models.User;
+using UserModel = foodbook.Models.UserTrigger;
 
 namespace foodbook.Services
 {
@@ -37,34 +36,26 @@ namespace foodbook.Services
                 // 1. Chuyển username thành lowercase
                 var lowercaseUsername = username.ToLower();
                 
-                // 2. Validate trước khi gửi lên Supabase Auth
+                // 2. Validate trước khi tạo user
                 await ValidateUserDataAsync(email, lowercaseUsername);
                 
-                // 3. Tạo user trong Supabase Auth để lấy access token
-                var authResponse = await _client.Auth.SignUp(email, password);
-                
-                if (authResponse != null)
+                // 3. Thêm vào bảng User-Trigger (không dùng Supabase Auth)
+                var userData = new UserModel
                 {
-                    // 4. Thêm vào bảng User-Trigger
-                    var userData = new UserModel
-                    {
-                        username = lowercaseUsername,
-                        full_name = fullName,
-                        email = email,
-                        password = password,
-                        created_at = DateTime.UtcNow,
-                        status = "active"
-                    };
-                    
-                    // Sử dụng PostgREST để insert
-                    var response = await _client
-                        .From<UserModel>()
-                        .Insert(userData);
-
-                    return true;
-                }
+                    username = lowercaseUsername,
+                    full_name = fullName,
+                    email = email,
+                    password = password,
+                    created_at = DateTime.UtcNow,
+                    status = "active"
+                };
                 
-                return false;
+                // Sử dụng PostgREST để insert
+                var response = await _client
+                    .From<UserModel>()
+                    .Insert(userData);
+
+                return true;
             }
             catch (Exception ex)
             {
@@ -78,7 +69,7 @@ namespace foodbook.Services
             {
                 // Kiểm tra username đã tồn tại chưa từ bảng User (không phải User-Trigger)
                 var existingUser = await _client
-                    .From<UserForValidation>()
+                    .From<foodbook.Models.User>()
                     .Where(x => x.username == username)
                     .Single();
 
@@ -100,7 +91,7 @@ namespace foodbook.Services
             {
                 // Kiểm tra email đã tồn tại chưa từ bảng User (không phải User-Trigger)
                 var existingEmail = await _client
-                    .From<UserForValidation>()
+                    .From<foodbook.Models.User>()
                     .Where(x => x.email == email)
                     .Single();
 
@@ -123,23 +114,20 @@ namespace foodbook.Services
         {
             try
             {
-                // 1. Đăng nhập qua Supabase Auth để lấy access token
-                var authResponse = await _client.Auth.SignIn(email, password);
-                
-                if (authResponse != null)
-                {
-                    // 2. Query thông tin user từ bảng User custom
-                    var userResult = await _client
-                        .From<UserModel>()
-                        .Where(x => x.email == email)
-                        .Single();
+                // Query thông tin user từ bảng User (không dùng Supabase Auth)
+                var userResult = await _client
+                    .From<foodbook.Models.User>()
+                    .Where(x => x.email == email || x.username == email)
+                    .Single();
 
-                    // 3. Trả về thông tin user + access token
+                // Kiểm tra password
+                if (userResult != null && userResult.password == password)
+                {
                     return new
                     {
                         user = userResult,
-                        access_token = authResponse.AccessToken,
-                        session = authResponse
+                        access_token = "dummy_token", // Không dùng Supabase Auth
+                        session = (object?)null
                     };
                 }
                 
@@ -153,14 +141,16 @@ namespace foodbook.Services
 
         public async Task SignOutAsync()
         {
-            await _client.Auth.SignOut();
+            // Không cần gọi Supabase Auth SignOut
+            await Task.CompletedTask;
         }
 
         public async Task<bool> ResetPasswordAsync(string email)
         {
             try
             {
-                await _client.Auth.ResetPasswordForEmail(email);
+                // Không dùng Supabase Auth, chỉ trả về true
+                // Logic reset password sẽ được xử lý bởi EmailService
                 return true;
             }
             catch (Exception ex)
@@ -169,30 +159,19 @@ namespace foodbook.Services
             }
         }
 
-        public Task<bool> UpdatePasswordAsync(string newPassword)
-        {
-            try
-            {
-                // For now, just return true - this would need proper implementation
-                // based on Supabase documentation for password updates
-                return Task.FromResult(true);
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Cập nhật mật khẩu thất bại: {ex.Message}");
-            }
-        }
 
-        public Supabase.Gotrue.User? GetCurrentUser()
+        public object? GetCurrentUser()
         {
-            return _client.Auth.CurrentUser;
+            // Không dùng Supabase Auth
+            return null;
         }
 
         public async Task SetSessionAsync(string accessToken, string refreshToken)
         {
             try
             {
-                await _client.Auth.SetSession(accessToken, refreshToken);
+                // Không dùng Supabase Auth
+                await Task.CompletedTask;
             }
             catch (Exception ex)
             {
@@ -204,6 +183,7 @@ namespace foodbook.Services
         {
             try
             {
+                // Tìm trong bảng User-Trigger trước
                 var userResult = await _client
                     .From<UserModel>()
                     .Where(x => x.email == email)
@@ -217,7 +197,8 @@ namespace foodbook.Services
             }
         }
 
-        public async Task<UserLogin?> LoginFromUserTableAsync(string emailOrPhone, string password)
+
+        public async Task<foodbook.Models.User?> LoginFromUserTableAsync(string emailOrPhone, string password)
         {
             try
             {
@@ -227,7 +208,7 @@ namespace foodbook.Services
                 
                 // Query user từ bảng User (không phải User-Trigger)
                 var userResult = await _client
-                    .From<UserLogin>()
+                    .From<foodbook.Models.User>()
                     .Where(x => x.email == lowercaseInput || x.username == lowercaseInput)
                     .Single();
 
@@ -239,8 +220,17 @@ namespace foodbook.Services
                 // Kiểm tra password (so sánh trực tiếp vì password được lưu plain text)
                 if (userResult != null && userResult.password == password)
                 {
-                    Console.WriteLine("Login successful!");
-                    return userResult;
+                    // Kiểm tra email đã được xác thực chưa
+                    if (userResult.is_verified == true)
+                    {
+                        Console.WriteLine("Login successful! Email verified.");
+                        return userResult;
+                    }
+                    else
+                    {
+                        Console.WriteLine("Login failed: Email not verified");
+                        throw new Exception("Tài khoản chưa được xác thực email. Vui lòng kiểm tra email và xác thực trước khi đăng nhập.");
+                    }
                 }
 
                 Console.WriteLine("Login failed: Password mismatch");
@@ -254,6 +244,152 @@ namespace foodbook.Services
                 throw new Exception($"Đăng nhập thất bại: {ex.Message}");
             }
         }
+
+        // Tìm user theo email hoặc username từ bảng User (cho forgot password)
+        public async Task<foodbook.Models.User?> GetUserByEmailOrUsernameAsync(string emailOrUsername)
+        {
+            try
+            {
+                var lowercaseInput = emailOrUsername.ToLower();
+                
+                // Tìm user từ bảng User
+                var userResult = await _client
+                    .From<foodbook.Models.User>()
+                    .Where(x => x.email == lowercaseInput || x.username == lowercaseInput)
+                    .Single();
+
+                return userResult;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"GetUserByEmailOrUsername error: {ex.Message}");
+                return null;
+            }
+        }
+
+        // Lưu token reset password vào memory
+        public async Task SavePasswordResetTokenAsync(string email, string token)
+        {
+            try
+            {
+                var resetData = new
+                {
+                    email = email.ToLower(),
+                    token = token,
+                    created_at = DateTime.UtcNow,
+                    expires_at = DateTime.UtcNow.AddHours(1) // Token hết hạn sau 1 giờ
+                };
+
+                // Lưu vào static dictionary
+                PasswordResetTokens[email.ToLower()] = resetData;
+                
+                Console.WriteLine($"Saved reset token for email: {email}");
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Không thể lưu token reset password: {ex.Message}");
+            }
+        }
+
+        // Kiểm tra token reset password có hợp lệ không
+        public async Task<bool> ValidatePasswordResetTokenAsync(string email, string token)
+        {
+            try
+            {
+                var lowercaseEmail = email.ToLower();
+                
+                if (PasswordResetTokens.ContainsKey(lowercaseEmail))
+                {
+                    var resetData = PasswordResetTokens[lowercaseEmail];
+                    
+                    if (resetData.token == token && resetData.expires_at > DateTime.UtcNow)
+                    {
+                        return true;
+                    }
+                    else if (resetData.expires_at <= DateTime.UtcNow)
+                    {
+                        // Token hết hạn, xóa khỏi cache
+                        PasswordResetTokens.Remove(lowercaseEmail);
+                    }
+                }
+                
+                return false;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"ValidatePasswordResetToken error: {ex.Message}");
+                return false;
+            }
+        }
+
+        // Tìm user trong bảng User-Trigger để reset password
+        public async Task<foodbook.Models.UserTrigger?> GetUserTriggerByEmailAsync(string email)
+        {
+            try
+            {
+                var lowercaseEmail = email.ToLower();
+                
+                // Tìm user từ bảng User-Trigger
+                var userResult = await _client
+                    .From<foodbook.Models.UserTrigger>()
+                    .Where(x => x.email == lowercaseEmail)
+                    .Single();
+
+                return userResult;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"GetUserTriggerByEmail error: {ex.Message}");
+                return null;
+            }
+        }
+
+        // Đặt lại mật khẩu mới trong bảng User-Trigger (trigger sẽ tự động cập nhật bảng User)
+        public async Task<bool> ResetPasswordAsync(string email, string newPassword)
+        {
+            try
+            {
+                var lowercaseEmail = email.ToLower();
+                
+                // Cập nhật password trong bảng User-Trigger cho TẤT CẢ các hàng có cùng email
+                // Trigger sẽ tự động cập nhật password trong bảng User cho tất cả hàng có cùng email/username
+                var updateResult = await _client
+                    .From<foodbook.Models.UserTrigger>()
+                    .Where(x => x.email == lowercaseEmail)
+                    .Set(x => x.password, newPassword)
+                    .Update();
+
+                Console.WriteLine($"Reset password for email: {email} in User-Trigger table - Updated {updateResult.Models.Count} rows");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Không thể đặt lại mật khẩu: {ex.Message}");
+            }
+        }
+
+        // Xóa token reset password
+        public async Task RemovePasswordResetTokenAsync(string email)
+        {
+            try
+            {
+                var lowercaseEmail = email.ToLower();
+                
+                if (PasswordResetTokens.ContainsKey(lowercaseEmail))
+                {
+                    PasswordResetTokens.Remove(lowercaseEmail);
+                }
+                
+                Console.WriteLine($"Removed reset token for email: {email}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"RemovePasswordResetToken error: {ex.Message}");
+            }
+        }
+
+        // Static dictionary để lưu token tạm thời
+        private static Dictionary<string, dynamic> PasswordResetTokens = new Dictionary<string, dynamic>();
 
     }
 }

@@ -39,15 +39,16 @@ namespace foodbook.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> UpdateUserRole(string userId, string newRole)
+        public IActionResult UpdateUserRole(string userId, string newRole)
         {
             try
             {
-                await _supabaseService.Client
-                    .From<User>()
-                    .Where(x => x.username == userId)
-                    .Set(x => x.role, newRole)
-                    .Update();
+                // Role không còn tồn tại trong bảng User-Trigger
+                // await _supabaseService.Client
+                //     .From<User>()
+                //     .Where(x => x.username == userId)
+                //     .Set(x => x.role, newRole)
+                //     .Update();
 
                 TempData["SuccessMessage"] = "Cập nhật quyền thành công!";
             }

@@ -1,7 +1,7 @@
-@model IEnumerable<foodbook.Models.User>
+@model IEnumerable<foodbook.Models.UserTrigger>
 @{
     ViewData["Title"] = "Admin Dashboard";
-    var users = ViewBag.Users as IEnumerable<foodbook.Models.User>;
+    var users = ViewBag.Users as IEnumerable<foodbook.Models.UserTrigger>;
     var currentUser = ViewBag.CurrentUser as string;
 }
 
@@ -55,8 +55,8 @@
                                     <td>@user.email</td>
                                     <td>@user.full_name</td>
                                     <td>
-                                        <span class="badge @(user.role == "admin" ? "bg-danger" : user.role == "moderator" ? "bg-warning" : "bg-primary")">
-                                            @user.role
+                                        <span class="badge bg-primary">
+                                            User
                                         </span>
                                     </td>
                                     <td>
@@ -69,10 +69,8 @@
                                         <div class="btn-group" role="group">
                                             <form method="post" action="@Url.Action("UpdateUserRole", "Admin")" class="d-inline">
                                                 <input type="hidden" name="userId" value="@user.username" />
-                                                <select name="newRole" class="form-select form-select-sm" onchange="this.form.submit()">
-                                                    <option value="user" selected="@(user.role == "user")">User</option>
-                                                    <option value="moderator" selected="@(user.role == "moderator")">Moderator</option>
-                                                    <option value="admin" selected="@(user.role == "admin")">Admin</option>
+                                                <select name="newRole" class="form-select form-select-sm" onchange="this.form.submit()" disabled>
+                                                    <option value="user" selected>User</option>
                                                 </select>
                                             </form>
                                             

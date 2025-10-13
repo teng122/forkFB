@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.DataProtection;
+
 namespace foodbook
 {
     public class Program
@@ -9,6 +11,11 @@ namespace foodbook
             // Add services to the container.
             builder.Services.AddControllersWithViews();
             
+            // Add Data Protection
+            builder.Services.AddDataProtection()
+                .SetApplicationName("Foodbook")
+                .PersistKeysToFileSystem(new DirectoryInfo("/tmp/keys"));
+
             // Add session support
             builder.Services.AddDistributedMemoryCache();
             builder.Services.AddSession(options =>
@@ -20,6 +27,9 @@ namespace foodbook
             
             // Add Supabase service
             builder.Services.AddSingleton<foodbook.Services.SupabaseService>();
+            
+            // Add Email service
+            builder.Services.AddScoped<foodbook.Services.EmailService>();
 
             var app = builder.Build();
 
