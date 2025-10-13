@@ -1,48 +1,116 @@
 /* Please see documentation at https://learn.microsoft.com/aspnet/core/client-side/bundling-and-minification
 for details on configuring this project to bundle and minify static web assets. */
 
+/* ==================== ORIGINAL STYLES ==================== */
 a.navbar-brand[b-n8ibmz921k] {
-  white-space: normal;
-  text-align: center;
-  word-break: break-all;
+    white-space: normal;
+    text-align: center;
+    word-break: break-all;
 }
 
 a[b-n8ibmz921k] {
-  color: #0077cc;
+    color: #0077cc;
 }
 
 .btn-primary[b-n8ibmz921k] {
-  color: #fff;
-  background-color: #1b6ec2;
-  border-color: #1861ac;
+    color: #fff;
+    background-color: #1b6ec2;
+    border-color: #1861ac;
 }
 
 .nav-pills .nav-link.active[b-n8ibmz921k], .nav-pills .show > .nav-link[b-n8ibmz921k] {
-  color: #fff;
-  background-color: #1b6ec2;
-  border-color: #1861ac;
+    color: #fff;
+    background-color: #1b6ec2;
+    border-color: #1861ac;
 }
 
 .border-top[b-n8ibmz921k] {
-  border-top: 1px solid #e5e5e5;
+    border-top: 1px solid #e5e5e5;
 }
+
 .border-bottom[b-n8ibmz921k] {
-  border-bottom: 1px solid #e5e5e5;
+    border-bottom: 1px solid #e5e5e5;
 }
 
 .box-shadow[b-n8ibmz921k] {
-  box-shadow: 0 .25rem .75rem rgba(0, 0, 0, .05);
+    box-shadow: 0 .25rem .75rem rgba(0, 0, 0, .05);
 }
 
 button.accept-policy[b-n8ibmz921k] {
-  font-size: 1rem;
-  line-height: inherit;
+    font-size: 1rem;
+    line-height: inherit;
 }
 
 .footer[b-n8ibmz921k] {
-  position: absolute;
-  bottom: 0;
-  width: 100%;
-  white-space: nowrap;
-  line-height: 60px;
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    white-space: nowrap;
+    line-height: 60px;
+}
+
+/* ==================== NEW STYLES FOR FIXED HEADER & SIDEBAR ==================== */
+html[b-n8ibmz921k], body[b-n8ibmz921k] {
+    height: 100%;
+    margin: 0;
+}
+
+body[b-n8ibmz921k] {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    padding-top: 0;
+}
+
+/* Fixed Header */
+header[b-n8ibmz921k] {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1030;
+    background-color: white;
+}
+
+/* Main Content Wrapper */
+.main-content-wrapper[b-n8ibmz921k] {
+    flex: 1 0 auto;
+    margin-top: 76px; /* Space for fixed header */
+}
+
+.container[b-n8ibmz921k] {
+    flex: 1;
+}
+
+/* Footer Section */
+.footer-section[b-n8ibmz921k] {
+    flex-shrink: 0;
+    margin-top: auto;
+    padding: 20px 0;
+    background-color: #f8f9fa;
+    border-top: 1px solid #e5e5e5;
+    margin-bottom: -60px
+}
+
+.social-link[b-n8ibmz921k] {
+    transition: color 0.3s;
+}
+
+    .social-link:hover[b-n8ibmz921k] {
+        color: #0077cc !important;
+    }
+
+.text-gray[b-n8ibmz921k] {
+    color: #6c757d;
+}
+
+.text-green[b-n8ibmz921k] {
+    color: #28a745;
+}
+
+/* Responsive */
+@media (max-width: 991.98px) {
+    .main-content-wrapper[b-n8ibmz921k] {
+        margin-top: 66px; /* Smaller margin for mobile */
+    }
 }

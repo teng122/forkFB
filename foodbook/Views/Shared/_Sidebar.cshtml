@@ -1,5 +1,60 @@
 ﻿@using foodbook.Helpers
 
+@if (Context.Session.IsAdmin())
+{
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h5 class="text-uppercase fw-bold mb-3">ADMIN PANEL</h5>
+        </div>
+
+        <nav class="sidebar-nav">
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link d-flex align-items-center text-gray" asp-controller="Dashboard" asp-action="Index">
+                        <i class="bi bi-house me-2"></i>
+                        <span>Tổng quan hệ thống</span>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link d-flex align-items-center text-gray" asp-controller="User" asp-action="Index">
+                        <i class="bi bi-person me-2"></i>
+                        <span>Quản lý người dùng</span>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link d-flex align-items-center text-gray" asp-controller="Content" asp-action="Review">
+                        <i class="bi bi-lock me-2"></i>
+                        <span>Kiểm duyệt nội dung</span>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link d-flex align-items-center text-gray" asp-controller="Category" asp-action="Index">
+                        <i class="bi bi-gear me-2"></i>
+                        <span>Quản lý phân loại</span>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link d-flex align-items-center text-gray" asp-controller="Ingredient" asp-action="Index">
+                        <i class="bi bi-funnel me-2"></i>
+                        <span>Quản lý nguyên liệu</span>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link d-flex align-items-center text-gray" asp-controller="Report" asp-action="Index">
+                        <i class="bi bi-file-earmark-text me-2"></i>
+                        <span>Báo cáo thống kê</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+}
+
 <div class="sidebar">
     <div class="sidebar-header">
         <h5 class="text-uppercase fw-bold mb-3">TÀI KHOẢN CỦA TÔI</h5>
