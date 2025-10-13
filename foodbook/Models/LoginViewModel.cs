@@ -4,8 +4,8 @@ namespace foodbook.Models
 {
     public class LoginViewModel
     {
-        [Display(Name = "Tên đăng nhập hoặc Email")]
-        [Required(ErrorMessage = "Vui lòng nhập tên đăng nhập hoặc email")]
+        [Display(Name = "Email hoặc Số điện thoại")]
+        [Required(ErrorMessage = "Vui lòng nhập email hoặc số điện thoại")]
         public string EmailOrPhone { get; set; } = string.Empty;
 
         [Display(Name = "Mật khẩu")]

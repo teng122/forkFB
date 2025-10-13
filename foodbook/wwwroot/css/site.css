@@ -18,7 +18,7 @@ html {
 }
 
 .navbar-brand {
-  font-size: 1.25rem;
+  font-size: 1.5rem;
   font-weight: bold;
 }
 
@@ -52,25 +52,21 @@ html {
 }
 
 .btn-danger {
-  background-color: transparent;
-  color: #dc3545;
-  border: 1px solid #dc3545;
+  background-color: #dc3545;
+  border-color: #dc3545;
   padding: 0.5rem 1rem;
 }
 
 .btn-danger:hover {
-  background-color: #dc3545;
-  color: white;
-  border-color: #dc3545;
+  background-color: #c82333;
+  border-color: #bd2130;
 }
 
 /* Outlined logout button */
 .btn-logout {
   background-color: transparent !important;
   color: #dc3545 !important;
-  border: 1px solid #dc3545 !important;
-  padding: 0.5rem 1rem !important;
-  font-weight: 500 !important;
+  border: 1px solid rgba(220, 53, 69, 0.5) !important;
 }
 
 .btn-logout:hover {
@@ -139,11 +135,10 @@ main {
   white-space: nowrap;
 }
 
-/* Login, Register, Forgot Password, Reset Password and Change Password card sizing */
+/* Login, Register, Forgot Password and Change Password card sizing */
 .login-card,
 .register-card,
 .forgot-password-card,
-.reset-password-card,
 .change-password-card {
   width: 100%;
   max-width: 460px;
@@ -153,7 +148,6 @@ main {
   .login-card,
   .register-card,
   .forgot-password-card,
-  .reset-password-card,
   .change-password-card {
     max-width: 600px;
   }
@@ -161,7 +155,6 @@ main {
   .login-card .card-body,
   .register-card .card-body,
   .forgot-password-card .card-body,
-  .reset-password-card .card-body,
   .change-password-card .card-body {
     padding: 3rem !important;
   }
@@ -169,7 +162,6 @@ main {
   .login-card h4,
   .register-card h4,
   .forgot-password-card h4,
-  .reset-password-card h4,
   .change-password-card h4 {
     font-size: 1.75rem;
     margin-bottom: 1rem !important;
@@ -178,7 +170,6 @@ main {
   .login-card .balance-hero,
   .register-card .balance-hero,
   .forgot-password-card .balance-hero,
-  .reset-password-card .balance-hero,
   .change-password-card .balance-hero {
     font-size: 1.1rem !important;
     margin-bottom: 2rem !important;
@@ -187,7 +178,6 @@ main {
   .login-card .form-label,
   .register-card .form-label,
   .forgot-password-card .form-label,
-  .reset-password-card .form-label,
   .change-password-card .form-label {
     font-size: 1.1rem;
     margin-bottom: 0.75rem;
@@ -196,7 +186,6 @@ main {
   .login-card .form-control,
   .register-card .form-control,
   .forgot-password-card .form-control,
-  .reset-password-card .form-control,
   .change-password-card .form-control {
     font-size: 1.1rem;
     padding: 0.75rem 1rem;
@@ -206,7 +195,6 @@ main {
   .login-card .btn,
   .register-card .btn,
   .forgot-password-card .btn,
-  .reset-password-card .btn,
   .change-password-card .btn {
     font-size: 1.1rem;
     padding: 0.75rem 1.5rem;
@@ -215,7 +203,6 @@ main {
   .login-card .btn-success,
   .register-card .btn-success,
   .forgot-password-card .btn-success,
-  .reset-password-card .btn-success,
   .change-password-card .btn-success {
     margin-bottom: 1.5rem;
   }
@@ -223,7 +210,6 @@ main {
   .login-card .text-center.text-muted.my-3,
   .register-card .text-center.text-muted.my-3,
   .forgot-password-card .text-center.text-muted.my-3,
-  .reset-password-card .text-center.text-muted.my-3,
   .change-password-card .text-center.text-muted.my-3 {
     font-size: 1rem;
     margin: 2rem 0 !important;
@@ -232,7 +218,6 @@ main {
   .login-card .d-grid .btn,
   .register-card .d-grid .btn,
   .forgot-password-card .d-grid .btn,
-  .reset-password-card .d-grid .btn,
   .change-password-card .d-grid .btn {
     font-size: 1rem;
     padding: 0.75rem 1rem;
@@ -241,7 +226,6 @@ main {
   .login-card .text-center.mt-4,
   .register-card .text-center.mt-4,
   .forgot-password-card .text-center.mt-4,
-  .reset-password-card .text-center.mt-4,
   .change-password-card .text-center.mt-4 {
     font-size: 1rem;
     margin-top: 2rem !important;
@@ -252,7 +236,6 @@ main {
   .login-card,
   .register-card,
   .forgot-password-card,
-  .reset-password-card,
   .change-password-card {
     max-width: 650px;
   }
@@ -260,7 +243,6 @@ main {
   .login-card .card-body,
   .register-card .card-body,
   .forgot-password-card .card-body,
-  .reset-password-card .card-body,
   .change-password-card .card-body {
     padding: 3.5rem !important;
   }
@@ -268,7 +250,6 @@ main {
   .login-card h4,
   .register-card h4,
   .forgot-password-card h4,
-  .reset-password-card h4,
   .change-password-card h4 {
     font-size: 2rem;
   }
@@ -276,7 +257,6 @@ main {
   .login-card .balance-hero,
   .register-card .balance-hero,
   .forgot-password-card .balance-hero,
-  .reset-password-card .balance-hero,
   .change-password-card .balance-hero {
     font-size: 1.2rem !important;
   }
@@ -284,7 +264,6 @@ main {
   .login-card .form-label,
   .register-card .form-label,
   .forgot-password-card .form-label,
-  .reset-password-card .form-label,
   .change-password-card .form-label {
     font-size: 1.15rem;
   }
@@ -292,7 +271,6 @@ main {
   .login-card .form-control,
   .register-card .form-control,
   .forgot-password-card .form-control,
-  .reset-password-card .form-control,
   .change-password-card .form-control {
     font-size: 1.15rem;
     padding: 0.875rem 1.125rem;
@@ -301,7 +279,6 @@ main {
   .login-card .btn,
   .register-card .btn,
   .forgot-password-card .btn,
-  .reset-password-card .btn,
   .change-password-card .btn {
     font-size: 1.15rem;
     padding: 0.875rem 1.75rem;
