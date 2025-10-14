@@ -20,4 +20,3 @@ namespace foodbook.Attributes
         }
     }
 }
-
