@@ -1,8 +1,170 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+﻿@using foodbook.Helpers
+@{
+    ViewData["Title"] = "Bảng tin";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="row g-4">
+    <div class="col-12 col-lg-3">
+        <div class="card sidebar-card sticky-sidebar">
+            <div class="card-body">
+
+                @if (Context.Session.IsAdmin())
+                {
+                    <div class="mb-4">
+                        <div class="sidebar-section-title">ADMIN PANEL</div>
+                        <ul class="sidebar-menu mb-0">
+                            <li class="sidebar-item active">
+                                <a class="sidebar-link" asp-controller="Admin" asp-action="Dashboard">
+                                    <i class="bi bi-speedometer2 me-2"></i> Tổng quan hệ thống
+                                </a>
+                            </li>
+                            <li class="sidebar-item">
+                                <a class="sidebar-link" asp-controller="Admin" asp-action="Dashboard">
+                                    <i class="bi bi-people me-2"></i> Quản lý người dùng
+                                </a>
+                            </li>
+                            <li class="sidebar-item">
+                                <a class="sidebar-link" asp-controller="Admin" asp-action="Dashboard">
+                                    <i class="bi bi-patch-check me-2"></i> Kiểm duyệt nội dung
+                                </a>
+                            </li>
+                            <li class="sidebar-item">
+                                <a class="sidebar-link" asp-controller="Admin" asp-action="Dashboard">
+                                    <i class="bi bi-tags me-2"></i> Quản lý phân loại
+                                </a>
+                            </li>
+                            <li class="sidebar-item">
+                                <a class="sidebar-link" asp-controller="Admin" asp-action="Dashboard">
+                                    <i class="bi bi-basket3 me-2"></i> Quản lý nguyên liệu
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                }
+
+                <div class="sidebar-section-title">TÀI KHOẢN CỦA TÔI</div>
+                <ul class="sidebar-menu mb-0" id="my-account-menu">
+                    <li class="sidebar-item">
+                        <a class="sidebar-link" asp-controller="Account" asp-action="Profile">
+                            <i class="bi bi-person me-2"></i> Hồ sơ của tôi
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a class="sidebar-link" href="#">
+                            <i class="bi bi-bookmark-check me-2"></i> Sổ tay của tôi
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a class="sidebar-link" href="#">
+                            <i class="bi bi-plus-square me-2"></i> Thêm công thức mới
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a class="sidebar-link" href="#">
+                            <i class="bi bi-gear me-2"></i> Cài đặt
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-lg-9">
+        <div class="row g-4">
+            <div class="col-12 col-md-6">
+                <div class="feed-card card h-100">
+                    <div class="card-body">
+                        <div class="feed-author d-flex align-items-center mb-3">
+                            <img src="https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?q=80&w=200&auto=format&fit=crop" class="rounded-circle me-2" style="width:36px;height:36px;object-fit:cover;" alt="avatar">
+                            <div>
+                                <div class="fw-semibold">Sarah_Cooks</div>
+                                <div class="small text-muted">Theo dõi</div>
+                            </div>
+                        </div>
+                        <img class="feed-image rounded w-100 mb-3" src="https://images.unsplash.com/photo-1521389508051-d7ffb5dc8bbf?q=80&w=1000&auto=format&fit=crop" alt="pasta" />
+                        <h5 class="fw-bold mb-2">Mì ống sốt Pesto tươi</h5>
+                        <div class="d-flex align-items-center text-muted small">
+                            <a href="#" class="me-3 text-decoration-none"><i class="bi bi-hand-thumbs-up"></i> 90</a>
+                            <a href="#" class="me-3 text-decoration-none"><i class="bi bi-chat"></i> 32</a>
+                            <span><i class="bi bi-share"></i> 1</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-md-6">
+                <div class="feed-card card h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            <img src="https://images.unsplash.com/photo-1546525848-3ce03ca516f6?q=80&w=200&auto=format&fit=crop" class="rounded-circle me-2" style="width:36px;height:36px;object-fit:cover;" alt="avatar">
+                            <div>
+                                <div class="fw-semibold">ChefMike</div>
+                                <div class="small text-muted">Đang theo dõi</div>
+                            </div>
+                        </div>
+                        <img class="feed-image rounded w-100 mb-3" src="https://images.unsplash.com/photo-1550547660-d9450f859349?q=80&w=1000&auto=format&fit=crop" alt="burger" />
+                        <h5 class="fw-bold mb-2">Mì ống sốt Pesto tươi</h5>
+                        <div class="d-flex align-items-center text-muted small">
+                            <a href="#" class="me-3 text-decoration-none"><i class="bi bi-hand-thumbs-up"></i> 50</a>
+                            <a href="#" class="me-3 text-decoration-none"><i class="bi bi-chat"></i> 32</a>
+                            <span><i class="bi bi-share"></i> 1</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-md-6">
+                <div class="feed-card card h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            <img src="https://images.unsplash.com/photo-1559620192-032c4bc4674e?q=80&w=200&auto=format&fit=crop" class="rounded-circle me-2" style="width:36px;height:36px;object-fit:cover;" alt="avatar">
+                            <div>
+                                <div class="fw-semibold">GrandmaBakes</div>
+                                <div class="small text-muted">Theo dõi</div>
+                            </div>
+                        </div>
+                        <img class="feed-image rounded w-100 mb-3" src="https://images.unsplash.com/photo-1549576490-b0b4831ef60a?q=80&w=1000&auto=format&fit=crop" alt="pie" />
+                        <h5 class="fw-bold mb-2">Mì ống sốt Pesto tươi</h5>
+                        <div class="d-flex align-items-center text-muted small">
+                            <a href="#" class="me-3 text-decoration-none"><i class="bi bi-hand-thumbs-up"></i> 54</a>
+                            <a href="#" class="me-3 text-decoration-none"><i class="bi bi-chat"></i> 32</a>
+                            <span><i class="bi bi-share"></i> 1</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-md-6">
+                <div class="feed-card card h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            <img src="https://images.unsplash.com/photo-1548943487-a2e4e43b4854?q=80&w=200&auto=format&fit=crop" class="rounded-circle me-2" style="width:36px;height:36px;object-fit:cover;" alt="avatar">
+                            <div>
+                                <div class="fw-semibold">SushiMaster</div>
+                                <div class="small text-muted">Đang theo dõi</div>
+                            </div>
+                        </div>
+                        <img class="feed-image rounded w-100 mb-3" src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=1000&auto=format&fit=crop" alt="sushi" />
+                        <h5 class="fw-bold mb-2">Mì ống sốt Pesto tươi</h5>
+                        <div class="d-flex align-items-center text-muted small">
+                            <a href="#" class="me-3 text-decoration-none"><i class="bi bi-hand-thumbs-up"></i> 12</a>
+                            <a href="#" class="me-3 text-decoration-none"><i class="bi bi-chat"></i> 21</a>
+                            <span><i class="bi bi-share"></i> 1</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('.sidebar-menu .sidebar-link').forEach(function (link) {
+                link.addEventListener('click', function () {
+                    var li = this.closest('.sidebar-menu').querySelectorAll('.sidebar-item');
+                    li.forEach(function (i) { i.classList.remove('active'); });
+                    this.closest('.sidebar-item').classList.add('active');
+                });
+            });
+        });
+    </script>
 </div>

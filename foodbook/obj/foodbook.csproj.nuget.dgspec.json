@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\huhum\\Documents\\Github\\foodbook\\foodbook\\foodbook.csproj": {}
+    "C:\\Users\\huhum\\Documents\\Github\\New folder (2)\\foodbook\\foodbook\\foodbook.csproj": {}
   },
   "projects": {
-    "C:\\Users\\huhum\\Documents\\Github\\foodbook\\foodbook\\foodbook.csproj": {
+    "C:\\Users\\huhum\\Documents\\Github\\New folder (2)\\foodbook\\foodbook\\foodbook.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\huhum\\Documents\\Github\\foodbook\\foodbook\\foodbook.csproj",
+        "projectUniqueName": "C:\\Users\\huhum\\Documents\\Github\\New folder (2)\\foodbook\\foodbook\\foodbook.csproj",
         "projectName": "foodbook",
-        "projectPath": "C:\\Users\\huhum\\Documents\\Github\\foodbook\\foodbook\\foodbook.csproj",
+        "projectPath": "C:\\Users\\huhum\\Documents\\Github\\New folder (2)\\foodbook\\foodbook\\foodbook.csproj",
         "packagesPath": "C:\\Users\\huhum\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\huhum\\Documents\\Github\\foodbook\\foodbook\\obj\\",
+        "outputPath": "C:\\Users\\huhum\\Documents\\Github\\New folder (2)\\foodbook\\foodbook\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
