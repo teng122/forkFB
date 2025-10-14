@@ -1,0 +1,20 @@
+# See https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
+## Build outputs
+bin/
+obj/
+## VS local settings
+.vs/
+*.user
+*.suo
+*.Cache
+*.ide
+## ASP.NET artifacts
+*/wwwroot/lib/
+## Rider/JetBrains
+.idea/
+## Others
+Thumbs.db
+*.log
+*.tmp
+*.rsuser
+launchSettings.json
