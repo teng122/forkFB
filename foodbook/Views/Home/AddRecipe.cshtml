@@ -1,0 +1,454 @@
+@model AddRecipeViewModel
+@{
+    ViewData["Title"] = "Thêm công thức mới";
+}
+
+<div class="add-recipe-container">
+    <div class="row">
+        <!-- Left Column - Main Form -->
+        <div class="col-lg-8">
+            <form asp-action="AddRecipe" method="post" enctype="multipart/form-data" id="addRecipeForm">
+                <div class="recipe-section">
+                    <h3 class="section-title">Tên công thức</h3>
+                    <input type="text" 
+                           class="form-control recipe-name-input" 
+                           asp-for="Name" 
+                           placeholder="VD: Cơm chiên">
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
+
+                <div class="recipe-section">
+                    <h3 class="section-title">Ảnh chính</h3>
+                    <div class="upload-area" id="mainMediaUpload" onclick="document.getElementById('mainMediaInput').click()">
+                        <input type="file" 
+                               asp-for="MainMedia" 
+                               class="d-none" 
+                               id="mainMediaInput"
+                               accept="image/*,video/*">
+                        <div class="upload-placeholder" id="mainMediaPlaceholder">
+                            <i class="bi bi-camera fs-1 text-muted"></i>
+                            <p class="text-muted mt-3">Nhấn để thêm ảnh hoặc video</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="recipe-section">
+                    <h3 class="section-title">Mô tả nguyên liệu</h3>
+                    <textarea class="form-control recipe-textarea" 
+                              asp-for="Description" 
+                              rows="6"
+                              placeholder="VD: 500g Ức gà không xương không da&#10;3 muỗng canh Mật ong&#10;2 muỗng canh Nước cốt chanh&#10;1 muỗng canh Dầu ô liu"></textarea>
+                </div>
+
+                <div class="recipe-section">
+                    <h3 class="section-title">Hướng dẫn từng bước</h3>
+                    <div id="stepsContainer">
+                        <!-- Step 1 -->
+                        <div class="step-item" data-step="1">
+                            <div class="step-header" data-bs-toggle="collapse" data-bs-target="#step1">
+                                <span class="step-label">Bước 1:</span>
+                                <i class="bi bi-chevron-down"></i>
+                            </div>
+                            <div class="collapse show" id="step1">
+                                <div class="step-content">
+                                    <label class="form-label">Mô tả bước</label>
+                                    <textarea class="form-control mb-3" 
+                                              name="Steps[0].Instruction" 
+                                              rows="3"
+                                              placeholder="Nhập mô tả chi tiết cho bước này..."></textarea>
+                                    
+                                    <label class="form-label">Ảnh minh họa (tùy chọn)</label>
+                                    <div class="step-image-upload">
+                                        <input type="file" 
+                                               name="Steps[0].StepImage" 
+                                               class="d-none step-image-input"
+                                               accept="image/*,video/*">
+                                        <div class="step-image-preview">
+                                            <i class="bi bi-camera fs-1 text-muted"></i>
+                                            <p class="text-muted">Nhấn để thêm ảnh</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <button type="button" class="btn btn-delete-step" onclick="deleteStep(1)">
+                                        <i class="bi bi-x"></i> Xóa bước
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Step 2 -->
+                        <div class="step-item" data-step="2">
+                            <div class="step-header collapsed" data-bs-toggle="collapse" data-bs-target="#step2">
+                                <span class="step-label">Bước 2:</span>
+                                <i class="bi bi-chevron-down"></i>
+                            </div>
+                            <div class="collapse" id="step2">
+                                <div class="step-content">
+                                    <label class="form-label">Mô tả bước</label>
+                                    <textarea class="form-control mb-3" 
+                                              name="Steps[1].Instruction" 
+                                              rows="3"
+                                              placeholder="Nhập mô tả chi tiết cho bước này..."></textarea>
+                                    
+                                    <label class="form-label">Ảnh minh họa (tùy chọn)</label>
+                                    <div class="step-image-upload">
+                                        <input type="file" 
+                                               name="Steps[1].StepImage" 
+                                               class="d-none step-image-input"
+                                               accept="image/*,video/*">
+                                        <div class="step-image-preview">
+                                            <i class="bi bi-camera fs-1 text-muted"></i>
+                                            <p class="text-muted">Nhấn để thêm ảnh</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <button type="button" class="btn btn-delete-step" onclick="deleteStep(2)">
+                                        <i class="bi bi-x"></i> Xóa bước
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="button" class="btn btn-add-step" onclick="addStep()">
+                        <i class="bi bi-plus-circle"></i> Thêm bước
+                    </button>
+                </div>
+
+                <div class="recipe-section">
+                    <button type="submit" class="btn btn-save-recipe">
+                        Lưu công thức
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Right Column - Sidebar Info -->
+        <div class="col-lg-4">
+            <div class="recipe-sidebar">
+                <!-- Nguyên liệu -->
+                <div class="recipe-info-section">
+                    <h5 class="recipe-info-title">Nguyên liệu</h5>
+                    <p class="recipe-info-subtitle">Thêm nguyên liệu/từ vực gắn 50</p>
+                    
+                    <div class="input-with-add-btn">
+                        <input type="text" 
+                               class="form-control autocomplete-input" 
+                               id="ingredientInput"
+                               placeholder="Nhập nguyên liệu...">
+                        <button type="button" class="btn btn-add-circle" onclick="addIngredientTag()">
+                            <i class="bi bi-plus-circle"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="autocomplete-dropdown" id="ingredientDropdown"></div>
+                    
+                    <div class="tags-container mt-3" id="ingredientTags"></div>
+                </div>
+
+                <!-- Phân loại -->
+                <div class="recipe-info-section">
+                    <h5 class="recipe-info-title">Phân Loại</h5>
+                    <p class="recipe-info-subtitle">Thêm phân loại (VD: Việt nam)</p>
+                    
+                    <div class="input-with-add-btn">
+                        <input type="text" 
+                               class="form-control autocomplete-input" 
+                               id="categoryInput"
+                               placeholder="Nhập phân loại...">
+                        <button type="button" class="btn btn-add-circle" onclick="addCategoryTag()">
+                            <i class="bi bi-plus-circle"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="autocomplete-dropdown" id="categoryDropdown"></div>
+                    
+                    <div class="tags-container mt-3" id="categoryTags"></div>
+                </div>
+
+                <!-- Thời gian nấu -->
+                <div class="recipe-info-section">
+                    <h5 class="recipe-info-title">Thời gian nấu</h5>
+                    <div class="time-input-group">
+                        <i class="bi bi-clock"></i>
+                        <input type="number" 
+                               class="form-control time-input" 
+                               asp-for="CookTime" 
+                               value="30">
+                        <span class="time-unit">phút</span>
+                    </div>
+                </div>
+
+                <!-- Độ khó -->
+                <div class="recipe-info-section">
+                    <h5 class="recipe-info-title">Độ khó</h5>
+                    <div class="difficulty-buttons">
+                        <button type="button" 
+                                class="btn btn-difficulty active" 
+                                data-level="dễ"
+                                onclick="selectDifficulty(this, 'dễ')">
+                            Dễ
+                        </button>
+                        <button type="button" 
+                                class="btn btn-difficulty" 
+                                data-level="trung bình"
+                                onclick="selectDifficulty(this, 'trung bình')">
+                            Trung bình
+                        </button>
+                        <button type="button" 
+                                class="btn btn-difficulty" 
+                                data-level="khó"
+                                onclick="selectDifficulty(this, 'khó')">
+                            Khó
+                        </button>
+                    </div>
+                    <input type="hidden" asp-for="Level" id="levelInput" value="dễ">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        let stepCount = 2;
+
+        // Mock data - trong thực tế sẽ fetch từ API
+        const mockIngredients = [
+            'Gà', 'Thịt bò', 'Thịt heo', 'Cá hồi', 'Cá ngừ', 'Tôm', 'Mực',
+            'Cơm', 'Mì', 'Phở', 'Bún', 'Miến', 'Bánh mì',
+            'Trứng', 'Sữa', 'Phô mai', 'Bơ', 'Dầu ô liu',
+            'Cà chua', 'Dưa chuột', 'Hành tây', 'Tỏi', 'Gừng',
+            'Mật ong', 'Đường', 'Muối', 'Tiêu', 'Nước mắm'
+        ];
+
+        const mockCategories = [
+            'Việt Nam', 'Trung Quốc', 'Nhật Bản', 'Hàn Quốc', 'Thái Lan',
+            'Món chay', 'Món mặn', 'Món khai vị', 'Món chính', 'Món tráng miệng',
+            'Món ăn sáng', 'Món ăn trưa', 'Món ăn tối', 'Món ăn vặt',
+            'Lẩu', 'Nướng', 'Xào', 'Chiên', 'Hấp', 'Luộc'
+        ];
+
+        let ingredientList = [];
+        let categoryList = [];
+
+        function setupAutocomplete(inputId, dropdownId, dataSource, onSelect) {
+            const input = document.getElementById(inputId);
+            const dropdown = document.getElementById(dropdownId);
+
+            input.addEventListener('input', function() {
+                const value = this.value.toLowerCase().trim();
+                dropdown.innerHTML = '';
+
+                if (value.length === 0) {
+                    dropdown.style.display = 'none';
+                    return;
+                }
+
+                const filtered = dataSource.filter(item => 
+                    item.toLowerCase().includes(value)
+                );
+
+                if (filtered.length > 0) {
+                    dropdown.style.display = 'block';
+                    filtered.slice(0, 5).forEach(item => {
+                        const div = document.createElement('div');
+                        div.className = 'autocomplete-item';
+                        div.textContent = item;
+                        div.onclick = function() {
+                            onSelect(item);
+                            input.value = '';
+                            dropdown.style.display = 'none';
+                        };
+                        dropdown.appendChild(div);
+                    });
+                } else {
+                    dropdown.style.display = 'none';
+                }
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!input.contains(e.target) && !dropdown.contains(e.target)) {
+                    dropdown.style.display = 'none';
+                }
+            });
+
+            // Enter key to add
+            input.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (this.value.trim()) {
+                        if (inputId === 'ingredientInput') {
+                            addIngredientTag();
+                        } else {
+                            addCategoryTag();
+                        }
+                    }
+                }
+            });
+        }
+
+        function addIngredientTag() {
+            const input = document.getElementById('ingredientInput');
+            const value = input.value.trim();
+            
+            if (!value) return;
+            
+            if (!ingredientList.includes(value)) {
+                ingredientList.push(value);
+                const container = document.getElementById('ingredientTags');
+                const tag = document.createElement('span');
+                tag.className = 'recipe-tag';
+                tag.innerHTML = `${value} <button type="button" onclick="removeIngredientTag(this, '${value}')">×</button>`;
+                container.appendChild(tag);
+                
+                // Nếu không có trong mock data, add vào (giả lập add vào DB)
+                if (!mockIngredients.includes(value)) {
+                    mockIngredients.push(value);
+                    console.log('Đã thêm nguyên liệu mới vào DB:', value);
+                }
+            }
+            
+            input.value = '';
+            document.getElementById('ingredientDropdown').style.display = 'none';
+        }
+
+        function addCategoryTag() {
+            const input = document.getElementById('categoryInput');
+            const value = input.value.trim();
+            
+            if (!value) return;
+            
+            if (!categoryList.includes(value)) {
+                categoryList.push(value);
+                const container = document.getElementById('categoryTags');
+                const tag = document.createElement('span');
+                tag.className = 'recipe-tag';
+                tag.innerHTML = `${value} <button type="button" onclick="removeCategoryTag(this, '${value}')">×</button>`;
+                container.appendChild(tag);
+                
+                // Nếu không có trong mock data, add vào (giả lập add vào DB)
+                if (!mockCategories.includes(value)) {
+                    mockCategories.push(value);
+                    console.log('Đã thêm phân loại mới vào DB:', value);
+                }
+            }
+            
+            input.value = '';
+            document.getElementById('categoryDropdown').style.display = 'none';
+        }
+
+        function removeIngredientTag(btn, value) {
+            ingredientList = ingredientList.filter(item => item !== value);
+            btn.parentElement.remove();
+        }
+
+        function removeCategoryTag(btn, value) {
+            categoryList = categoryList.filter(item => item !== value);
+            btn.parentElement.remove();
+        }
+
+        function addStep() {
+            stepCount++;
+            const stepsContainer = document.getElementById('stepsContainer');
+            const stepHtml = `
+                <div class="step-item" data-step="${stepCount}">
+                    <div class="step-header collapsed" data-bs-toggle="collapse" data-bs-target="#step${stepCount}">
+                        <span class="step-label">Bước ${stepCount}:</span>
+                        <i class="bi bi-chevron-down"></i>
+                    </div>
+                    <div class="collapse" id="step${stepCount}">
+                        <div class="step-content">
+                            <label class="form-label">Mô tả bước</label>
+                            <textarea class="form-control mb-3" 
+                                      name="Steps[${stepCount - 1}].Instruction" 
+                                      rows="3"
+                                      placeholder="Nhập mô tả chi tiết cho bước này..."></textarea>
+                            
+                            <label class="form-label">Ảnh minh họa (tùy chọn)</label>
+                            <div class="step-image-upload">
+                                <input type="file" 
+                                       name="Steps[${stepCount - 1}].StepImage" 
+                                       class="d-none step-image-input"
+                                       accept="image/*,video/*">
+                                <div class="step-image-preview" onclick="this.previousElementSibling.click()">
+                                    <i class="bi bi-camera fs-1 text-muted"></i>
+                                    <p class="text-muted">Nhấn để thêm ảnh</p>
+                                </div>
+                            </div>
+                            
+                            <button type="button" class="btn btn-delete-step" onclick="deleteStep(${stepCount})">
+                                <i class="bi bi-x"></i> Xóa bước
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            stepsContainer.insertAdjacentHTML('beforeend', stepHtml);
+        }
+
+        function deleteStep(stepNum) {
+            const stepItem = document.querySelector(`[data-step="${stepNum}"]`);
+            if (stepItem) {
+                stepItem.remove();
+            }
+        }
+
+        function selectDifficulty(btn, level) {
+            document.querySelectorAll('.btn-difficulty').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('levelInput').value = level;
+        }
+
+        // Image preview handlers
+        document.getElementById('mainMediaInput')?.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                const placeholder = document.getElementById('mainMediaPlaceholder');
+                reader.onload = function(e) {
+                    if (file.type.startsWith('image/')) {
+                        placeholder.innerHTML = `<img src="${e.target.result}" alt="Preview" class="upload-preview-img">`;
+                    } else if (file.type.startsWith('video/')) {
+                        placeholder.innerHTML = `<video src="${e.target.result}" class="upload-preview-img" controls></video>`;
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Step image preview handlers
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.step-image-preview')) {
+                const preview = e.target.closest('.step-image-preview');
+                const input = preview.previousElementSibling;
+                if (input && input.classList.contains('step-image-input')) {
+                    input.click();
+                }
+            }
+        });
+
+        document.addEventListener('change', function(e) {
+            if (e.target.classList.contains('step-image-input')) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    const preview = e.target.nextElementSibling;
+                    reader.onload = function(e) {
+                        preview.innerHTML = `<img src="${e.target.result}" alt="Step preview">`;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            }
+        });
+
+        // Initialize autocomplete on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            setupAutocomplete('ingredientInput', 'ingredientDropdown', mockIngredients, addIngredientTag);
+            setupAutocomplete('categoryInput', 'categoryDropdown', mockCategories, addCategoryTag);
+        });
+    </script>
+}
+
