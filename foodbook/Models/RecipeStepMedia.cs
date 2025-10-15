@@ -10,17 +10,20 @@ namespace foodbook.Models
         [Required]
         [Column("recipe_id")]
         public int recipe_id { get; set; }
-        
+
         [Required]
         [Column("step")]
         public int step { get; set; }
-        
+
         [Required]
         [Column("media_id")]
         public int media_id { get; set; }
-        
+
         [Column("display_order")]
         public int display_order { get; set; } = 1;
+        
+        [Column("created_at")]
+        public DateTime created_at { get; set; } = DateTime.UtcNow;
     }
 }
 
