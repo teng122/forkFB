@@ -20,7 +20,7 @@ namespace foodbook.Models
         [Required]
         public string password { get; set; } = string.Empty;
         
-        public byte[]? avatar_img { get; set; }
+        public string? avatar_img { get; set; }
         
         public string? bio { get; set; }
         
