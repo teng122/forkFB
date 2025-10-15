@@ -47,11 +47,12 @@ namespace foodbook.Controllers
                     HttpContext.Session.SetString("user_email", user.email);
                     HttpContext.Session.SetString("username", user.username);
                     HttpContext.Session.SetString("full_name", user.full_name ?? "");
+                    HttpContext.Session.SetString("avatar_img", user.avatar_img ?? "");
                     HttpContext.Session.SetString("role", user.role ?? "user"); // Lưu role để kiểm tra admin
                     
                     Console.WriteLine($"Session set: UserId={user.user_id}, Username={user.username}");
                     
-                    return RedirectToAction("Newsfeed", "Home");
+                    return RedirectToAction("Index", "Home");
                 }
                 else
                 {
@@ -268,9 +269,66 @@ namespace foodbook.Controllers
 
         [HttpGet]
         [LoginRequired]
+        public IActionResult ChangePassword()
+        {
+            return View(new ChangePasswordViewModel());
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [LoginRequired]
+        public async Task<IActionResult> ChangePassword(ChangePasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            try
+            {
+                var sessionEmail = HttpContext.Session.GetString("user_email");
+                var userId = HttpContext.Session.GetInt32("UserId") ?? 0;
+                if (string.IsNullOrEmpty(sessionEmail) || userId == 0)
+                {
+                    TempData["ErrorMessage"] = "Vui lòng đăng nhập lại.";
+                    return RedirectToAction("Login");
+                }
+
+                var success = await _supabaseService.ResetPasswordAsync(sessionEmail, model.NewPassword);
+                if (!success)
+                {
+                    TempData["ErrorMessage"] = "Không thể đổi mật khẩu. Vui lòng thử lại.";
+                    return View(model);
+                }
+
+                // Fallback: cập nhật trực tiếp bảng User để đảm bảo đồng bộ
+                try
+                {
+                    var lowercaseEmail = sessionEmail.ToLower();
+                    await _supabaseService.Client
+                        .From<foodbook.Models.User>()
+                        .Where(x => x.email == lowercaseEmail)
+                        .Set(x => x.password, model.NewPassword)
+                        .Update();
+                }
+                catch { /* bỏ qua nếu bảng User đã được trigger cập nhật */ }
+
+                TempData["SuccessMessage"] = "Đổi mật khẩu thành công.";
+                return RedirectToAction("Edit", "Profile", new { id = userId });
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = ex.Message;
+                return View(model);
+            }
+        }
+
+        [HttpGet]
+        [LoginRequired]
         public IActionResult Profile()
         {
-            return View();
+            // Redirect đến ProfileController để xử lý logic
+            return RedirectToAction("Index", "Profile");
         }
 
         [HttpGet]
