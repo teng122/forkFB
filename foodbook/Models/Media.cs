@@ -7,12 +7,17 @@ namespace foodbook.Models
     [Table("Media")]
     public class Media : BaseModel
     {
-        [PrimaryKey("media_id")]
+        [PrimaryKey("media_id", shouldInsert: false)]
         public int? media_id { get; set; }
         
-        public byte[]? media_img { get; set; }
+        [Column("media_img")]
+        public string? media_img { get; set; }  // URL từ Supabase Storage
         
-        public byte[]? media_video { get; set; }
+        [Column("media_video")]
+        public string? media_video { get; set; }  // URL từ Supabase Storage
+        
+        [Column("created_at")]
+        public DateTime created_at { get; set; } = DateTime.UtcNow;
     }
 }
 

@@ -4,18 +4,23 @@ using Supabase.Postgrest.Attributes;
 
 namespace foodbook.Models
 {
-    [Table("Ingredient")]
-    public class Ingredient : BaseModel
+    [Table("RecipeStep_Media")]
+    public class RecipeStepMedia : BaseModel
     {
-        [PrimaryKey("ingredient_id", shouldInsert: false)]
-        public int? ingredient_id { get; set; }
-        
         [Required]
         [Column("recipe_id")]
         public int recipe_id { get; set; }
-        
-        [Column("name")]
-        public string? name { get; set; }
+
+        [Required]
+        [Column("step")]
+        public int step { get; set; }
+
+        [Required]
+        [Column("media_id")]
+        public int media_id { get; set; }
+
+        [Column("display_order")]
+        public int display_order { get; set; } = 1;
         
         [Column("created_at")]
         public DateTime created_at { get; set; } = DateTime.UtcNow;
