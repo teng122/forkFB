@@ -42,11 +42,14 @@ namespace foodbook.Controllers
                 {
                     Console.WriteLine($"Login successful for user: {user.username}");
                     // Store user session với thông tin từ bảng User
-                    HttpContext.Session.SetString("user_id", user.username);
+                    HttpContext.Session.SetInt32("UserId", user.user_id ?? 0); // LƯU USER_ID (INT) !!!
+                    HttpContext.Session.SetString("user_id", user.username); // Giữ lại cho backward compatible
                     HttpContext.Session.SetString("user_email", user.email);
                     HttpContext.Session.SetString("username", user.username);
                     HttpContext.Session.SetString("full_name", user.full_name ?? "");
                     HttpContext.Session.SetString("role", user.role ?? "user"); // Lưu role để kiểm tra admin
+                    
+                    Console.WriteLine($"Session set: UserId={user.user_id}, Username={user.username}");
                     
                     return RedirectToAction("Index", "Home");
                 }

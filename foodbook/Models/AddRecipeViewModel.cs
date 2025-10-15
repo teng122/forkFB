@@ -24,8 +24,9 @@ namespace foodbook.Models
         public List<string> RecipeTypes { get; set; } = new List<string>();
 
         [Required(ErrorMessage = "Vui lòng nhập thời gian nấu")]
+        [Range(1, 1440, ErrorMessage = "Thời gian nấu phải từ 1-1440 phút (24 giờ)")]
         [Display(Name = "Thời gian nấu (phút)")]
-        public int CookTime { get; set; }
+        public int CookTime { get; set; } = 30; // Default 30 phút
 
         [Required(ErrorMessage = "Vui lòng chọn độ khó")]
         [Display(Name = "Độ khó")]
@@ -39,9 +40,13 @@ namespace foodbook.Models
     {
         public int StepNumber { get; set; }
         
-        [Required(ErrorMessage = "Vui lòng nhập mô tả bước")]
-        public string Instruction { get; set; } = string.Empty;
+        // Không required vì có thể chỉ có ảnh mà không có text
+        public string? Instruction { get; set; }
         
+        // Hỗ trợ nhiều ảnh/video cho mỗi step
+        public List<IFormFile>? StepMedia { get; set; } = new List<IFormFile>();
+        
+        // Giữ lại để backward compatible với view cũ
         public IFormFile? StepImage { get; set; }
     }
 }
