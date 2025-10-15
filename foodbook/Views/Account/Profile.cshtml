@@ -1,0 +1,201 @@
+@model foodbook.Models.ProfileViewModel
+
+@{
+    // 1. Khởi tạo an toàn. user sẽ là null nếu Model là null hoặc Model.User là null
+    var user = Model?.User;
+
+    ViewData["Title"] = "Hồ sơ người dùng";
+
+    // Nếu avatar là string (URL), chỉ cần kiểm tra null/empty
+    string avatarSrc = Url.Content("~/images/default-avatar.jpg");
+
+    // LOGIC AVATAR STRING: Chỉ kiểm tra và gán URL nếu có
+    if (user != null && !string.IsNullOrEmpty(user.avatar_img))
+    {
+        // Giả định user.avatar_img LƯU TRỰC TIẾP URL
+        avatarSrc = user.avatar_img;
+    }
+}
+
+<div class="container mt-5">
+
+    @* KIỂM TRA LỖI/DỮ LIỆU THIẾU *@
+    @if (user == null)
+    {
+        <div class="alert alert-danger text-center" role="alert">
+            Không thể tải thông tin hồ sơ. Vui lòng đăng nhập lại.
+        </div>
+    }
+    else
+    {
+        @* TẤT CẢ LOGIC HIỂN THỊ HỒ SƠ CHỈ CHẠY KHI user KHÔNG NULL *@
+
+        @* Profile Header Section *@
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <img src="@avatarSrc" class="rounded-circle shadow" width="120" height="120" alt="Avatar" />
+            </div>
+            <div class="col-md-9">
+                @* Tên người dùng *@
+                <h3 class="fw-bold mb-2">@(user.full_name ?? "Nguyễn Thị User")</h3>
+                
+                @* Bio mở rộng giống ảnh *@
+                <p class="mb-3">@(user.bio ?? "Người đam mê ẩm thực, thích thử nghiệm các món ăn mới và chia sẻ bí quyết nấu nướng với mọi người. Luôn tìm kiếm những hương vị độc đáo và những trải nghiệm ẩm thực đáng nhớ. Các món ăn yêu thích: Bún Chả, Phở Cuốn, Gỏi Cuốn, Bánh Mi.")</p>
+                
+                @* Thống kê giống ảnh *@
+                <div class="d-flex mb-3">
+                    <span class="me-4"><strong>@Model.RecipeCount Công thức</strong></span>
+                    <span class="me-4"><strong>@Model.FollowersCount Người theo dõi</strong></span>
+                    <span><strong>@Model.FollowingCount Đang theo dõi</strong></span>
+                </div>
+                
+                @* Logic hiển thị nút theo ngữ cảnh *@
+                @{
+                    var sessionEmail = Context.Session.GetString("user_email");
+                    var isOwnProfile = !string.IsNullOrEmpty(sessionEmail) && 
+                                     !string.IsNullOrEmpty(user.email) && 
+                                     string.Equals(sessionEmail, user.email, StringComparison.OrdinalIgnoreCase);
+                }
+                
+                @if (isOwnProfile)
+                {
+                    @* Nút Chỉnh sửa khi xem profile của chính mình *@
+                    <a href="@Url.Action("Edit", "Profile", new { id = user.user_id })" 
+                       class="btn btn-outline-primary btn-lg">
+                        <i class="bi bi-pencil"></i> Chỉnh sửa hồ sơ
+                    </a>
+                }
+                else
+                {
+                    @* Nút Theo dõi khi xem profile của người khác *@
+                    <button class="btn btn-success btn-lg" id="follow-btn">
+                        <i class="bi bi-camera"></i> Theo dõi
+                    </button>
+                }
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+
+                @* TAB GIAO DIỆN (Giả định) *@
+                <ul class="nav nav-tabs mb-4" id="profileTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active fw-bold" id="recipes-tab" data-bs-toggle="tab" data-bs-target="#recipes" type="button" role="tab">Bài đăng</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link fw-bold" id="reactions-tab" data-bs-toggle="tab" data-bs-target="#reactions" type="button" role="tab">Đã reaction</button>
+                    </li>
+                </ul>
+
+                @* NỘI DUNG RECIPE *@
+                <div class="tab-content" id="profileTabsContent">
+                    <div class="tab-pane fade show active" id="recipes" role="tabpanel">
+
+                        @if (Model.Recipes != null && Model.Recipes.Any())
+                        {
+                            <div class="row">
+                                @foreach (var recipe in Model.Recipes)
+                                {
+                                    // Xử lý Thumbnail là STRING URL
+                                    string thumbSrc = Url.Content("~/images/no-thumbnail.png");
+
+                                    // Giả định thuộc tính ThumbnailImg của RecipeViewModel LƯU TRỰC TIẾP URL
+                                    if (!string.IsNullOrEmpty(recipe.ThumbnailImg))
+                                    {
+                                        thumbSrc = recipe.ThumbnailImg;
+                                    }
+
+                                    <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+                                        <div class="card h-100 shadow-sm recipe-card">
+                                            <img src="@thumbSrc" class="card-img-top" style="height:200px; object-fit:cover;" alt="@recipe.Name" />
+                                            <div class="card-body p-3">
+                                                <h6 class="card-title fw-bold mb-2">@recipe.Name</h6>
+                                                <div class="d-flex align-items-center text-muted small">
+                                                    <i class="bi bi-hand-thumbs-up text-green me-1"></i>
+                                                    <span class="me-2">@recipe.Likes</span>
+                                                    <span class="me-1">•</span>
+                                                    <span>@recipe.CookTime phút</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            @* Hiển thị recipe mẫu giống ảnh khi chưa có dữ liệu *@
+                            <div class="row">
+                                <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+                                    <div class="card h-100 shadow-sm recipe-card">
+                                        <img src="https://images.unsplash.com/photo-1551218808-94e220e084d2?w=400&h=200&fit=crop" class="card-img-top" style="height:200px; object-fit:cover;" alt="Phở Cuốn Hà Nội" />
+                                        <div class="card-body p-3">
+                                            <h6 class="card-title fw-bold mb-2">Phở Cuốn Hà Nội</h6>
+                                            <div class="d-flex align-items-center text-muted small">
+                                                <i class="bi bi-hand-thumbs-up text-green me-1"></i>
+                                                <span class="me-2">54</span>
+                                                <span class="me-1">•</span>
+                                                <span>30 phút</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+                                    <div class="card h-100 shadow-sm recipe-card">
+                                        <img src="https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=400&h=200&fit=crop" class="card-img-top" style="height:200px; object-fit:cover;" alt="Bún Chả Gia Truyền" />
+                                        <div class="card-body p-3">
+                                            <h6 class="card-title fw-bold mb-2">Bún Chả Gia Truyền</h6>
+                                            <div class="d-flex align-items-center text-muted small">
+                                                <i class="bi bi-hand-thumbs-up text-green me-1"></i>
+                                                <span class="me-2">54</span>
+                                                <span class="me-1">•</span>
+                                                <span>60 phút</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+                                    <div class="card h-100 shadow-sm recipe-card">
+                                        <img src="https://images.unsplash.com/photo-1559847844-5315695dadae?w=400&h=200&fit=crop" class="card-img-top" style="height:200px; object-fit:cover;" alt="Gỏi Cuốn Tôm Thịt" />
+                                        <div class="card-body p-3">
+                                            <h6 class="card-title fw-bold mb-2">Gỏi Cuốn Tôm Thịt</h6>
+                                            <div class="d-flex align-items-center text-muted small">
+                                                <i class="bi bi-hand-thumbs-up text-green me-1"></i>
+                                                <span class="me-2">54</span>
+                                                <span class="me-1">•</span>
+                                                <span>20 phút</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+                                    <div class="card h-100 shadow-sm recipe-card">
+                                        <img src="https://images.unsplash.com/photo-1571091718767-18b5b1457add?w=400&h=200&fit=crop" class="card-img-top" style="height:200px; object-fit:cover;" alt="Bánh Mì Thập Cẩm" />
+                                        <div class="card-body p-3">
+                                            <h6 class="card-title fw-bold mb-2">Bánh Mì Thập Cẩm</h6>
+                                            <div class="d-flex align-items-center text-muted small">
+                                                <i class="bi bi-hand-thumbs-up text-green me-1"></i>
+                                                <span class="me-2">54</span>
+                                                <span class="me-1">•</span>
+                                                <span>15 phút</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="tab-pane fade" id="reactions" role="tabpanel">
+                        <p class="text-muted text-center mt-5">Các công thức đã tương tác sẽ hiển thị tại đây.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

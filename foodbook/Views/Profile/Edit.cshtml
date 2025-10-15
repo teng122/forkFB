@@ -1,0 +1,73 @@
+@model foodbook.Models.User
+
+@{
+    ViewData["Title"] = "Chỉnh sửa hồ sơ";
+}
+
+<div class="container mt-5" style="max-width: 720px;">
+    <div class="text-center mb-4">
+        <h4 class="fw-bold">Chỉnh sửa hồ sơ của bạn</h4>
+        <div class="d-flex flex-column align-items-center mt-3">
+            <img id="avatar-preview" src="@(string.IsNullOrEmpty(Model?.avatar_img) ? Url.Content("~/images/default-avatar.jpg") : Model.avatar_img)" class="rounded-circle" width="120" height="120" style="object-fit: cover;" alt="Avatar" />
+            <label for="avatar" class="btn btn-outline-success mt-3">
+                <i class="bi bi-camera"></i> Thay đổi ảnh đại diện
+            </label>
+        </div>
+    </div>
+
+    <form asp-action="Edit" asp-controller="Profile" method="post" enctype="multipart/form-data">
+        <input type="hidden" asp-for="user_id" />
+        <input type="hidden" asp-for="email" />
+
+        @* Bỏ chỉnh sửa tên người dùng theo yêu cầu *@
+
+        <div class="mb-3">
+            <label class="form-label">Tên đầy đủ</label>
+            <input asp-for="full_name" class="form-control" />
+            <span asp-validation-for="full_name" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Tiểu sử</label>
+            <textarea asp-for="bio" class="form-control" rows="4"></textarea>
+            <span asp-validation-for="bio" class="text-danger"></span>
+        </div>
+
+        @* Không có trường vị trí theo yêu cầu *@
+
+        <div class="mb-4">
+            <input type="file" id="avatar" name="avatar" class="d-none" accept="image/*" />
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center">
+            <a href="@Url.Action("ChangePassword", "Account")" class="btn btn-success">
+                Thay đổi mật khẩu
+            </a>
+            <div>
+                <a href="@Url.Action("Index", "Profile", new { id = Model?.user_id })" class="btn btn-outline-secondary me-2">Hủy</a>
+                <button type="submit" class="btn btn-success">Lưu thay đổi</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function(){
+            var input = document.getElementById('avatar');
+            var preview = document.getElementById('avatar-preview');
+            var navbarAvatar = document.getElementById('navbar-avatar');
+            if (!input) return;
+            input.addEventListener('change', function(ev){
+                var file = ev.target.files && ev.target.files[0];
+                if (!file) return;
+                var url = URL.createObjectURL(file);
+                if (preview) preview.src = url;
+                if (navbarAvatar) navbarAvatar.src = url;
+            });
+        })();
+    </script>
+}
+
+

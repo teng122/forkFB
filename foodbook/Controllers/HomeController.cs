@@ -1,8 +1,7 @@
-using foodbook.Attributes;
-using foodbook.Models;
-using foodbook.Services;
-using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
+using foodbook.Models;
+using Microsoft.AspNetCore.Mvc;
+using foodbook.Attributes;
 
 namespace foodbook.Controllers
 {
@@ -11,14 +10,9 @@ namespace foodbook.Controllers
     {
         private readonly ILogger<HomeController> _logger;
 
-        private readonly SupabaseService _supabaseService;
-
-            
-
-        public HomeController(ILogger<HomeController> logger, SupabaseService supabaseService)
+        public HomeController(ILogger<HomeController> logger)
         {
             _logger = logger;
-            _supabaseService = supabaseService;
         }
 
         public IActionResult Index()
@@ -37,24 +31,6 @@ namespace foodbook.Controllers
         public IActionResult Error()
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
-        }
-
-       
-
-        public async Task<IActionResult> Newsfeed()
-        {
-            try
-            {
-                var recipes = await _supabaseService.GetNewsfeedRecipesAsync();
-                return View(recipes);
-            }
-            catch (Exception ex)
-            {
-                // Log the error (e.g., using ILogger)
-                Console.WriteLine($"Error fetching newsfeed recipes: {ex.Message}");
-                // Return an empty list of RecipeViewModel to the view
-                return View(new List<NewfeedViewModel>());
-            }
         }
     }
 }

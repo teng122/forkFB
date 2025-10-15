@@ -391,44 +391,5 @@ namespace foodbook.Services
         // Static dictionary để lưu token tạm thời
         private static Dictionary<string, dynamic> PasswordResetTokens = new Dictionary<string, dynamic>();
 
-        //Nguyên newsfeed
-        public async Task<List<NewfeedViewModel>> GetNewsfeedRecipesAsync()
-        {
-            try
-            {
-                // Join bảng Recipe với User (UserId là khóa ngoại)
-                var response = await _client
-                    .From<Recipe>()
-                    .Select("*, User!fk_recipe_user(username, avatar_img)")
-                    .Get();
-
-                var recipeViewModels = response.Models.Select(r => new NewfeedViewModel
-                {
-                    RecipeId = r.recipe_id ?? 0,
-                    RecipeName = r.name,
-                    Description = r.description,
-                    ThumbnailImg = r.thumbnail_img ?? "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png",
-                    CreatedAt = r.created_at,
-                    Level = r.level,
-
-                    // Dữ liệu người dùng (nếu có)
-                    UserName = r.User?.username ?? "Người dùng ẩn danh",
-                    UserAvatarUrl = r.User?.avatar_img ?? "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png",
-
-                    LikesCount = 0,
-                    CommentsCount = 0,
-                    SharesCount = 0,
-                }).ToList();
-
-                Console.WriteLine($"Fetched {recipeViewModels.Count} newsfeed recipes from Supabase.");
-                return recipeViewModels;
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Không thể lấy danh sách công thức cho Newsfeed: {ex.Message}");
-            }
-        }
-
     }
 }
-
