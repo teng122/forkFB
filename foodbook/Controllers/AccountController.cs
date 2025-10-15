@@ -51,7 +51,7 @@ namespace foodbook.Controllers
                     
                     Console.WriteLine($"Session set: UserId={user.user_id}, Username={user.username}");
                     
-                    return RedirectToAction("Index", "Home");
+                    return RedirectToAction("Newsfeed", "Home");
                 }
                 else
                 {
