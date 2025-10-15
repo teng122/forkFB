@@ -3,11 +3,45 @@
     ViewData["Title"] = "Thêm công thức mới";
 }
 
+<!-- Hiển thị thông báo lỗi/thành công -->
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle-fill me-2"></i>
+        @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        <strong>Lỗi:</strong> @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (!ViewData.ModelState.IsValid)
+{
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-circle-fill me-2"></i>
+        <strong>Validation Errors:</strong>
+        <ul class="mb-0 mt-2">
+            @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+            {
+                <li>@error.ErrorMessage</li>
+            }
+        </ul>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
 <div class="add-recipe-container">
     <div class="row">
         <!-- Left Column - Main Form -->
         <div class="col-lg-8">
-            <form asp-action="AddRecipe" method="post" enctype="multipart/form-data" id="addRecipeForm">
+            <form asp-action="Add" method="post" enctype="multipart/form-data" id="addRecipeForm">
                 <div class="recipe-section">
                     <h3 class="section-title">Tên công thức</h3>
                     <input type="text" 
@@ -57,16 +91,19 @@
                                               rows="3"
                                               placeholder="Nhập mô tả chi tiết cho bước này..."></textarea>
                                     
-                                    <label class="form-label">Ảnh minh họa (tùy chọn)</label>
-                                    <div class="step-image-upload">
+                                    <label class="form-label">Ảnh/Video minh họa (có thể chọn nhiều)</label>
+                                    <div class="step-media-container">
                                         <input type="file" 
-                                               name="Steps[0].StepImage" 
-                                               class="d-none step-image-input"
-                                               accept="image/*,video/*">
-                                        <div class="step-image-preview">
-                                            <i class="bi bi-camera fs-1 text-muted"></i>
-                                            <p class="text-muted">Nhấn để thêm ảnh</p>
+                                               name="Steps[0].StepMedia" 
+                                               class="d-none step-media-input"
+                                               accept="image/*,video/*"
+                                               multiple
+                                               data-step="0">
+                                        <div class="step-media-upload-btn" onclick="this.previousElementSibling.click()">
+                                            <i class="bi bi-plus-circle"></i>
+                                            <span>Thêm ảnh/video</span>
                                         </div>
+                                        <div class="step-media-grid" id="mediaGrid0"></div>
                                     </div>
                                     
                                     <button type="button" class="btn btn-delete-step" onclick="deleteStep(1)">
@@ -90,16 +127,19 @@
                                               rows="3"
                                               placeholder="Nhập mô tả chi tiết cho bước này..."></textarea>
                                     
-                                    <label class="form-label">Ảnh minh họa (tùy chọn)</label>
-                                    <div class="step-image-upload">
+                                    <label class="form-label">Ảnh/Video minh họa (có thể chọn nhiều)</label>
+                                    <div class="step-media-container">
                                         <input type="file" 
-                                               name="Steps[1].StepImage" 
-                                               class="d-none step-image-input"
-                                               accept="image/*,video/*">
-                                        <div class="step-image-preview">
-                                            <i class="bi bi-camera fs-1 text-muted"></i>
-                                            <p class="text-muted">Nhấn để thêm ảnh</p>
+                                               name="Steps[1].StepMedia" 
+                                               class="d-none step-media-input"
+                                               accept="image/*,video/*"
+                                               multiple
+                                               data-step="1">
+                                        <div class="step-media-upload-btn" onclick="this.previousElementSibling.click()">
+                                            <i class="bi bi-plus-circle"></i>
+                                            <span>Thêm ảnh/video</span>
                                         </div>
+                                        <div class="step-media-grid" id="mediaGrid1"></div>
                                     </div>
                                     
                                     <button type="button" class="btn btn-delete-step" onclick="deleteStep(2)">
@@ -116,8 +156,9 @@
                 </div>
 
                 <div class="recipe-section">
-                    <button type="submit" class="btn btn-save-recipe">
-                        Lưu công thức
+                    <button type="submit" class="btn btn-save-recipe" id="submitBtn">
+                        <span class="btn-text">Lưu công thức</span>
+                        <span class="spinner-border spinner-border-sm d-none" role="status"></span>
                     </button>
                 </div>
             </form>
@@ -174,9 +215,13 @@
                         <input type="number" 
                                class="form-control time-input" 
                                asp-for="CookTime" 
-                               value="30">
+                               value="30"
+                               min="1"
+                               max="1440"
+                               required>
                         <span class="time-unit">phút</span>
                     </div>
+                    <span asp-validation-for="CookTime" class="text-danger small"></span>
                 </div>
 
                 <!-- Độ khó -->
@@ -212,8 +257,6 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
-        let stepCount = 2;
-
         // Mock data - trong thực tế sẽ fetch từ API
         const mockIngredients = [
             'Gà', 'Thịt bò', 'Thịt heo', 'Cá hồi', 'Cá ngừ', 'Tôm', 'Mực',
@@ -351,35 +394,43 @@
         }
 
         function addStep() {
-            stepCount++;
             const stepsContainer = document.getElementById('stepsContainer');
+            
+            // Đếm số bước hiện có thay vì dùng stepCount
+            const currentSteps = stepsContainer.querySelectorAll('.step-item');
+            const newStepNumber = currentSteps.length + 1;
+            const newStepIndex = currentSteps.length; // 0-based index for form
+            
             const stepHtml = `
-                <div class="step-item" data-step="${stepCount}">
-                    <div class="step-header collapsed" data-bs-toggle="collapse" data-bs-target="#step${stepCount}">
-                        <span class="step-label">Bước ${stepCount}:</span>
+                <div class="step-item" data-step="${newStepNumber}">
+                    <div class="step-header collapsed" data-bs-toggle="collapse" data-bs-target="#step${newStepNumber}">
+                        <span class="step-label">Bước ${newStepNumber}:</span>
                         <i class="bi bi-chevron-down"></i>
                     </div>
-                    <div class="collapse" id="step${stepCount}">
+                    <div class="collapse" id="step${newStepNumber}">
                         <div class="step-content">
                             <label class="form-label">Mô tả bước</label>
                             <textarea class="form-control mb-3" 
-                                      name="Steps[${stepCount - 1}].Instruction" 
+                                      name="Steps[${newStepIndex}].Instruction" 
                                       rows="3"
                                       placeholder="Nhập mô tả chi tiết cho bước này..."></textarea>
                             
-                            <label class="form-label">Ảnh minh họa (tùy chọn)</label>
-                            <div class="step-image-upload">
+                            <label class="form-label">Ảnh/Video minh họa (có thể chọn nhiều)</label>
+                            <div class="step-media-container">
                                 <input type="file" 
-                                       name="Steps[${stepCount - 1}].StepImage" 
-                                       class="d-none step-image-input"
-                                       accept="image/*,video/*">
-                                <div class="step-image-preview" onclick="this.previousElementSibling.click()">
-                                    <i class="bi bi-camera fs-1 text-muted"></i>
-                                    <p class="text-muted">Nhấn để thêm ảnh</p>
+                                       name="Steps[${newStepIndex}].StepMedia" 
+                                       class="d-none step-media-input"
+                                       accept="image/*,video/*"
+                                       multiple
+                                       data-step="${newStepIndex}">
+                                <div class="step-media-upload-btn" onclick="this.previousElementSibling.click()">
+                                    <i class="bi bi-plus-circle"></i>
+                                    <span>Thêm ảnh/video</span>
                                 </div>
+                                <div class="step-media-grid" id="mediaGrid${newStepIndex}"></div>
                             </div>
                             
-                            <button type="button" class="btn btn-delete-step" onclick="deleteStep(${stepCount})">
+                            <button type="button" class="btn btn-delete-step" onclick="deleteStep(${newStepNumber})">
                                 <i class="bi bi-x"></i> Xóa bước
                             </button>
                         </div>
@@ -392,8 +443,87 @@
         function deleteStep(stepNum) {
             const stepItem = document.querySelector(`[data-step="${stepNum}"]`);
             if (stepItem) {
+                // Xóa step và media files liên quan
+                const stepIndex = stepNum - 1;
+                if (stepMediaFiles[stepIndex]) {
+                    delete stepMediaFiles[stepIndex];
+                }
+                
                 stepItem.remove();
+                
+                // Reindex lại tất cả các steps
+                reindexSteps();
             }
+        }
+
+        function reindexSteps() {
+            const stepsContainer = document.getElementById('stepsContainer');
+            const stepItems = stepsContainer.querySelectorAll('.step-item');
+            
+            // Tạo object mới cho stepMediaFiles
+            const newStepMediaFiles = {};
+            
+            stepItems.forEach((stepItem, index) => {
+                const newStepNumber = index + 1;
+                const newStepIndex = index;
+                
+                // Update data-step attribute
+                stepItem.setAttribute('data-step', newStepNumber);
+                
+                // Update step header
+                const stepLabel = stepItem.querySelector('.step-label');
+                if (stepLabel) {
+                    stepLabel.textContent = `Bước ${newStepNumber}:`;
+                }
+                
+                // Update collapse target and id
+                const stepHeader = stepItem.querySelector('.step-header');
+                const collapseDiv = stepItem.querySelector('.collapse');
+                if (stepHeader && collapseDiv) {
+                    stepHeader.setAttribute('data-bs-target', `#step${newStepNumber}`);
+                    collapseDiv.setAttribute('id', `step${newStepNumber}`);
+                }
+                
+                // Update form input names
+                const textarea = stepItem.querySelector('textarea');
+                if (textarea) {
+                    textarea.setAttribute('name', `Steps[${newStepIndex}].Instruction`);
+                }
+                
+                const fileInput = stepItem.querySelector('.step-media-input');
+                if (fileInput) {
+                    fileInput.setAttribute('name', `Steps[${newStepIndex}].StepMedia`);
+                    const oldStepIndex = fileInput.getAttribute('data-step');
+                    fileInput.setAttribute('data-step', newStepIndex);
+                    
+                    // Di chuyển media files sang index mới
+                    if (stepMediaFiles[oldStepIndex]) {
+                        newStepMediaFiles[newStepIndex] = stepMediaFiles[oldStepIndex];
+                    }
+                }
+                
+                // Update media grid id
+                const mediaGrid = stepItem.querySelector('.step-media-grid');
+                if (mediaGrid) {
+                    mediaGrid.setAttribute('id', `mediaGrid${newStepIndex}`);
+                }
+                
+                // Update delete button
+                const deleteBtn = stepItem.querySelector('.btn-delete-step');
+                if (deleteBtn) {
+                    deleteBtn.setAttribute('onclick', `deleteStep(${newStepNumber})`);
+                }
+            });
+            
+            // Cập nhật stepMediaFiles với index mới
+            stepMediaFiles = newStepMediaFiles;
+            
+            // Re-render media grids với index mới
+            Object.keys(stepMediaFiles).forEach(stepIndex => {
+                renderMediaGrid(parseInt(stepIndex));
+            });
+            
+            console.log('Steps reindexed, total steps:', stepItems.length);
         }
 
         function selectDifficulty(btn, level) {
@@ -401,6 +531,9 @@
             btn.classList.add('active');
             document.getElementById('levelInput').value = level;
         }
+
+        // Object lưu files cho mỗi step
+        let stepMediaFiles = {};
 
         // Image preview handlers
         document.getElementById('mainMediaInput')?.addEventListener('change', function(e) {
@@ -419,35 +552,170 @@
             }
         });
 
-        // Step image preview handlers
-        document.addEventListener('click', function(e) {
-            if (e.target.closest('.step-image-preview')) {
-                const preview = e.target.closest('.step-image-preview');
-                const input = preview.previousElementSibling;
-                if (input && input.classList.contains('step-image-input')) {
-                    input.click();
+        // Xử lý upload nhiều media cho steps
+        document.addEventListener('change', function(e) {
+            if (e.target.classList.contains('step-media-input')) {
+                const input = e.target;
+                const stepIndex = input.getAttribute('data-step');
+                const files = Array.from(input.files);
+                
+                if (files.length > 0) {
+                    // Khởi tạo array nếu chưa có
+                    if (!stepMediaFiles[stepIndex]) {
+                        stepMediaFiles[stepIndex] = [];
+                    }
+                    
+                    // Thêm files mới vào
+                    stepMediaFiles[stepIndex] = stepMediaFiles[stepIndex].concat(files);
+                    
+                    // Render grid
+                    renderMediaGrid(stepIndex);
                 }
             }
         });
 
-        document.addEventListener('change', function(e) {
-            if (e.target.classList.contains('step-image-input')) {
-                const file = e.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    const preview = e.target.nextElementSibling;
-                    reader.onload = function(e) {
-                        preview.innerHTML = `<img src="${e.target.result}" alt="Step preview">`;
-                    };
-                    reader.readAsDataURL(file);
+        function renderMediaGrid(stepIndex) {
+            const gridContainer = document.getElementById(`mediaGrid${stepIndex}`);
+            if (!gridContainer) {
+                console.warn(`Media grid container not found for step ${stepIndex}`);
+                return;
+            }
+            
+            const files = stepMediaFiles[stepIndex] || [];
+            gridContainer.innerHTML = '';
+            
+            files.forEach((file, index) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const mediaItem = document.createElement('div');
+                    mediaItem.className = 'step-media-item';
+                    
+                    let mediaContent = '';
+                    if (file.type.startsWith('image/')) {
+                        mediaContent = `<img src="${e.target.result}" alt="Media ${index + 1}">`;
+                    } else if (file.type.startsWith('video/')) {
+                        mediaContent = `
+                            <video src="${e.target.result}"></video>
+                            <div class="video-overlay"><i class="bi bi-play-circle"></i></div>
+                        `;
+                    }
+                    
+                    mediaItem.innerHTML = `
+                        ${mediaContent}
+                        <button type="button" class="btn-remove-media" onclick="removeMediaFile(${stepIndex}, ${index})">
+                            <i class="bi bi-x"></i>
+                        </button>
+                        <div class="media-order">${index + 1}</div>
+                    `;
+                    
+                    gridContainer.appendChild(mediaItem);
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function removeMediaFile(stepIndex, fileIndex) {
+            if (stepMediaFiles[stepIndex]) {
+                stepMediaFiles[stepIndex].splice(fileIndex, 1);
+                renderMediaGrid(stepIndex);
+            }
+        }
+
+        // Chuẩn bị form trước khi submit
+        function prepareFormSubmit(event) {
+            console.log('=== PREPARING FORM SUBMIT ===');
+            const form = document.getElementById('addRecipeForm');
+            
+            // Xóa các hidden input cũ (nếu có)
+            form.querySelectorAll('.dynamic-hidden-input').forEach(el => el.remove());
+            
+            // Thêm ingredients vào form
+            console.log('Ingredients:', ingredientList);
+            ingredientList.forEach((ingredient, index) => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = `Ingredients[${index}]`;
+                input.value = ingredient;
+                input.className = 'dynamic-hidden-input';
+                form.appendChild(input);
+            });
+            
+            // Thêm categories vào form
+            console.log('Categories:', categoryList);
+            categoryList.forEach((category, index) => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = `RecipeTypes[${index}]`;
+                input.value = category;
+                input.className = 'dynamic-hidden-input';
+                form.appendChild(input);
+            });
+            
+            // Gán files từ stepMediaFiles vào các input tương ứng
+            console.log('Step Media Files:', stepMediaFiles);
+            Object.keys(stepMediaFiles).forEach(stepIndex => {
+                const files = stepMediaFiles[stepIndex];
+                if (files && files.length > 0) {
+                    console.log(`Step ${stepIndex}: ${files.length} files`);
+                    const input = document.querySelector(`input[data-step="${stepIndex}"]`);
+                    if (input) {
+                        // Tạo DataTransfer để set files cho input
+                        const dataTransfer = new DataTransfer();
+                        files.forEach(file => {
+                            console.log(`  - ${file.name} (${file.size} bytes)`);
+                            dataTransfer.items.add(file);
+                        });
+                        input.files = dataTransfer.files;
+                    } else {
+                        console.error(`Input not found for step ${stepIndex}`);
+                    }
+                }
+            });
+            
+            // Log form data
+            const formData = new FormData(form);
+            console.log('=== FORM DATA ===');
+            for (let [key, value] of formData.entries()) {
+                if (value instanceof File) {
+                    console.log(`${key}: [File] ${value.name} (${value.size} bytes)`);
+                } else {
+                    console.log(`${key}: ${value}`);
                 }
             }
-        });
+            
+            // Kiểm tra validation
+            if (!form.checkValidity()) {
+                console.error('Form validation failed!');
+                event.preventDefault();
+                event.stopPropagation();
+                form.classList.add('was-validated');
+                return false;
+            }
+            
+            // Show loading
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.querySelector('.btn-text').textContent = 'Đang lưu...';
+            submitBtn.querySelector('.spinner-border').classList.remove('d-none');
+            
+            console.log('Form is valid, submitting...');
+            return true;
+        }
 
         // Initialize autocomplete on page load
         document.addEventListener('DOMContentLoaded', function() {
             setupAutocomplete('ingredientInput', 'ingredientDropdown', mockIngredients, addIngredientTag);
             setupAutocomplete('categoryInput', 'categoryDropdown', mockCategories, addCategoryTag);
+            
+            // Attach submit handler
+            const form = document.getElementById('addRecipeForm');
+            form.addEventListener('submit', function(e) {
+                console.log('Form submit event triggered');
+                if (!prepareFormSubmit(e)) {
+                    e.preventDefault();
+                    return false;
+                }
+            });
         });
     </script>
 }
