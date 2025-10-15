@@ -182,41 +182,82 @@
         </div>
     }
 
-    <footer class="footer-section">
-        <div class="container">
-            <div class="row align-items-center">
-                <div class="col-sm-12 col-md-6">
-                    <ul class="nav">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" href="#">Khám phá</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" href="#">Về chúng tôi</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" href="#">Hỗ trợ</a>
-                        </li>
-                    </ul>
-                </div>
-                <div class="col-sm-12 col-md-6">
-                    <div class="social-icons d-flex justify-content-end">
-                        <a href="#" class="social-link me-3 text-gray">
-                            <i class="bi bi-facebook fs-5"></i>
-                        </a>
-                        <a href="#" class="social-link me-3 text-gray">
-                            <i class="bi bi-instagram fs-5"></i>
-                        </a>
-                        <a href="#" class="social-link me-3 text-gray">
-                            <i class="bi bi-twitter fs-5"></i>
-                        </a>
-                        <a href="#" class="social-link text-gray">
-                            <i class="bi bi-linkedin fs-5"></i>
-                        </a>
+    @if (!isAccountPage && Context.Session.IsLoggedIn())
+    {
+        <footer class="footer-section" id="mainFooter" style="transition: margin-left 0.3s ease;">
+            <div class="container">
+                <div class="row align-items-center">
+                    <div class="col-sm-12 col-md-6">
+                        <ul class="nav">
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" href="#">Khám phá</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" href="#">Về chúng tôi</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" href="#">Hỗ trợ</a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-sm-12 col-md-6">
+                        <div class="social-icons d-flex justify-content-end">
+                            <a href="#" class="social-link me-3 text-gray">
+                                <i class="bi bi-facebook fs-5"></i>
+                            </a>
+                            <a href="#" class="social-link me-3 text-gray">
+                                <i class="bi bi-instagram fs-5"></i>
+                            </a>
+                            <a href="#" class="social-link me-3 text-gray">
+                                <i class="bi bi-twitter fs-5"></i>
+                            </a>
+                            <a href="#" class="social-link text-gray">
+                                <i class="bi bi-linkedin fs-5"></i>
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </footer>
+        </footer>
+    }
+    else
+    {
+        <footer class="footer-section">
+            <div class="container">
+                <div class="row align-items-center">
+                    <div class="col-sm-12 col-md-6">
+                        <ul class="nav">
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" href="#">Khám phá</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" href="#">Về chúng tôi</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" href="#">Hỗ trợ</a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-sm-12 col-md-6">
+                        <div class="social-icons d-flex justify-content-end">
+                            <a href="#" class="social-link me-3 text-gray">
+                                <i class="bi bi-facebook fs-5"></i>
+                            </a>
+                            <a href="#" class="social-link me-3 text-gray">
+                                <i class="bi bi-instagram fs-5"></i>
+                            </a>
+                            <a href="#" class="social-link me-3 text-gray">
+                                <i class="bi bi-twitter fs-5"></i>
+                            </a>
+                            <a href="#" class="social-link text-gray">
+                                <i class="bi bi-linkedin fs-5"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    }
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
@@ -224,12 +265,18 @@
         function toggleSidebarCollapse() {
             var sidebar = document.getElementById('sidebar');
             var main = document.getElementById('mainContent');
+            var footer = document.getElementById('mainFooter');
             if (!sidebar) return;
             sidebar.classList.toggle('collapsed');
             // cập nhật lại margin main khi collapse
-            if (window.innerWidth > 768 && main) {
+            if (window.innerWidth > 768) {
                 var rect = sidebar.getBoundingClientRect();
-                main.style.marginLeft = rect.width + 'px';
+                if (main) {
+                    main.style.marginLeft = rect.width + 'px';
+                }
+                if (footer) {
+                    footer.style.marginLeft = rect.width + 'px';
+                }
                 document.documentElement.style.setProperty('--sidebar-computed-width', rect.width + 'px');
             }
         }
@@ -239,18 +286,25 @@
             if (!sidebar) return;
             sidebar.classList.toggle('show');
         }
-        // Tính chiều rộng thật của sidebar (max-content) => set margin-left cho main
+        // Tính chiều rộng thật của sidebar (max-content) => set margin-left cho main và footer
         (function() {
             function applySidebarWidth() {
                 var sidebar = document.getElementById('sidebar');
                 var main = document.getElementById('mainContent');
-                if (!sidebar || !main) return;
+                var footer = document.getElementById('mainFooter');
+                if (!sidebar) return;
                 if (window.innerWidth <= 768) {
-                    main.style.marginLeft = '0px';
+                    if (main) main.style.marginLeft = '0px';
+                    if (footer) footer.style.marginLeft = '0px';
                     return;
                 }
                 var rect = sidebar.getBoundingClientRect();
-                main.style.marginLeft = rect.width + 'px';
+                if (main) {
+                    main.style.marginLeft = rect.width + 'px';
+                }
+                if (footer) {
+                    footer.style.marginLeft = rect.width + 'px';
+                }
                 document.documentElement.style.setProperty('--sidebar-computed-width', rect.width + 'px');
             }
             window.addEventListener('load', applySidebarWidth);
