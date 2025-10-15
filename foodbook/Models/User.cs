@@ -25,8 +25,10 @@ namespace foodbook.Models
         [Column("password")]
         public string password { get; set; } = string.Empty;
         
+
         [Column("avatar_img")]
         public string? avatar_img { get; set; }  // URL từ Supabase Storage
+
         
         [Column("bio")]
         public string? bio { get; set; }

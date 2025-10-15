@@ -1,6 +1,7 @@
-using System.ComponentModel.DataAnnotations;
-using Supabase.Postgrest.Models;
 using Supabase.Postgrest.Attributes;
+using Supabase.Postgrest.Models;
+using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace foodbook.Models
 {
@@ -20,7 +21,7 @@ namespace foodbook.Models
         [Required]
         [Column("name")]
         public string name { get; set; } = string.Empty;
-        
+
         [Column("thumbnail_img")]
         public string? thumbnail_img { get; set; }  // URL từ Supabase Storage
         
@@ -38,6 +39,9 @@ namespace foodbook.Models
         
         [Column("level")]
         public string level { get; set; } = "dễ"; // dễ, trung bình, khó
+
+        [JsonPropertyName("User")]
+        public User User { get; set; }
     }
 }
 
