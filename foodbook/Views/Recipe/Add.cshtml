@@ -113,41 +113,7 @@
                             </div>
                         </div>
 
-                        <!-- Step 2 -->
-                        <div class="step-item" data-step="2">
-                            <div class="step-header collapsed" data-bs-toggle="collapse" data-bs-target="#step2">
-                                <span class="step-label">Bước 2:</span>
-                                <i class="bi bi-chevron-down"></i>
-                            </div>
-                            <div class="collapse" id="step2">
-                                <div class="step-content">
-                                    <label class="form-label">Mô tả bước</label>
-                                    <textarea class="form-control mb-3" 
-                                              name="Steps[1].Instruction" 
-                                              rows="3"
-                                              placeholder="Nhập mô tả chi tiết cho bước này..."></textarea>
-                                    
-                                    <label class="form-label">Ảnh/Video minh họa (có thể chọn nhiều)</label>
-                                    <div class="step-media-container">
-                                        <input type="file" 
-                                               name="Steps[1].StepMedia" 
-                                               class="d-none step-media-input"
-                                               accept="image/*,video/*"
-                                               multiple
-                                               data-step="1">
-                                        <div class="step-media-upload-btn" onclick="this.previousElementSibling.click()">
-                                            <i class="bi bi-plus-circle"></i>
-                                            <span>Thêm ảnh/video</span>
-                                        </div>
-                                        <div class="step-media-grid" id="mediaGrid1"></div>
-                                    </div>
-                                    
-                                    <button type="button" class="btn btn-delete-step" onclick="deleteStep(2)">
-                                        <i class="bi bi-x"></i> Xóa bước
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
+                        <!-- Step 2 placeholder removed - default only one step -->
                     </div>
 
                     <button type="button" class="btn btn-add-step" onclick="addStep()">
@@ -257,21 +223,9 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
-        // Mock data - trong thực tế sẽ fetch từ API
-        const mockIngredients = [
-            'Gà', 'Thịt bò', 'Thịt heo', 'Cá hồi', 'Cá ngừ', 'Tôm', 'Mực',
-            'Cơm', 'Mì', 'Phở', 'Bún', 'Miến', 'Bánh mì',
-            'Trứng', 'Sữa', 'Phô mai', 'Bơ', 'Dầu ô liu',
-            'Cà chua', 'Dưa chuột', 'Hành tây', 'Tỏi', 'Gừng',
-            'Mật ong', 'Đường', 'Muối', 'Tiêu', 'Nước mắm'
-        ];
-
-        const mockCategories = [
-            'Việt Nam', 'Trung Quốc', 'Nhật Bản', 'Hàn Quốc', 'Thái Lan',
-            'Món chay', 'Món mặn', 'Món khai vị', 'Món chính', 'Món tráng miệng',
-            'Món ăn sáng', 'Món ăn trưa', 'Món ăn tối', 'Món ăn vặt',
-            'Lẩu', 'Nướng', 'Xào', 'Chiên', 'Hấp', 'Luộc'
-        ];
+        // Data từ server (ViewBag)
+        const mockIngredients = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.IngredientSuggestions ?? new List<string>()));
+        const mockCategories = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.TypeSuggestions ?? new List<string>()));
 
         let ingredientList = [];
         let categoryList = [];
@@ -300,8 +254,8 @@
                         div.className = 'autocomplete-item';
                         div.textContent = item;
                         div.onclick = function() {
-                            onSelect(item);
-                            input.value = '';
+                            input.value = item; // Set input value to selected item
+                            onSelect(); // Call without parameter, let function read from input
                             dropdown.style.display = 'none';
                         };
                         dropdown.appendChild(div);
@@ -347,10 +301,9 @@
                 tag.innerHTML = `${value} <button type="button" onclick="removeIngredientTag(this, '${value}')">×</button>`;
                 container.appendChild(tag);
                 
-                // Nếu không có trong mock data, add vào (giả lập add vào DB)
+                // Nếu không có trong danh sách, thêm vào local để gợi ý ở lần sau trong session
                 if (!mockIngredients.includes(value)) {
                     mockIngredients.push(value);
-                    console.log('Đã thêm nguyên liệu mới vào DB:', value);
                 }
             }
             
@@ -372,10 +325,8 @@
                 tag.innerHTML = `${value} <button type="button" onclick="removeCategoryTag(this, '${value}')">×</button>`;
                 container.appendChild(tag);
                 
-                // Nếu không có trong mock data, add vào (giả lập add vào DB)
                 if (!mockCategories.includes(value)) {
                     mockCategories.push(value);
-                    console.log('Đã thêm phân loại mới vào DB:', value);
                 }
             }
             

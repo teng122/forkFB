@@ -27,6 +27,39 @@ namespace foodbook.Controllers
         [HttpGet]
         public IActionResult Add()
         {
+            try
+            {
+                // Load suggestions from DB: distinct Ingredient names and all RecipeType contents
+                var ingredientNames = _supabaseService.Client
+                    .From<Ingredient>()
+                    .Select("name")
+                    .Get().Result.Models
+                    .Where(i => !string.IsNullOrWhiteSpace(i.name))
+                    .Select(i => i.name!.Trim())
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .OrderBy(n => n)
+                    .ToList();
+
+                var typeContents = _supabaseService.Client
+                    .From<RecipeType>()
+                    .Select("content")
+                    .Get().Result.Models
+                    .Where(t => !string.IsNullOrWhiteSpace(t.content))
+                    .Select(t => t.content!.Trim())
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .OrderBy(n => n)
+                    .ToList();
+
+                ViewBag.IngredientSuggestions = ingredientNames;
+                ViewBag.TypeSuggestions = typeContents;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to load suggestions for Add Recipe");
+                ViewBag.IngredientSuggestions = new List<string>();
+                ViewBag.TypeSuggestions = new List<string>();
+            }
+
             return View();
         }
 
@@ -81,7 +114,7 @@ namespace foodbook.Controllers
                     description = model.Description,
                     cook_time = model.CookTime,
                     level = model.Level,
-                    step_number = model.Steps?.Count ?? 0,
+                    step_number = Math.Max(1, model.Steps?.Count ?? 0),
                     created_at = DateTime.UtcNow
                 };
 
@@ -165,8 +198,59 @@ namespace foodbook.Controllers
                     _logger.LogInformation("No ingredients to save");
                 }
 
-                // 4. Lưu Recipe Types (nếu có bảng này)
-                // TODO: Implement nếu cần
+                // 4. Lưu Recipe Types (hỗ trợ nhiều types per recipe)
+                if (model.RecipeTypes != null && model.RecipeTypes.Any())
+                {
+                    _logger.LogInformation("Processing {Count} recipe types", model.RecipeTypes.Count);
+
+                    foreach (var typeNameRaw in model.RecipeTypes)
+                    {
+                        var typeName = (typeNameRaw ?? string.Empty).Trim();
+                        if (string.IsNullOrEmpty(typeName)) continue;
+
+                        _logger.LogInformation("Processing recipe type: {Type}", typeName);
+
+                        // Tìm type đã tồn tại
+                        var existingType = await _supabaseService.Client
+                            .From<RecipeType>()
+                            .Select("recipe_type_id, content")
+                            .Where(x => x.content == typeName)
+                            .Get();
+
+                        int recipeTypeId;
+                        if (existingType.Models.Any())
+                        {
+                            recipeTypeId = existingType.Models.First().recipe_type_id.Value;
+                            _logger.LogInformation("  - Found existing RecipeType: ID={Id}, Content={Content}", 
+                                recipeTypeId, typeName);
+                        }
+                        else
+                        {
+                            // Tạo type mới
+                            var newType = new RecipeType 
+                            { 
+                                content = typeName, 
+                                created_at = DateTime.UtcNow 
+                            };
+                            var insertResult = await _supabaseService.Client.From<RecipeType>().Insert(newType);
+                            recipeTypeId = insertResult.Models.FirstOrDefault()?.recipe_type_id ?? 0;
+                            _logger.LogInformation("  - Created new RecipeType: ID={Id}, Content={Content}", 
+                                recipeTypeId, typeName);
+                        }
+
+                        // Tạo link trong bảng trung gian
+                        var recipeRecipeType = new RecipeRecipeType
+                        {
+                            recipe_id = recipeId,
+                            recipe_type_id = recipeTypeId,
+                            created_at = DateTime.UtcNow
+                        };
+
+                        await _supabaseService.Client.From<RecipeRecipeType>().Insert(recipeRecipeType);
+                        _logger.LogInformation("  - Created Recipe_RecipeType link: RecipeId={RecipeId}, TypeId={TypeId}", 
+                            recipeId, recipeTypeId);
+                    }
+                }
 
                 // 5. Lưu Recipe Steps với nhiều Media
                 if (model.Steps != null && model.Steps.Any())
@@ -283,6 +367,8 @@ namespace foodbook.Controllers
                 {
                     _logger.LogInformation("No steps to save");
                 }
+
+                // 6. Recipe types đã được lưu qua bảng trung gian Recipe_RecipeType
 
                 _logger.LogInformation("=== ADD RECIPE COMPLETED SUCCESSFULLY ===");
                 TempData["Success"] = $"Đã thêm công thức '{model.Name}' thành công!";
