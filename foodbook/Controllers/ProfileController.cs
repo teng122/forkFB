@@ -15,9 +15,9 @@ namespace foodbook.Controllers
             _supabaseService = supabaseService;
             _storageService = storageService;
         }
-       
-        // GET: /Profile hoặc /Profile?id=123
-        public async Task<IActionResult> Index(int? id)
+
+        // GET: /Profile/Info hoặc /Profile/Info?id=123
+        public async Task<IActionResult> Info(int? id)
         {
             try
             {
@@ -40,7 +40,7 @@ namespace foodbook.Controllers
 
                     if (currentUserResp == null)
                     {
-                        return View("~/Views/Account/Profile.cshtml", new ProfileViewModel());
+                        return View("~/Views/Account/PersonalInfo.cshtml", new ProfileViewModel());
                     }
 
                     id = currentUserResp.user_id;
@@ -53,13 +53,14 @@ namespace foodbook.Controllers
                     .Single();
 
                 if (userResp == null)
-                    return View("~/Views/Account/Profile.cshtml", new ProfileViewModel());
+                    return View("~/Views/Account/PersonalInfo.cshtml", new ProfileViewModel());
 
-                // Lấy các recipe của user
+                // Lấy các recipe của user (chỉ 4 bài đầu tiên)
                 var recipesResp = await _supabaseService.Client
                     .From<Recipe>()
                     .Filter("user_id", Operator.Equals, userResp.user_id)
                     .Order("created_at", Ordering.Descending)
+                    .Range(0, 3) // Chỉ lấy 4 bài đầu tiên (0-3)
                     .Get();
 
                 var recipeModels = recipesResp.Models ?? new List<Recipe>();
@@ -110,12 +111,12 @@ namespace foodbook.Controllers
                     FollowingCount = followingCount
                 };
 
-                return View("~/Views/Account/Profile.cshtml", viewModel);
+                return View("~/Views/Account/PersonalInfo.cshtml", viewModel);
             }
             catch (Exception ex)
             {
                 TempData["ErrorMessage"] = "Lỗi khi tải hồ sơ: " + ex.Message;
-                return View("~/Views/Account/Profile.cshtml", new ProfileViewModel());
+                return View("~/Views/Account/PersonalInfo.cshtml", new ProfileViewModel());
             }
         }
 
@@ -201,6 +202,156 @@ namespace foodbook.Controllers
             {
                 TempData["ErrorMessage"] = "Cập nhật thất bại: " + ex.Message;
                 return View(model);
+            }
+        }
+
+        // API endpoint for infinite scroll - Load more profile posts
+        public async Task<IActionResult> LoadMoreProfilePosts(int page = 1, int pageSize = 4)
+        {
+            try
+            {
+                var sessionEmail = HttpContext.Session.GetString("user_email");
+                if (string.IsNullOrEmpty(sessionEmail))
+                {
+                    return Json(new { success = false, message = "Bạn cần đăng nhập" });
+                }
+
+                // Get current user
+                var user = await _supabaseService.Client
+                    .From<User>()
+                    .Filter("email", Operator.Equals, sessionEmail)
+                    .Single();
+
+                if (user == null)
+                {
+                    return Json(new { success = false, message = "Không tìm thấy người dùng" });
+                }
+
+                // Get recipes with pagination
+                var offset = (page - 1) * pageSize;
+                var recipesResult = await _supabaseService.Client
+                    .From<Recipe>()
+                    .Filter("user_id", Operator.Equals, user.user_id)
+                    .Order("created_at", Ordering.Descending)
+                    .Range(offset, offset + pageSize - 1)
+                    .Get();
+
+                var recipes = recipesResult.Models ?? new List<Recipe>();
+
+                // Map to simple objects for JSON response
+                var recipeData = recipes.Select(r => new
+                {
+                    recipeId = r.recipe_id ?? 0,
+                    name = r.name ?? "Unknown Recipe",
+                    thumbnailImg = r.thumbnail_img ?? "",
+                    cookTime = r.cook_time ?? 0,
+                    likes = 0, // TODO: Implement actual like count
+                    description = r.description ?? ""
+                }).ToList();
+
+                return Json(new
+                {
+                    success = true,
+                    recipes = recipeData,
+                    hasMore = recipes.Count == pageSize
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = "Lỗi khi tải thêm bài đăng: " + ex.Message
+                });
+            }
+        }
+
+        // API endpoint for infinite scroll - Load more reacted posts
+        public async Task<IActionResult> LoadMoreReactedPosts(int page = 1, int pageSize = 4)
+        {
+            try
+            {
+                var sessionEmail = HttpContext.Session.GetString("user_email");
+                if (string.IsNullOrEmpty(sessionEmail))
+                {
+                    return Json(new { success = false, message = "Bạn cần đăng nhập" });
+                }
+
+                // Get current user
+                var user = await _supabaseService.Client
+                    .From<User>()
+                    .Filter("email", Operator.Equals, sessionEmail)
+                    .Single();
+
+                if (user == null)
+                {
+                    return Json(new { success = false, message = "Không tìm thấy người dùng" });
+                }
+
+                // Get liked recipes with pagination
+                var offset = (page - 1) * pageSize;
+                var likesResult = await _supabaseService.Client
+                    .From<likeDislike>()
+                    .Filter("user_id", Operator.Equals, user.user_id)
+                    .Filter("is_like", Operator.Equals, true)
+                    .Order("created_at", Ordering.Descending)
+                    .Range(offset, offset + pageSize - 1)
+                    .Get();
+
+                var likes = likesResult.Models ?? new List<likeDislike>();
+
+                if (!likes.Any())
+                {
+                    return Json(new
+                    {
+                        success = true,
+                        recipes = new List<object>(),
+                        hasMore = false
+                    });
+                }
+
+                // Get recipe details for liked recipes
+                var recipeIds = likes.Select(l => l.recipe_id).ToList();
+                var recipes = new List<Recipe>();
+
+                foreach (var recipeId in recipeIds)
+                {
+                    var recipe = await _supabaseService.Client
+                        .From<Recipe>()
+                        .Filter("recipe_id", Operator.Equals, recipeId)
+                        .Single();
+                    
+                    if (recipe != null)
+                    {
+                        recipes.Add(recipe);
+                    }
+                }
+
+                // Map to simple objects for JSON response
+                var recipeData = recipes.Select(r => new
+                {
+                    recipeId = r.recipe_id ?? 0,
+                    name = r.name ?? "Unknown Recipe",
+                    thumbnailImg = r.thumbnail_img ?? "",
+                    cookTime = r.cook_time ?? 0,
+                    likes = 0, // TODO: Implement actual like count
+                    description = r.description ?? ""
+                }).ToList();
+
+                return Json(new
+                {
+                    success = true,
+                    recipes = recipeData,
+                    hasMore = likes.Count == pageSize
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = "Lỗi khi tải thêm bài đã reaction: " + ex.Message
+                });
             }
         }
     }

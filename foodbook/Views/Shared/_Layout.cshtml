@@ -41,14 +41,31 @@
                                 <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Recipes">Công thức</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Search">Tìm kiếm</a>
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Search" asp-action="Search">Tìm kiếm</a>
                             </li>
                             @if (Context.Session.IsAdmin())
                             {
-                                <li class="nav-item">
-                                    <a class="nav-link text-danger fw-bold" asp-area="" asp-controller="Admin" asp-action="Dashboard">
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle text-danger fw-bold" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                         <i class="bi bi-shield-check"></i> Admin
                                     </a>
+                                    <ul class="dropdown-menu" aria-labelledby="adminDropdown">
+                                        <li><a class="dropdown-item" asp-controller="Admin" asp-action="Dashboard">
+                                            <i class="bi bi-house"></i> Tổng quan hệ thống
+                                        </a></li>
+                                        <li><a class="dropdown-item" asp-controller="Admin" asp-action="Users">
+                                            <i class="bi bi-people"></i> Quản lý người dùng
+                                        </a></li>
+                                        <li><a class="dropdown-item" asp-controller="Admin" asp-action="ContentModeration">
+                                            <i class="bi bi-file-check"></i> Kiểm duyệt nội dung
+                                        </a></li>
+                                        <li><a class="dropdown-item" asp-controller="Admin" asp-action="CategoryManagement">
+                                            <i class="bi bi-funnel"></i> Quản lý phân loại
+                                        </a></li>
+                                        <li><a class="dropdown-item" asp-controller="Admin" asp-action="IngredientManagement">
+                                            <i class="bi bi-list-ul"></i> Quản lý nguyên liệu
+                                        </a></li>
+                                    </ul>
                                 </li>
                             }
                         </ul>
@@ -63,14 +80,9 @@
                                 </div>
                             </div>
                             
-                            <a href="@Url.Action("Logout", "Account")" class="btn btn-logout rounded-pill me-3 d-flex align-items-center">
-                                <i class="bi bi-arrow-right me-1"></i>
-                                Đăng xuất
-                            </a>
-                            
                             <div class="user-profile">
                                 @{ var avatar = Context.Session.GetString("avatar_img"); var avatarSrc = string.IsNullOrEmpty(avatar) ? Url.Content("~/images/default-avatar.jpg") : avatar; }
-                                <a class="d-flex align-items-center text-decoration-none" href="@Url.Action("Profile", "Account")">
+                                <a class="d-flex align-items-center text-decoration-none" href="@Url.Action("Info", "Profile")">
                                     <img id="navbar-avatar" src="@avatarSrc"
                                          alt="User Profile" 
                                          class="rounded-circle me-2" 
@@ -78,6 +90,10 @@
                                     <span class="text-dark">@Context.Session.GetUsername()</span>
                                 </a>
                             </div>
+                            
+                            <a href="@Url.Action("Logout", "Account")" class="btn btn-outline-secondary ms-3">
+                                <i class="bi bi-box-arrow-right"></i> Đăng xuất
+                            </a>
                         </div>
                     </div>
                 }
@@ -136,7 +152,7 @@
                 <h6 class="sidebar-section-title">TÀI KHOẢN CỦA TÔI</h6>
                 <ul class="sidebar-menu">
                     <li class="sidebar-menu-item">
-                        <a class="sidebar-menu-link @(currentController == "Account" && currentAction == "Profile" ? "active" : "")" asp-controller="Account" asp-action="Profile">
+                        <a class="sidebar-menu-link @(currentController == "Profile" && currentAction == "Info" ? "active" : "")" asp-controller="Profile" asp-action="Info">
                             <i class="sidebar-menu-icon bi bi-person"></i>
                             <span>Hồ sơ của tôi</span>
                         </a>
