@@ -24,17 +24,19 @@ namespace foodbook.Controllers
             return RedirectToAction("Newsfeed");
         }
 
-        public async Task<IActionResult> Newsfeed()
+        public async Task<IActionResult> Newsfeed(int page = 1, int pageSize = 4)
         {
             try
             {
                 _logger.LogInformation("Loading newsfeed...");
                 
-                // Lấy tất cả recipes từ DB
+                // Lấy recipes với pagination
+                var offset = (page - 1) * pageSize;
                 var recipesResult = await _supabaseService.Client
                     .From<Recipe>()
                     .Select("*")
                     .Order("created_at", Supabase.Postgrest.Constants.Ordering.Descending)
+                    .Range(offset, offset + pageSize - 1)
                     .Get();
                 
                 var recipes = recipesResult.Models;
@@ -170,6 +172,142 @@ namespace foodbook.Controllers
         }
 
         // AddRecipe đã được move sang RecipeController
+
+        // Redirect /Home/MyRecipes to /User/Notebook
+        public IActionResult MyRecipes()
+        {
+            return RedirectToAction("Notebook", "User");
+        }
+
+        // API endpoint for infinite scroll
+        public async Task<IActionResult> LoadMoreRecipes(int page = 1, int pageSize = 4)
+        {
+            try
+            {
+                // Lấy recipes với pagination
+                var offset = (page - 1) * pageSize;
+                var recipesResult = await _supabaseService.Client
+                    .From<Recipe>()
+                    .Select("*")
+                    .Order("created_at", Supabase.Postgrest.Constants.Ordering.Descending)
+                    .Range(offset, offset + pageSize - 1)
+                    .Get();
+                
+                var recipes = recipesResult.Models;
+                
+                // Map sang NewfeedViewModel
+                var newsfeedItems = new List<NewfeedViewModel>();
+                
+                foreach (var r in recipes)
+                {
+                    var recipeId = r.recipe_id ?? 0;
+                    
+                    // Load tags từ Ingredient và RecipeType
+                    var tags = new List<string>();
+                    
+                    // Thêm level làm tag đầu tiên
+                    if (!string.IsNullOrEmpty(r.level))
+                    {
+                        tags.Add($"#{r.level}");
+                    }
+                    
+                    // Load ingredients
+                    try
+                    {
+                        var ingredients = await _supabaseService.Client
+                            .From<Ingredient>()
+                            .Select("name")
+                            .Where(x => x.recipe_id == recipeId)
+                            .Get();
+                            
+                        foreach (var ing in ingredients.Models)
+                        {
+                            if (!string.IsNullOrEmpty(ing.name))
+                            {
+                                tags.Add($"#{ing.name.Trim()}");
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Failed to load ingredients for recipe {RecipeId}", recipeId);
+                    }
+                    
+                    // Load recipe types
+                    try
+                    {
+                        var recipeTypes = await _supabaseService.Client
+                            .From<RecipeRecipeType>()
+                            .Select("recipe_type_id")
+                            .Where(x => x.recipe_id == recipeId)
+                            .Get();
+                            
+                        foreach (var rt in recipeTypes.Models)
+                        {
+                            var typeResult = await _supabaseService.Client
+                                .From<RecipeType>()
+                                .Select("content")
+                                .Where(x => x.recipe_type_id == rt.recipe_type_id)
+                                .Single();
+                                
+                            if (typeResult != null && !string.IsNullOrEmpty(typeResult.content))
+                            {
+                                tags.Add($"#{typeResult.content.Trim()}");
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Failed to load recipe types for recipe {RecipeId}", recipeId);
+                    }
+                    
+                    // Load user info
+                    User? user = null;
+                    try
+                    {
+                        if (r.user_id > 0)
+                        {
+                            var userResult = await _supabaseService.Client
+                                .From<User>()
+                                .Select("full_name, avatar_img")
+                                .Where(x => x.user_id == r.user_id)
+                                .Single();
+                            user = userResult;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Failed to load user info for recipe {RecipeId}", recipeId);
+                    }
+                    
+                    newsfeedItems.Add(new NewfeedViewModel
+                    {
+                        RecipeId = recipeId,
+                        RecipeName = r.name ?? "Unknown Recipe",
+                        Description = r.description ?? "",
+                        ThumbnailImg = r.thumbnail_img ?? "",
+                        Level = r.level ?? "Dễ",
+                        Tags = tags,
+                        UserAvatarUrl = user?.avatar_img ?? "",
+                        UserName = user?.full_name ?? "Unknown User"
+                    });
+                }
+                
+                return Json(new { 
+                    success = true, 
+                    recipes = newsfeedItems,
+                    hasMore = recipes.Count == pageSize
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading more recipes");
+                return Json(new { 
+                    success = false, 
+                    message = "Không thể tải thêm công thức: " + ex.Message 
+                });
+            }
+        }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()

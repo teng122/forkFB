@@ -1,0 +1,595 @@
+@model foodbook.Models.ProfileViewModel
+
+@{
+    // 1. Khởi tạo an toàn. user sẽ là null nếu Model là null hoặc Model.User là null
+    var user = Model?.User;
+
+    ViewData["Title"] = "Thông tin cá nhân";
+
+    // Nếu avatar là string (URL), chỉ cần kiểm tra null/empty
+    string avatarSrc = Url.Content("~/images/default-avatar.jpg");
+
+    // LOGIC AVATAR STRING: Chỉ kiểm tra và gán URL nếu có
+    if (user != null && !string.IsNullOrEmpty(user.avatar_img))
+    {
+        // Giả định user.avatar_img LƯU TRỰC TIẾP URL
+        avatarSrc = user.avatar_img;
+    }
+
+    // Logic hiển thị nút theo ngữ cảnh
+    var sessionEmail = Context.Session.GetString("user_email");
+    var isOwnProfile = !string.IsNullOrEmpty(sessionEmail) && 
+                     !string.IsNullOrEmpty(user?.email) && 
+                     string.Equals(sessionEmail, user.email, StringComparison.OrdinalIgnoreCase);
+}
+
+<div class="profile-page">
+
+    @* KIỂM TRA LỖI/DỮ LIỆU THIẾU *@
+    @if (user == null)
+    {
+        <div class="alert alert-danger text-center" role="alert">
+            Không thể tải thông tin hồ sơ. Vui lòng đăng nhập lại.
+        </div>
+    }
+    else
+    {
+        @* Profile Header Section - Exact match to image *@
+        <div class="profile-header">
+            <div class="profile-avatar">
+                <img src="@avatarSrc" alt="Avatar" />
+            </div>
+            
+            <div class="profile-info">
+                <h2 class="profile-name">@(user.full_name ?? "Nguyễn Thu Thủy")</h2>
+                
+                <p class="profile-bio">@(user.bio ?? "Người đam mê ẩm thực, thích thử nghiệm các món ăn mới và chia sẻ bí quyết nấu nướng với mọi người. Luôn tìm kiếm những hương vị độc đáo và những trải nghiệm ẩm thực đáng nhớ. Các món ăn yêu thích: Bún Chả, Phở Cuốn, Gỏi Cuốn, Bánh Mì.")</p>
+                
+                <div class="profile-stats">
+                    <span class="stat-item"><strong>@(Model?.RecipeCount ?? 28)</strong> Công thức</span>
+                    <span class="stat-item"><strong>@(Model?.FollowersCount ?? 1200)</strong> Người theo dõi</span>
+                    <span class="stat-item"><strong>@(Model?.FollowingCount ?? 345)</strong> Đang theo dõi</span>
+                </div>
+                
+                
+                @if (isOwnProfile)
+                {
+                    @* Nút Chỉnh sửa khi xem profile của chính mình *@
+                    <a href="@Url.Action("Edit", "Profile", new { id = user.user_id })" 
+                       class="profile-edit-btn">
+                        <i class="bi bi-pencil"></i> Chỉnh sửa hồ sơ
+                    </a>
+                }
+                else
+                {
+                    @* Nút Theo dõi khi xem profile của người khác *@
+                    <button class="btn btn-success profile-edit-btn" id="follow-btn">
+                        <i class="bi bi-person-plus"></i> Theo dõi
+                    </button>
+                }
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+
+                @* TAB GIAO DIỆN - Custom Style *@
+                <div class="profile-tabs">
+                    <ul class="nav nav-pills" id="pills-tab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="pills-posts-tab" data-bs-toggle="pill" data-bs-target="#pills-posts" type="button" role="tab" aria-controls="pills-posts" aria-selected="true">Bài đăng</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="pills-reacted-tab" data-bs-toggle="pill" data-bs-target="#pills-reacted" type="button" role="tab" aria-controls="pills-reacted" aria-selected="false">Đã reaction</button>
+                    </li>
+                </ul>
+                </div>
+
+                <div class="tab-content" id="pills-tabContent">
+                    <div class="tab-pane fade show active" id="pills-posts" role="tabpanel" aria-labelledby="pills-posts-tab">
+                        @* RECIPE GRID - 4 columns *@
+                        @if (Model.Recipes != null && Model.Recipes.Any())
+                        {
+                            <div class="row g-4">
+                                @foreach (var recipe in Model.Recipes)
+                                {
+                                    // Xử lý Thumbnail là STRING URL
+                                    string thumbSrc = Url.Content("~/images/no-thumbnail.png");
+
+                                    // Giả định thuộc tính ThumbnailImg của RecipeViewModel LƯU TRỰC TIẾP URL
+                                    if (!string.IsNullOrEmpty(recipe.ThumbnailImg))
+                                    {
+                                        thumbSrc = recipe.ThumbnailImg;
+                                    }
+
+                                    <div class="col-lg-3 col-md-4 col-sm-6">
+                                        <div class="recipe-card h-100">
+                                            <div class="recipe-image">
+                                                <img src="@thumbSrc" class="w-100" style="height:200px; object-fit:cover;" alt="@recipe.Name" />
+                                            </div>
+                                            <div class="recipe-content">
+                                                <h6 class="recipe-title">@recipe.Name</h6>
+                                                <div class="recipe-actions">
+                                                    <div class="recipe-stats">
+                                                        <span><i class="bi bi-hand-thumbs-up text-success"></i> @recipe.Likes</span>
+                                                        <span><i class="bi bi-clock"></i> @recipe.CookTime phút</span>
+                                                    </div>
+                                                    @if (isOwnProfile)
+                                                    {
+                                                        <button class="btn btn-outline-danger">
+                                                            <i class="bi bi-trash"></i>
+                                                        </button>
+                                                    }
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            @* Hiển thị recipe mẫu giống ảnh khi chưa có dữ liệu *@
+                            <div class="row g-4">
+                                <div class="col-lg-3 col-md-4 col-sm-6">
+                                    <div class="recipe-card h-100">
+                                        <div class="recipe-image">
+                                            <img src="https://images.unsplash.com/photo-1551218808-94e220e084d2?w=400&h=200&fit=crop" class="w-100" style="height:200px; object-fit:cover;" alt="Phở Cuốn Hà Nội" />
+                                        </div>
+                                        <div class="recipe-content">
+                                            <h6 class="recipe-title">Phở Cuốn Hà Nội</h6>
+                                            <div class="recipe-actions">
+                                                <div class="recipe-stats">
+                                                    <span><i class="bi bi-hand-thumbs-up text-success"></i> 54</span>
+                                                    <span><i class="bi bi-clock"></i> 60 phút</span>
+                                                </div>
+                                                <button class="btn btn-outline-danger">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-3 col-md-4 col-sm-6">
+                                    <div class="recipe-card h-100">
+                                        <div class="recipe-image">
+                                            <img src="https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=400&h=200&fit=crop" class="w-100" style="height:200px; object-fit:cover;" alt="Bún Chả Gia Truyền" />
+                                        </div>
+                                        <div class="recipe-content">
+                                            <h6 class="recipe-title">Bún Chả Gia Truyền</h6>
+                                            <div class="recipe-actions">
+                                                <div class="recipe-stats">
+                                                    <span><i class="bi bi-hand-thumbs-up text-success"></i> 42</span>
+                                                    <span><i class="bi bi-clock"></i> 45 phút</span>
+                                                </div>
+                                                <button class="btn btn-outline-danger">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-3 col-md-4 col-sm-6">
+                                    <div class="recipe-card h-100">
+                                        <div class="recipe-image">
+                                            <img src="https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=200&fit=crop" class="w-100" style="height:200px; object-fit:cover;" alt="Gỏi Cuốn Tôm Thịt" />
+                                        </div>
+                                        <div class="recipe-content">
+                                            <h6 class="recipe-title">Gỏi Cuốn Tôm Thịt</h6>
+                                            <div class="recipe-actions">
+                                                <div class="recipe-stats">
+                                                    <span><i class="bi bi-hand-thumbs-up text-success"></i> 38</span>
+                                                    <span><i class="bi bi-clock"></i> 25 phút</span>
+                                                </div>
+                                                <button class="btn btn-outline-danger">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-3 col-md-4 col-sm-6">
+                                    <div class="recipe-card h-100">
+                                        <div class="recipe-image">
+                                            <img src="https://images.unsplash.com/photo-1586190848861-99aa4a171e90?w=400&h=200&fit=crop" class="w-100" style="height:200px; object-fit:cover;" alt="Bánh Mì Thập Cẩm" />
+                                        </div>
+                                        <div class="recipe-content">
+                                            <h6 class="recipe-title">Bánh Mì Thập Cẩm</h6>
+                                            <div class="recipe-actions">
+                                                <div class="recipe-stats">
+                                                    <span><i class="bi bi-hand-thumbs-up text-success"></i> 54</span>
+                                                    <span><i class="bi bi-clock"></i> 15 phút</span>
+                                                </div>
+                                                <button class="btn btn-outline-danger">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="tab-pane fade" id="pills-reacted" role="tabpanel" aria-labelledby="pills-reacted-tab">
+                        <div class="text-center py-5">
+                            <i class="bi bi-heart text-muted" style="font-size: 3rem;"></i>
+                            <h5 class="text-muted mt-3">Chưa có bài đăng nào được reaction</h5>
+                            <p class="text-muted">Các bài đăng bạn đã thích sẽ hiển thị ở đây</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    
+    <script>
+        // Infinite Scroll for Profile Posts
+        let currentPage = 1;
+        let isLoading = false;
+        let hasMore = true;
+        let currentTab = 'posts'; // 'posts' or 'reacted'
+        const isOwnProfile = @(isOwnProfile ? "true" : "false");
+
+        function loadMorePosts() {
+            if (isLoading || !hasMore) return;
+            
+            isLoading = true;
+            currentPage++;
+            
+            // Show loading indicator
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'col-12 text-center py-4';
+            loadingDiv.innerHTML = '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>';
+            
+            const activeTab = document.querySelector('.tab-pane.active');
+            const row = activeTab.querySelector('.row.g-4');
+            if (row) {
+                row.appendChild(loadingDiv);
+            }
+            
+            // Determine endpoint based on current tab
+            const endpoint = currentTab === 'posts' ? 'LoadMoreProfilePosts' : 'LoadMoreReactedPosts';
+            
+            fetch(`/Profile/${endpoint}?page=${currentPage}&pageSize=4`)
+                .then(response => response.json())
+                .then(data => {
+                    // Remove loading indicator
+                    loadingDiv.remove();
+                    
+                    if (data.success && data.recipes && data.recipes.length > 0) {
+                        // Add new recipes to the grid
+                        const row = activeTab.querySelector('.row.g-4');
+                        if (row) {
+                            data.recipes.forEach(recipe => {
+                                const recipeHtml = createRecipeCard(recipe);
+                                row.insertAdjacentHTML('beforeend', recipeHtml);
+                            });
+                        }
+                        
+                        hasMore = data.hasMore;
+                    } else {
+                        hasMore = false;
+                        if (data.recipes && data.recipes.length === 0) {
+                            // Show "no more posts" message
+                            const noMoreDiv = document.createElement('div');
+                            noMoreDiv.className = 'col-12 text-center py-4 text-muted';
+                            noMoreDiv.innerHTML = '<p>Đã hiển thị tất cả bài đăng!</p>';
+                            const row = activeTab.querySelector('.row.g-4');
+                            if (row) {
+                                row.appendChild(noMoreDiv);
+                            }
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading more posts:', error);
+                    loadingDiv.remove();
+                })
+                .finally(() => {
+                    isLoading = false;
+                });
+        }
+
+        function createRecipeCard(recipe) {
+            const deleteButton = isOwnProfile ? 
+                `<button class="btn btn-outline-danger">
+                    <i class="bi bi-trash"></i>
+                </button>` : '';
+            
+            return `
+                <div class="col-lg-3 col-md-4 col-sm-6">
+                    <div class="recipe-card h-100">
+                        <div class="recipe-image">
+                            <img src="${recipe.thumbnailImg || '/images/no-thumbnail.png'}" 
+                                 class="w-100" 
+                                 style="height:200px; object-fit:cover;" 
+                                 alt="${recipe.name}" />
+                        </div>
+                        <div class="recipe-content">
+                            <h6 class="recipe-title">${recipe.name}</h6>
+                            <div class="recipe-actions">
+                                <div class="recipe-stats">
+                                    <span><i class="bi bi-hand-thumbs-up text-success"></i> ${recipe.likes || 0}</span>
+                                    <span><i class="bi bi-clock"></i> ${recipe.cookTime || 0} phút</span>
+                                </div>
+                                ${deleteButton}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Tab change handler
+        document.addEventListener('DOMContentLoaded', function() {
+            const tabButtons = document.querySelectorAll('[data-bs-toggle="pill"]');
+            
+            tabButtons.forEach(button => {
+                button.addEventListener('shown.bs.tab', function(event) {
+                    const target = event.target.getAttribute('data-bs-target');
+                    
+                    // Reset pagination when switching tabs
+                    currentPage = 1;
+                    hasMore = true;
+                    isLoading = false;
+                    
+                    // Update current tab
+                    if (target === '#pills-posts') {
+                        currentTab = 'posts';
+                    } else if (target === '#pills-reacted') {
+                        currentTab = 'reacted';
+                    }
+                });
+            });
+        });
+
+        // Scroll event listener
+        window.addEventListener('scroll', function() {
+            if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 1000) {
+                loadMorePosts();
+            }
+        });
+    </script>
+}
+
+<style>
+/* Profile Page Styles - Exact match to the image */
+.profile-page {
+    background: #f8f9fa;
+    min-height: 100vh;
+    padding: 2rem 0;
+}
+
+.profile-header {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    padding: 3rem 2rem;
+    text-align: center;
+    margin: 0 auto 2rem auto;
+    max-width: 800px;
+}
+
+.profile-avatar {
+    margin-bottom: 1.5rem;
+}
+
+.profile-avatar img {
+    width: 120px;
+    height: 120px;
+    border: 2px solid #e9ecef;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.profile-name {
+    font-weight: bold;
+    margin-bottom: 1rem;
+    color: #212529;
+    font-size: 2rem;
+}
+
+.profile-bio {
+    max-width: 600px;
+    margin: 0 auto 1.5rem auto;
+    line-height: 1.6;
+    font-size: 1rem;
+    color: #6c757d;
+}
+
+.profile-stats {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-bottom: 1.5rem;
+    font-size: 1rem;
+}
+
+.stat-item {
+    color: #6c757d;
+    font-weight: 600;
+}
+
+.stat-item strong {
+    color: #212529;
+    font-weight: bold;
+}
+
+.profile-edit-btn {
+    background: white;
+    border: 1px solid #dee2e6;
+    color: #6c757d;
+    padding: 0.75rem 2rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.profile-edit-btn:hover {
+    background: #f8f9fa;
+    color: #495057;
+    text-decoration: none;
+}
+
+/* Profile Tabs */
+.profile-tabs {
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.profile-tabs .nav-pills {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 0.5rem;
+    display: inline-flex;
+}
+
+.profile-tabs .nav-link {
+    border-radius: 8px;
+    color: #6c757d;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    border: none;
+    padding: 0.75rem 1.5rem;
+}
+
+.profile-tabs .nav-link.active {
+    background: #28a745;
+    color: white;
+    box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+}
+
+.profile-tabs .nav-link:hover:not(.active) {
+    background: #e9ecef;
+    color: #495057;
+}
+
+/* Recipe Cards */
+.recipe-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+    overflow: hidden;
+    border: none;
+    height: 100%;
+}
+
+.recipe-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.recipe-image {
+    overflow: hidden;
+    border-radius: 12px 12px 0 0;
+    height: 200px;
+}
+
+.recipe-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.recipe-card:hover .recipe-image img {
+    transform: scale(1.05);
+}
+
+.recipe-content {
+    padding: 1rem;
+}
+
+.recipe-title {
+    color: #212529;
+    font-size: 1rem;
+    line-height: 1.4;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+}
+
+.recipe-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.875rem;
+}
+
+.recipe-stats {
+    display: flex;
+    gap: 1rem;
+    color: #6c757d;
+}
+
+.recipe-stats span {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.recipe-actions .btn-outline-danger {
+    border-color: #dc3545;
+    color: #dc3545;
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    font-size: 0.75rem;
+}
+
+.recipe-actions .btn-outline-danger:hover {
+    background: #dc3545;
+    color: white;
+    transform: scale(1.05);
+}
+
+/* Responsive */
+@@media (max-width: 768px) {
+    .profile-header {
+        padding: 2rem 1.5rem;
+    }
+    
+    .profile-stats {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .stat-item {
+        text-align: center;
+    }
+    
+    .profile-bio {
+        font-size: 0.9rem;
+    }
+    
+    .profile-tabs .nav-pills {
+        flex-direction: column;
+    }
+}
+
+@@media (max-width: 576px) {
+    .profile-avatar img {
+        width: 100px;
+        height: 100px;
+    }
+    
+    .profile-name {
+        font-size: 1.5rem;
+    }
+    
+    .profile-edit-btn {
+        padding: 0.5rem 1.5rem;
+        font-size: 0.9rem;
+    }
+}
+</style>
