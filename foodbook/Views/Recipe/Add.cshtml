@@ -254,8 +254,8 @@
                         div.className = 'autocomplete-item';
                         div.textContent = item;
                         div.onclick = function() {
-                            onSelect(item);
-                            input.value = '';
+                            input.value = item; // Set input value to selected item
+                            onSelect(); // Call without parameter, let function read from input
                             dropdown.style.display = 'none';
                         };
                         dropdown.appendChild(div);

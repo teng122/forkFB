@@ -50,10 +50,26 @@
                     <!-- Nội dung -->
                     <div class="card-body feed-card-body">
                         <h5 class="card-title fw-bold mb-2 feed-title">@recipe.RecipeName</h5>
-                        <div class="tag-list mb-3">
-                            <span class="tag-chip">#@recipe.Level</span>
-                            <span class="tag-chip">#homemade</span>
-                            <span class="tag-chip">#quick</span>
+                        <div class="tag-container mb-3" data-recipe-id="@recipe.RecipeId">
+                            <div class="tag-list tag-collapsed">
+                                @if (recipe.Tags != null && recipe.Tags.Any())
+                                {
+                                @foreach (var tag in recipe.Tags.Take(3))
+                                {
+                                    <span class="tag-chip">@tag</span>
+                                }
+                                }
+                                else
+                                {
+                                    <span class="tag-chip">#@recipe.Level</span>
+                                }
+                            </div>
+                            @if (recipe.Tags != null && recipe.Tags.Count > 3)
+                            {
+                                <button class="tag-show-more-btn" onclick="event.stopPropagation(); event.preventDefault(); showTagsPopup(@recipe.RecipeId, '@string.Join("|", recipe.Tags)')">
+                                    +@(recipe.Tags.Count - 3)
+                                </button>
+                            }
                         </div>
                     </div>
                 </a>
@@ -78,5 +94,66 @@
     </div>
 </div>
 
+<!-- Tags Dropdown Popup -->
+<div id="tagsDropdown" class="tags-dropdown-popup" style="display: none;">
+    <div class="tags-dropdown-content">
+        <div class="tags-dropdown-header">
+            <span class="tags-dropdown-title">Tất cả phân loại</span>
+            <button type="button" class="tags-dropdown-close" onclick="hideTagsPopup()">&times;</button>
+        </div>
+        <div id="tagsPopupContent" class="tags-dropdown-body">
+            <!-- Tags sẽ được load vào đây -->
+        </div>
+    </div>
+</div>
+
 <!-- Bootstrap Icons (nếu chưa có) -->
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
+
+<script>
+function showTagsPopup(recipeId, tagsString) {
+    // Parse tags từ string
+    const tags = tagsString.split('|');
+    
+    // Tạo HTML cho tags
+    const tagsHtml = tags.map(tag => 
+        `<span class="tag-chip">${tag}</span>`
+    ).join('');
+    
+    // Load tags vào popup
+    document.getElementById('tagsPopupContent').innerHTML = tagsHtml;
+    
+    // Tìm vị trí tag đầu tiên của recipe này
+    const tagContainer = document.querySelector(`[data-recipe-id="${recipeId}"]`);
+    const firstTag = tagContainer.querySelector('.tag-chip');
+    
+    if (firstTag) {
+        const rect = firstTag.getBoundingClientRect();
+        const dropdown = document.getElementById('tagsDropdown');
+        
+        // Đặt vị trí dropdown ngay dưới tag đầu tiên
+        dropdown.style.position = 'fixed';
+        dropdown.style.top = (rect.bottom + window.scrollY + 5) + 'px';
+        dropdown.style.left = rect.left + 'px';
+        dropdown.style.zIndex = '9999';
+        
+        // Hiển thị dropdown
+        dropdown.style.display = 'block';
+    }
+}
+
+function hideTagsPopup() {
+    document.getElementById('tagsDropdown').style.display = 'none';
+}
+
+// Đóng dropdown khi click outside
+document.addEventListener('click', function(event) {
+    const dropdown = document.getElementById('tagsDropdown');
+    const isClickInside = dropdown.contains(event.target);
+    const isTagButton = event.target.classList.contains('tag-show-more-btn');
+    
+    if (!isClickInside && !isTagButton) {
+        hideTagsPopup();
+    }
+});
+</script>

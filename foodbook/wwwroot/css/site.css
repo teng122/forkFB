@@ -380,8 +380,106 @@ body {
 .feed-card-body { padding: 16px 24px 12px 24px !important; }
 .feed-title { font-size: 1.35rem; }
 
-.tag-list { display: flex; flex-wrap: wrap; gap: 8px; }
-.tag-chip { background: #f3f4f6; color: #374151; font-weight: 600; font-size: .8rem; padding: 6px 12px; border-radius: 999px; }
+.tag-container { 
+    position: relative; 
+}
+.tag-list { 
+    display: flex; 
+    flex-wrap: nowrap; 
+    gap: 8px; 
+    align-items: center; 
+    overflow-x: auto;
+    white-space: nowrap;
+}
+.tag-chip { 
+    background: #f3f4f6; 
+    color: #374151; 
+    font-weight: 600; 
+    font-size: .8rem; 
+    padding: 6px 12px; 
+    border-radius: 999px; 
+    white-space: nowrap; 
+    flex-shrink: 0; 
+    display: inline-block;
+}
+.tag-show-more-btn { 
+    background: #e5e7eb; 
+    color: #6b7280; 
+    border: none; 
+    border-radius: 999px; 
+    padding: 6px 12px; 
+    font-size: .8rem; 
+    font-weight: 600; 
+    cursor: pointer; 
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+    margin-top: 8px;
+}
+.tag-show-more-btn:hover { 
+    background: #d1d5db; 
+    color: #374151; 
+}
+
+/* Tags Dropdown Popup */
+.tags-dropdown-popup {
+    position: fixed;
+    z-index: 9999;
+    max-width: 300px;
+    min-width: 200px;
+}
+
+.tags-dropdown-content {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+}
+
+.tags-dropdown-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.tags-dropdown-title {
+    font-weight: 600;
+    color: #374151;
+    font-size: 0.9rem;
+}
+
+.tags-dropdown-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: #6b7280;
+    cursor: pointer;
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+}
+
+.tags-dropdown-close:hover {
+    background: #e5e7eb;
+    color: #374151;
+}
+
+.tags-dropdown-body {
+    padding: 16px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    max-height: 200px;
+    overflow-y: auto;
+}
 
 .feed-actions { background: #fff; padding: 14px 24px 18px 24px; display: flex; align-items: center; justify-content: center !important; gap: 62px; }
 .feed-actions .action { display: inline-flex; align-items: center; gap: 8px; color: #6b7280; padding: 8px 12px; border-radius: 10px; }

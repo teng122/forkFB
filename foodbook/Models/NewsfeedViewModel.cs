@@ -15,5 +15,7 @@
         public int LikesCount { get; set; } = 0;
         public int CommentsCount { get; set; } = 0;
         public int SharesCount { get; set; } = 0;
+        
+        public List<string> Tags { get; set; } = new List<string>();
     }
 }
