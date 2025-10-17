@@ -21,9 +21,6 @@ namespace foodbook.Models
 
         [Column("display_order")]
         public int display_order { get; set; } = 1;
-        
-        [Column("created_at")]
-        public DateTime created_at { get; set; } = DateTime.UtcNow;
     }
 }
 

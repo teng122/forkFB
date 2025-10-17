@@ -15,9 +15,6 @@ namespace foodbook.Models
         
         [Column("media_video")]
         public string? media_video { get; set; }  // URL từ Supabase Storage
-        
-        [Column("created_at")]
-        public DateTime created_at { get; set; } = DateTime.UtcNow;
     }
 }
 
