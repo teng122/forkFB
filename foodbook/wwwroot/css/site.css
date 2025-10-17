@@ -356,6 +356,43 @@ body {
   margin-bottom: 0;
 }
 
+/* Newsfeed */
+.newsfeed-container { padding-top: 1rem; }
+.newsfeed-grid { row-gap: 2rem !important; }
+/* cố định 2 cột trên desktop, 1 cột trên mobile */
+.newsfeed-grid { grid-auto-rows: 1fr; }
+
+.feed-card { border-radius: 16px; overflow: hidden; background: #ffffff; }
+.feed-card:hover { box-shadow: 0 10px 24px rgba(0,0,0,.08); transform: translateY(-2px); transition: .2s ease; }
+.feed-card-header { display: flex; flex-direction: column; align-items: center; }
+.user-inline-center { display: inline-flex; align-items: center; gap: 8px; }
+.feed-card-header .user-avatar { box-shadow: 0 0 0 2px #fff; }
+.user-avatar-ring { outline: 3px solid #e9ecef; border: 2px solid #fff; }
+.feed-card-header .user-name { line-height: 1.1; }
+.follow-btn { background-color: #1dd75b; border: none; font-weight: 600; }
+.follow-btn:hover { background-color: #16a34a; }
+.follow-btn-sm { padding: 6px 14px; font-size: .9rem; }
+
+.feed-link { display: block; padding-left: 24px; padding-right: 24px; }
+.feed-card .thumb { width: calc(100% - 48px); aspect-ratio: 3 / 2; border-radius: 14px; overflow: hidden; margin: 12px auto 0; }
+.feed-card .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.feed-card-body { padding: 16px 24px 12px 24px !important; }
+.feed-title { font-size: 1.35rem; }
+
+.tag-list { display: flex; flex-wrap: wrap; gap: 8px; }
+.tag-chip { background: #f3f4f6; color: #374151; font-weight: 600; font-size: .8rem; padding: 6px 12px; border-radius: 999px; }
+
+.feed-actions { background: #fff; padding: 14px 24px 18px 24px; display: flex; align-items: center; justify-content: center !important; gap: 62px; }
+.feed-actions .action { display: inline-flex; align-items: center; gap: 8px; color: #6b7280; padding: 8px 12px; border-radius: 10px; }
+.feed-actions .action i { font-size: 1.05rem; }
+.feed-actions .action:hover { color: #111827; cursor: pointer; }
+
+@media (min-width: 992px) {
+  .row.newsfeed-grid { --bs-gutter-x: 2rem; }
+  .row.newsfeed-grid > .col { max-width: 50%; }
+}
+
 /* Sidebar (restored) */
 .sidebar {
   position: fixed;

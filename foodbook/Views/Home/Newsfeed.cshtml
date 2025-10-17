@@ -4,73 +4,65 @@
     ViewData["Title"] = "Newsfeed";
 }
 
-<div class="container mt-4">
-    <div class="row row-cols-1 row-cols-md-2 g-4">
+<div class="container mt-4 newsfeed-container">
+    <div class="row row-cols-1 row-cols-md-2 g-4 newsfeed-grid">
         @if (Model != null && Model.Any())
         {
             foreach (var recipe in Model)
             {
                 <div class="col">
-                    <div class="card h-100 shadow-sm border-0 rounded-4 overflow-hidden">
+                    <div class="card h-100 shadow-sm border-0 rounded-4 overflow-hidden feed-card">
 
                         <!-- Phần đầu: Avatar + tên + nút theo dõi -->
-                        <div class="d-flex align-items-center justify-content-between p-3 pb-0">
-
-                            <!-- Bên trái: avatar + tên (đặt ngang hàng) -->
-                            <div class="d-flex align-items-center">
+                        <div class="feed-card-header text-center p-3 pb-0">
+                            <div class="user-inline-center">
                                 <img src="@recipe.UserAvatarUrl"
                                      onerror="this.onerror=null;this.src='https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png';"
                                      alt="avatar"
-                                     class="rounded-circle me-2"
+                                     class="rounded-circle user-avatar user-avatar-ring"
                                      width="40" height="40"
                                      style="object-fit: cover;">
-                                <div class="fw-semibold">@recipe.UserName</div>
+                                <div class="fw-semibold user-name">@recipe.UserName</div>
                             </div>
-
-                            <!-- Bên phải: nút theo dõi -->
-                            <button class="btn btn-sm btn-success rounded-pill px-3">
-                                Theo dõi
-                            </button>
+                            <button class="btn btn-success rounded-pill px-3 mt-2 follow-btn follow-btn-sm">Theo dõi</button>
                         </div>
 
                         <!-- Bọc ảnh + nội dung bằng link -->
                         <a asp-controller="Home"
                            asp-action="Recipe_Detail"
                            asp-route-id="@recipe.RecipeId"
-                           class="text-decoration-none text-dark">
+                           class="text-decoration-none text-dark feed-link">
 
                             <!-- Ảnh món ăn -->
-                            @if (!string.IsNullOrEmpty(recipe.ThumbnailImg))
-                            {
-                                <img src="@recipe.ThumbnailImg"
-                                     class="card-img-top mt-2"
-                                     alt="@recipe.RecipeName"
-                                     style="height: 230px; object-fit: cover;">
-                            }
-                            else
-                            {
-                                <img src="https://via.placeholder.com/400x250?text=No+Image"
-                                     class="card-img-top mt-2"
-                                     alt="No Image"
-                                     style="height: 230px; object-fit: cover;">
-                            }
+                            <div class="thumb mt-2">
+                                @if (!string.IsNullOrEmpty(recipe.ThumbnailImg))
+                                {
+                                    <img src="@recipe.ThumbnailImg"
+                                         alt="@recipe.RecipeName">
+                                }
+                                else
+                                {
+                                    <img src="https://via.placeholder.com/600x400?text=No+Image"
+                                         alt="No Image">
+                                }
+                            </div>
 
                     <!-- Nội dung -->
-                    <div class="card-body">
-                        <h5 class="card-title fw-bold">@recipe.RecipeName</h5>
-                        <p class="card-text text-muted small mb-3">
-                            @(recipe.Description?.Length > 100
-                                                        ? recipe.Description.Substring(0, 100) + "..."
-                                                        : recipe.Description)
-                        </p>
+                    <div class="card-body feed-card-body">
+                        <h5 class="card-title fw-bold mb-2 feed-title">@recipe.RecipeName</h5>
+                        <div class="tag-list mb-3">
+                            <span class="tag-chip">#@recipe.Level</span>
+                            <span class="tag-chip">#homemade</span>
+                            <span class="tag-chip">#quick</span>
+                        </div>
                     </div>
                 </a>
 
                             <!-- Các chỉ số tương tác -->
-                            <div class="d-flex justify-content-around border-top pt-2 text-muted small">
-                                <div><i class="bi bi-hand-thumbs-up me-1"></i>@recipe.LikesCount</div>
-                                <div><i class="bi bi-chat me-1"></i>@recipe.CommentsCount</div>
-                                <div><i class="bi bi-share me-1"></i>@recipe.SharesCount</div>
+                            <div class="d-flex justify-content-between align-items-center border-top text-muted small feed-actions">
+                                <div class="action"><i class="bi bi-hand-thumbs-up me-1"></i>@recipe.LikesCount</div>
+                                <div class="action"><i class="bi bi-chat me-1"></i>@recipe.CommentsCount</div>
+                                <div class="action"><i class="bi bi-share me-1"></i>@recipe.SharesCount</div>
                             </div>
                         </div>
 
