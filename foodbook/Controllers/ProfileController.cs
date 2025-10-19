@@ -55,12 +55,12 @@ namespace foodbook.Controllers
                 if (userResp == null)
                     return View("~/Views/Account/PersonalInfo.cshtml", new ProfileViewModel());
 
-                // Lấy các recipe của user (chỉ 4 bài đầu tiên)
+                // Lấy các recipe của user (8 bài đầu tiên)
                 var recipesResp = await _supabaseService.Client
                     .From<Recipe>()
                     .Filter("user_id", Operator.Equals, userResp.user_id)
                     .Order("created_at", Ordering.Descending)
-                    .Range(0, 3) // Chỉ lấy 4 bài đầu tiên (0-3)
+                    .Range(0, 7) // Lấy 8 bài đầu tiên (0-7)
                     .Get();
 
                 var recipeModels = recipesResp.Models ?? new List<Recipe>();
@@ -138,7 +138,7 @@ namespace foodbook.Controllers
             if (!string.Equals(user.email, sessionEmail, StringComparison.OrdinalIgnoreCase))
             {
                 TempData["ErrorMessage"] = "Bạn không có quyền chỉnh sửa hồ sơ này.";
-                return RedirectToAction("Index", new { id = id });
+                return RedirectToAction("Info", new { id = id });
             }
 
             return View(user);
@@ -157,7 +157,7 @@ namespace foodbook.Controllers
                 if (!string.Equals(model.email, sessionEmail, StringComparison.OrdinalIgnoreCase))
                 {
                     TempData["ErrorMessage"] = "Bạn không có quyền cập nhật hồ sơ này.";
-                    return RedirectToAction("Index", new { id = model.user_id });
+                    return RedirectToAction("Info", new { id = model.user_id });
                 }
 
                 // Lấy user hiện tại để tránh ghi đè các trường nhạy cảm (password, email, username)
@@ -169,7 +169,7 @@ namespace foodbook.Controllers
                 if (existingUser == null)
                 {
                     TempData["ErrorMessage"] = "Không tìm thấy người dùng.";
-                    return RedirectToAction("Index", new { id = model.user_id });
+                    return RedirectToAction("Info", new { id = model.user_id });
                 }
 
                 // Upload avatar nếu có
@@ -196,7 +196,7 @@ namespace foodbook.Controllers
                 }
 
                 TempData["SuccessMessage"] = "Cập nhật hồ sơ thành công";
-                return RedirectToAction("Index", new { id = model.user_id });
+                return RedirectToAction("Info", new { id = model.user_id });
             }
             catch (Exception ex)
             {
@@ -206,7 +206,7 @@ namespace foodbook.Controllers
         }
 
         // API endpoint for infinite scroll - Load more profile posts
-        public async Task<IActionResult> LoadMoreProfilePosts(int page = 1, int pageSize = 4)
+        public async Task<IActionResult> LoadMoreProfilePosts(int page = 1, int pageSize = 8)
         {
             try
             {
@@ -267,7 +267,7 @@ namespace foodbook.Controllers
         }
 
         // API endpoint for infinite scroll - Load more reacted posts
-        public async Task<IActionResult> LoadMoreReactedPosts(int page = 1, int pageSize = 4)
+        public async Task<IActionResult> LoadMoreReactedPosts(int page = 1, int pageSize = 8)
         {
             try
             {

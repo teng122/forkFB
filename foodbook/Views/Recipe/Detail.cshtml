@@ -1,0 +1,752 @@
+@model dynamic
+@{
+    ViewData["Title"] = Model.Recipe.name;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<!-- Back Button -->
+<div class="mb-3">
+    <a href="javascript:history.back()" class="text-decoration-none text-muted" style="font-size: 14px;">
+        <i class="bi bi-arrow-left"></i> Quay lại
+    </a>
+</div>
+
+<!-- Recipe Title with Level Badge -->
+<div class="d-flex align-items-center gap-2 mb-2">
+    <h1 class="recipe-title mb-0">@Model.Recipe.name</h1>
+    <span class="badge bg-success level-badge">@Model.Recipe.level</span>
+</div>
+
+<!-- Author Info with Follow Button -->
+<div class="d-flex align-items-center justify-content-between mb-2">
+    <div class="d-flex align-items-center gap-2">
+        @if (!string.IsNullOrEmpty(Model.Author?.avatar_img))
+        {
+            <img src="@Model.Author.avatar_img" alt="@Model.Author?.username" 
+                 class="rounded-circle" style="width: 28px; height: 28px; object-fit: cover;">
+        }
+        else
+        {
+            <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center" 
+                 style="width: 28px; height: 28px; font-size: 12px;">
+                <i class="bi bi-person"></i>
+            </div>
+        }
+        <a href="@Url.Action("Info", "Profile", new { id = Model.Author?.user_id })" 
+           class="text-decoration-none text-dark fw-medium" style="font-size: 14px;">
+            @Model.Author?.username
+        </a>
+        <button class="btn btn-outline-success btn-sm follow-btn">Theo dõi</button>
+    </div>
+    
+    <!-- Save Button -->
+    <button class="btn btn-success btn-sm save-btn" id="btnSaveRecipe" 
+            data-recipe-id="@Model.Recipe.recipe_id" data-is-saved="@Model.IsSaved">
+        <i class="bi @(Model.IsSaved ? "bi-bookmark-fill" : "bi-bookmark")"></i>
+        Lưu vào sổ tay
+    </button>
+</div>
+
+<!-- Recipe Stats -->
+<div class="d-flex align-items-center gap-3 text-muted mb-3 recipe-stats">
+    <span class="stat-item cursor-pointer" id="btnLike" data-recipe-id="@Model.Recipe.recipe_id" data-is-liked="@Model.IsLiked">
+        <i class="bi @(Model.IsLiked ? "bi-heart-fill text-danger" : "bi-heart")"></i>
+        <span id="likeCount">@Model.LikeCount</span>
+    </span>
+    <span class="stat-item">
+        <i class="bi bi-chat"></i>
+        <span>@Model.CommentCount</span>
+    </span>
+    <span class="stat-item">
+        <i class="bi bi-bookmark"></i>
+        Bao lưu
+    </span>
+    <span class="stat-item">
+        <i class="bi bi-clock"></i>
+        @Model.Recipe.cook_time phút
+    </span>
+</div>
+
+<!-- Thumbnail Image -->
+@if (!string.IsNullOrEmpty(Model.Recipe.thumbnail_img))
+{
+    <div class="recipe-thumbnail mb-4">
+        <img src="@Model.Recipe.thumbnail_img" alt="@Model.Recipe.name" class="img-fluid rounded-3">
+    </div>
+}
+
+<!-- Ingredients Section -->
+<div class="recipe-section mb-4">
+    <h5 class="section-title mb-3">Nguyên liệu</h5>
+    <div class="ingredients-box">
+        @foreach (var ingredient in Model.Ingredients)
+        {
+            <div class="ingredient-item">@ingredient.name</div>
+        }
+    </div>
+</div>
+
+<!-- Recipe Steps Section -->
+@{
+    int stepIndex = 0;
+}
+@foreach (var step in Model.Steps)
+{
+    <div class="recipe-step mb-3">
+        <div class="step-header collapsed" data-bs-toggle="collapse" data-bs-target="#step@(step.step)">
+            <span class="step-title">Bước @step.step</span>
+            <i class="bi bi-chevron-down step-chevron"></i>
+        </div>
+        
+        <div id="step@(step.step)" class="collapse">
+            <div class="step-content">
+                <!-- Step Description -->
+                <div class="step-description mb-3">
+                    <div class="step-label">Mô tả bước:</div>
+                    <p class="step-text">@step.instruction</p>
+                </div>
+                
+                <!-- Step Media -->
+                @if (Model.StepMedia.ContainsKey(step.step) && Model.StepMedia[step.step].Count > 0)
+                {
+                    var mediaList = Model.StepMedia[step.step];
+                    
+                    <div class="step-media-wrapper" id="mediaContainer@(step.step)">
+                        @for (int i = 0; i < mediaList.Count; i++)
+                        {
+                            var media = mediaList[i];
+                            var displayStyle = i == 0 ? "display: block;" : "display: none;";
+                            
+                            <div class="step-media-item position-relative" data-step="@step.step" data-index="@i" style="@displayStyle">
+                                @if (!string.IsNullOrEmpty(media.media_img))
+                                {
+                                    <img src="@media.media_img" alt="Step @step.step" 
+                                         class="step-image img-fluid rounded-3" 
+                                         onclick="showImageModal('@media.media_img')">
+                                    
+                                    @if (mediaList.Count > 1)
+                                    {
+                                        <div class="step-number-badge">@(i + 1)</div>
+                                    }
+                                }
+                                else if (!string.IsNullOrEmpty(media.media_video))
+                                {
+                                    <video controls class="step-image img-fluid rounded-3">
+                                        <source src="@media.media_video" type="video/mp4">
+                                        Trình duyệt của bạn không hỗ trợ video.
+                                    </video>
+                                }
+                            </div>
+                        }
+                        
+                        @if (mediaList.Count > 1)
+                        {
+                            <!-- Navigation Arrows -->
+                            <button class="media-nav-btn prev-btn" onclick="navigateStepMedia(@step.step, -1)">
+                                <i class="bi bi-chevron-left"></i>
+                            </button>
+                            <button class="media-nav-btn next-btn" onclick="navigateStepMedia(@step.step, 1)">
+                                <i class="bi bi-chevron-right"></i>
+                            </button>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+    stepIndex++;
+}
+
+<!-- Comments Section -->
+<div class="comments-section">
+    <h5 class="section-title mb-3">Bình luận của bạn</h5>
+    
+    <!-- Comment Form -->
+    <form id="commentForm" class="comment-form mb-4">
+        <textarea class="comment-input" id="commentBody" rows="3" 
+                  placeholder="Viết bình luận của bạn..." required></textarea>
+        <div class="text-end mt-2">
+            <button class="btn btn-success comment-submit-btn" type="submit">
+                Gửi bình luận
+            </button>
+        </div>
+    </form>
+    
+    <!-- Comments List -->
+    <div id="commentsList">
+        @if (Model.Comments.Count > 0)
+        {
+            foreach (var commentItem in Model.Comments)
+            {
+                <div class="comment-item">
+                    <div class="d-flex gap-2">
+                        <div class="comment-avatar">
+                            @if (!string.IsNullOrEmpty(commentItem.User?.avatar_img))
+                            {
+                                <img src="@commentItem.User.avatar_img" alt="@commentItem.User.username" 
+                                     class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover;">
+                            }
+                            else
+                            {
+                                <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center" 
+                                     style="width: 32px; height: 32px; font-size: 14px;">
+                                    <i class="bi bi-person"></i>
+                                </div>
+                            }
+                        </div>
+                        <div class="comment-body">
+                            <div class="comment-author">@commentItem.User?.username</div>
+                            <div class="comment-text">@commentItem.Comment.body</div>
+                            <div class="comment-time">
+                                @{
+                                    var timeAgo = DateTime.UtcNow - commentItem.Comment.created_at;
+                                    if (timeAgo.TotalMinutes < 1)
+                                    {
+                                        <text>Vừa xong</text>
+                                    }
+                                    else if (timeAgo.TotalMinutes < 60)
+                                    {
+                                        <text>@((int)timeAgo.TotalMinutes) phút trước</text>
+                                    }
+                                    else if (timeAgo.TotalHours < 24)
+                                    {
+                                        <text>@((int)timeAgo.TotalHours) giờ trước</text>
+                                    }
+                                    else
+                                    {
+                                        <text>@commentItem.Comment.created_at.ToString("dd/MM/yyyy")</text>
+                                    }
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <p class="text-muted text-center py-4" style="font-size: 14px;">Chưa có bình luận nào. Hãy là người đầu tiên!</p>
+        }
+    </div>
+</div>
+
+<!-- Image Modal -->
+<div class="modal fade" id="imageModal" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content bg-transparent border-0">
+            <div class="modal-body p-0 position-relative">
+                <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3" 
+                        data-bs-dismiss="modal" style="z-index: 1051;"></button>
+                <img id="modalImage" src="" alt="Recipe Image" class="img-fluid w-100">
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Recipe Title & Level */
+.recipe-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1a1a1a;
+    line-height: 1.3;
+}
+
+.level-badge {
+    font-size: 12px;
+    padding: 3px 10px;
+    border-radius: 10px;
+    font-weight: 500;
+}
+
+/* Buttons */
+.follow-btn {
+    font-size: 13px;
+    padding: 3px 16px;
+    border-radius: 16px;
+    font-weight: 500;
+}
+
+.save-btn {
+    font-size: 13px;
+    padding: 5px 16px;
+    border-radius: 6px;
+    font-weight: 500;
+}
+
+/* Stats */
+.recipe-stats {
+    font-size: 13px;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Recipe Thumbnail */
+.recipe-thumbnail img {
+    width: 100%;
+    max-height: 500px;
+    height: auto;
+    object-fit: contain;
+}
+
+/* Section Title */
+.section-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-bottom: 15px !important;
+}
+
+.recipe-section .section-title {
+    background-color: transparent !important;
+    margin-bottom: 15px !important;
+}
+
+/* Ingredients */
+.recipe-section {
+    background-color: #f5f5f5 !important;
+    border-radius: 8px;
+    padding: 20px !important;
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    margin-bottom: 20px !important;
+}
+
+.recipe-section * {
+    box-sizing: border-box;
+}
+
+.ingredients-box {
+    background-color: transparent !important;
+    border-radius: 0;
+    padding: 0 !important;
+    border: none;
+    box-shadow: none;
+    width: 100% !important;
+    box-sizing: border-box;
+    margin: 0 !important;
+    display: block !important;
+}
+
+.ingredient-item {
+    padding: 8px 0 !important;
+    font-size: 14px;
+    color: #333;
+    line-height: 1.6;
+    margin: 0 !important;
+    display: block !important;
+    width: 100% !important;
+}
+
+/* Recipe Steps */
+.recipe-step {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    margin-top: 20px !important;
+}
+
+.step-header {
+    background-color: #f5f5f5;
+    padding: 16px 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #e0e0e0;
+    transition: background-color 0.2s;
+}
+
+.step-header:hover {
+    background-color: #eeeeee;
+}
+
+.step-header.collapsed {
+    border-bottom: none;
+}
+
+.step-title {
+    font-size: 16px;
+    font-weight: 500;
+    color: #333;
+    margin: 0;
+}
+
+.step-chevron {
+    transition: transform 0.3s;
+    font-size: 14px;
+    color: #666;
+}
+
+.step-header:not(.collapsed) .step-chevron {
+    transform: rotate(180deg);
+}
+
+.step-header.collapsed .step-chevron {
+    transform: rotate(0deg);
+}
+
+.step-content {
+    padding: 20px 16px;
+    background-color: #f5f5f5 !important;
+}
+
+.step-description {
+    background-color: transparent !important;
+    padding: 0 !important;
+    margin-bottom: 15px;
+}
+
+.step-label {
+    font-weight: 600;
+    font-size: 14px;
+    color: #1a1a1a;
+    margin-bottom: 8px;
+    background-color: transparent !important;
+}
+
+.step-text {
+    font-size: 14px;
+    color: #555;
+    line-height: 1.6;
+    margin: 0;
+    background-color: transparent !important;
+}
+
+/* Step Media */
+.step-media-wrapper {
+    position: relative;
+    width: 100%;
+    max-height: 450px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.step-media-item {
+    width: 100%;
+    max-height: 450px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.step-image {
+    max-width: 100%;
+    max-height: 450px;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    cursor: pointer;
+    display: block;
+    margin: 0 auto;
+}
+
+.step-number-badge {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    background: rgba(0, 0, 0, 0.75);
+    color: white;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.media-nav-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.95);
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    z-index: 10;
+    transition: all 0.2s;
+}
+
+.media-nav-btn:hover {
+    background: #fff;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+}
+
+.media-nav-btn i {
+    font-size: 18px;
+    color: #333;
+}
+
+.prev-btn {
+    left: 12px;
+}
+
+.next-btn {
+    right: 12px;
+}
+
+/* Comments */
+.comments-section {
+    margin-top: 40px;
+    padding-top: 24px;
+    border-top: 1px solid #e0e0e0;
+}
+
+.comment-form {
+    background-color: #f5f5f5;
+    border-radius: 8px;
+    padding: 12px;
+}
+
+.comment-input {
+    width: 100%;
+    border: none;
+    background: transparent;
+    resize: none;
+    font-size: 14px;
+    padding: 8px;
+    outline: none;
+}
+
+.comment-submit-btn {
+    font-size: 13px;
+    padding: 6px 20px;
+    border-radius: 6px;
+    font-weight: 500;
+}
+
+.comment-item {
+    padding: 16px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.comment-item:last-child {
+    border-bottom: none;
+}
+
+.comment-author {
+    font-size: 14px;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-bottom: 4px;
+}
+
+.comment-text {
+    font-size: 14px;
+    color: #333;
+    line-height: 1.5;
+    margin-bottom: 4px;
+}
+
+.comment-time {
+    font-size: 12px;
+    color: #888;
+}
+
+/* Utilities */
+.cursor-pointer {
+    cursor: pointer;
+    user-select: none;
+}
+
+/* Responsive */
+@@media (max-width: 768px) {
+    .recipe-title {
+        font-size: 20px;
+    }
+    
+    .recipe-thumbnail img {
+        max-height: 350px;
+    }
+    
+    .step-media-wrapper {
+        max-height: 300px;
+    }
+    
+    .step-media-item {
+        max-height: 300px;
+    }
+    
+    .step-image {
+        max-height: 300px;
+    }
+    
+    .media-nav-btn {
+        width: 32px;
+        height: 32px;
+    }
+    
+    .media-nav-btn i {
+        font-size: 16px;
+    }
+    
+    .step-number-badge {
+        width: 36px;
+        height: 36px;
+        font-size: 16px;
+        top: 12px;
+        left: 12px;
+    }
+}
+</style>
+
+<script>
+// Store current media index for each step
+let currentMediaIndexes = {};
+
+// Initialize media indexes
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.step-media-wrapper').forEach(container => {
+        const stepMatch = container.id.match(/mediaContainer(\d+)/);
+        if (stepMatch) {
+            const stepNum = parseInt(stepMatch[1]);
+            currentMediaIndexes[stepNum] = 0;
+        }
+    });
+});
+
+// Navigate step media
+function navigateStepMedia(stepNumber, direction) {
+    const container = document.getElementById('mediaContainer' + stepNumber);
+    if (!container) return;
+    
+    const mediaItems = container.querySelectorAll('.step-media-item');
+    if (mediaItems.length <= 1) return;
+    
+    // Hide current media
+    mediaItems[currentMediaIndexes[stepNumber]].style.display = 'none';
+    
+    // Calculate new index
+    currentMediaIndexes[stepNumber] += direction;
+    
+    // Wrap around
+    if (currentMediaIndexes[stepNumber] < 0) {
+        currentMediaIndexes[stepNumber] = mediaItems.length - 1;
+    } else if (currentMediaIndexes[stepNumber] >= mediaItems.length) {
+        currentMediaIndexes[stepNumber] = 0;
+    }
+    
+    // Show new media
+    mediaItems[currentMediaIndexes[stepNumber]].style.display = 'block';
+}
+
+// Like functionality
+document.getElementById('btnLike')?.addEventListener('click', async function() {
+    const recipeId = this.dataset.recipeId;
+    
+    try {
+        const response = await fetch('/Recipe/ToggleLike', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ recipeId: parseInt(recipeId) })
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            
+            if (result.success) {
+                const icon = this.querySelector('i');
+                if (result.isLiked) {
+                    icon.classList.remove('bi-heart');
+                    icon.classList.add('bi-heart-fill', 'text-danger');
+                } else {
+                    icon.classList.remove('bi-heart-fill', 'text-danger');
+                    icon.classList.add('bi-heart');
+                }
+                this.dataset.isLiked = result.isLiked;
+                document.getElementById('likeCount').textContent = result.likeCount;
+            }
+        }
+    } catch (error) {
+        console.error('Error toggling like:', error);
+    }
+});
+
+// Save to notebook functionality
+document.getElementById('btnSaveRecipe')?.addEventListener('click', async function() {
+    const recipeId = this.dataset.recipeId;
+    
+    try {
+        const response = await fetch('/Recipe/ToggleSave', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ recipeId: parseInt(recipeId) })
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            
+            if (result.success) {
+                const icon = this.querySelector('i');
+                if (result.isSaved) {
+                    icon.classList.remove('bi-bookmark');
+                    icon.classList.add('bi-bookmark-fill');
+                } else {
+                    icon.classList.remove('bi-bookmark-fill');
+                    icon.classList.add('bi-bookmark');
+                }
+                this.dataset.isSaved = result.isSaved;
+            }
+        }
+    } catch (error) {
+        console.error('Error toggling save:', error);
+    }
+});
+
+// Comment functionality
+document.getElementById('commentForm')?.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const recipeId = @Model.Recipe.recipe_id;
+    const body = document.getElementById('commentBody').value;
+    
+    if (!body.trim()) return;
+    
+    try {
+        const response = await fetch('/Recipe/AddComment', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+                recipeId: recipeId,
+                body: body.trim()
+            })
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            if (result.success) {
+                location.reload();
+            }
+        }
+    } catch (error) {
+        console.error('Error adding comment:', error);
+    }
+});
+
+// Show image modal
+function showImageModal(imageUrl) {
+    document.getElementById('modalImage').src = imageUrl;
+    new bootstrap.Modal(document.getElementById('imageModal')).show();
+}
+</script>

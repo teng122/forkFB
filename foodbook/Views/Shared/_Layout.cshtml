@@ -33,6 +33,32 @@
                     </button>
                     
                     <div class="navbar-collapse collapse d-lg-inline-flex justify-content-between align-items-center">
+                        <!-- Mobile Search - Only visible on mobile -->
+                        <div class="d-lg-none w-100 mb-3">
+                            <div class="search-container">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white border-end-0">
+                                        <i class="bi bi-search text-muted"></i>
+                                    </span>
+                                    <input type="text" class="form-control border-start-0" placeholder="Tìm kiếm công thức, người dùng">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Mobile User Info - Only visible on mobile -->
+                        <div class="d-lg-none w-100 mb-3">
+                            @{ var avatar = Context.Session.GetString("avatar_img"); var avatarSrc = string.IsNullOrEmpty(avatar) ? Url.Content("~/images/default-avatar.jpg") : avatar; }
+                            <div class="d-flex align-items-center justify-content-between">
+                                <a class="d-flex align-items-center text-decoration-none" href="@Url.Action("Info", "Profile")">
+                                    <img id="navbar-avatar" src="@avatarSrc"
+                                         alt="User Profile" 
+                                         class="rounded-circle me-2" 
+                                         style="width: 40px; height: 40px; object-fit: cover;">
+                                    <span class="text-dark fw-bold">@Context.Session.GetUsername()</span>
+                                </a>
+                            </div>
+                        </div>
+                        
                         <ul class="navbar-nav me-auto">
                             <li class="nav-item">
                                 <a class="nav-link text-green fw-bold" asp-area="" asp-controller="Home" asp-action="Index">Bảng tin</a>
@@ -70,7 +96,8 @@
                             }
                         </ul>
                         
-                        <div class="d-flex align-items-center">
+                        <!-- Desktop Search and User Profile - Only visible on desktop -->
+                        <div class="d-none d-lg-flex align-items-center">
                             <div class="search-container me-3">
                                 <div class="input-group">
                                     <span class="input-group-text bg-white border-end-0">
@@ -81,7 +108,6 @@
                             </div>
                             
                             <div class="user-profile">
-                                @{ var avatar = Context.Session.GetString("avatar_img"); var avatarSrc = string.IsNullOrEmpty(avatar) ? Url.Content("~/images/default-avatar.jpg") : avatar; }
                                 <a class="d-flex align-items-center text-decoration-none" href="@Url.Action("Info", "Profile")">
                                     <img id="navbar-avatar" src="@avatarSrc"
                                          alt="User Profile" 
@@ -95,11 +121,56 @@
                                 <i class="bi bi-box-arrow-right"></i> Đăng xuất
                             </a>
                         </div>
+                        
+                        <!-- Mobile Logout Button - Only visible on mobile -->
+                        <div class="d-lg-none w-100 mt-3">
+                            <a href="@Url.Action("Logout", "Account")" class="btn btn-outline-danger w-100">
+                                <i class="bi bi-box-arrow-right"></i> Đăng xuất
+                            </a>
+                        </div>
                     </div>
                 }
             </div>
         </nav>
     </header>
+    
+    <!-- Global Notifications -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show position-fixed" style="top: 80px; right: 20px; z-index: 1050; min-width: 300px;" role="alert">
+            <i class="bi bi-check-circle me-2"></i>
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show position-fixed" style="top: 80px; right: 20px; z-index: 1050; min-width: 300px;" role="alert">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show position-fixed" style="top: 80px; right: 20px; z-index: 1050; min-width: 300px;" role="alert">
+            <i class="bi bi-check-circle me-2"></i>
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show position-fixed" style="top: 80px; right: 20px; z-index: 1050; min-width: 300px;" role="alert">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    
     @if (!isAccountPage && Context.Session.IsLoggedIn())
     {
         <!-- Sidebar -->
@@ -278,6 +349,20 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    
+    <!-- Auto-dismiss notifications -->
+    <script>
+        // Auto-dismiss notifications after 5 seconds
+        document.addEventListener('DOMContentLoaded', function() {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(function(alert) {
+                setTimeout(function() {
+                    const bsAlert = new bootstrap.Alert(alert);
+                    bsAlert.close();
+                }, 5000);
+            });
+        });
+    </script>
     <script>
         function toggleSidebarCollapse() {
             var sidebar = document.getElementById('sidebar');

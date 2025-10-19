@@ -47,7 +47,7 @@ namespace foodbook.Services
                     email = email,
                     password = password,
                     created_at = DateTime.UtcNow,
-                    status = "active"
+                    status = null // Default to null, will be set by DB trigger
                 };
                 
                 // Sử dụng PostgREST để insert
@@ -220,17 +220,22 @@ namespace foodbook.Services
                 // Kiểm tra password (so sánh trực tiếp vì password được lưu plain text)
                 if (userResult != null && userResult.password == password)
                 {
-                    // Kiểm tra email đã được xác thực chưa
-                    if (userResult.is_verified == true)
+                    // Kiểm tra trạng thái tài khoản
+                    if (userResult.status == "ban")
                     {
-                        Console.WriteLine("Login successful! Email verified.");
-                        return userResult;
+                        Console.WriteLine("Login failed: Account is banned");
+                        throw new Exception("Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên để được hỗ trợ.");
                     }
-                    else
+                    
+                    // Kiểm tra email đã được xác thực chưa
+                    if (userResult.is_verified != true)
                     {
                         Console.WriteLine("Login failed: Email not verified");
                         throw new Exception("Tài khoản chưa được xác thực email. Vui lòng kiểm tra email và xác thực trước khi đăng nhập.");
                     }
+                    
+                    Console.WriteLine("Login successful! Email verified and account is active.");
+                    return userResult;
                 }
 
                 Console.WriteLine("Login failed: Password mismatch");

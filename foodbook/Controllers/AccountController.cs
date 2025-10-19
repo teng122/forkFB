@@ -332,6 +332,13 @@ namespace foodbook.Controllers
         }
 
         [HttpGet]
+        [LoginRequired]
+        public IActionResult Settings()
+        {
+            return View();
+        }
+
+        [HttpGet]
         public async Task<IActionResult> VerifyEmail(string email)
         {
             var model = new EmailVerificationViewModel
