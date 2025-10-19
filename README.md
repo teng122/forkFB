@@ -275,7 +275,7 @@ Distributed under the MIT License. See `LICENSE` for more information.
 ## 📞 Liên hệ / Contact
 
 - **Email**: huhume147@gmail.com
-- **Project Link**: [https://github.com/yourusername/foodbook](https://github.com/yourusername/foodbook)
+- **Project Link**: [https://github.com/Phamtin147/foodbook](https://github.com/Phamtin147/foodbook)
 
 ## 🙏 Acknowledgments
 
