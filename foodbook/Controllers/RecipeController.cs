@@ -398,10 +398,322 @@ namespace foodbook.Controllers
             }
         }
 
+        // Recipe Detail
+        [HttpGet]
+        public async Task<IActionResult> Detail(int id)
+        {
+            try
+            {
+                var currentUserId = HttpContext.Session.GetInt32("UserId");
+                
+                // 1. Lấy thông tin Recipe
+                var recipe = await _supabaseService.Client
+                    .From<Recipe>()
+                    .Where(x => x.recipe_id == id)
+                    .Single();
+
+                if (recipe == null)
+                {
+                    TempData["ErrorMessage"] = "Không tìm thấy công thức";
+                    return RedirectToAction("Newsfeed", "Home");
+                }
+
+                // 2. Lấy thông tin User (tác giả)
+                var author = await _supabaseService.Client
+                    .From<User>()
+                    .Where(x => x.user_id == recipe.user_id)
+                    .Single();
+
+                // 3. Lấy danh sách Ingredients
+                var ingredients = await _supabaseService.Client
+                    .From<Ingredient>()
+                    .Where(x => x.recipe_id == id)
+                    .Get();
+
+                // 4. Lấy các RecipeSteps
+                var steps = await _supabaseService.Client
+                    .From<RecipeStep>()
+                    .Where(x => x.recipe_id == id)
+                    .Order("step", Supabase.Postgrest.Constants.Ordering.Ascending)
+                    .Get();
+
+                // 5. Lấy Media cho từng bước
+                var stepMedia = new Dictionary<int, List<Media>>();
+                foreach (var step in steps.Models ?? new List<RecipeStep>())
+                {
+                    var mediaLinks = await _supabaseService.Client
+                        .From<RecipeStepMedia>()
+                        .Where(x => x.recipe_id == id && x.step == step.step)
+                        .Order("display_order", Supabase.Postgrest.Constants.Ordering.Ascending)
+                        .Get();
+
+                    var mediaList = new List<Media>();
+                    foreach (var link in mediaLinks.Models ?? new List<RecipeStepMedia>())
+                    {
+                        var media = await _supabaseService.Client
+                            .From<Media>()
+                            .Where(x => x.media_id == link.media_id)
+                            .Single();
+                        if (media != null)
+                            mediaList.Add(media);
+                    }
+                    stepMedia[step.step] = mediaList;
+                }
+
+                // 6. Đếm số likes
+                var likes = await _supabaseService.Client
+                    .From<likeDislike>()
+                    .Where(x => x.recipe_id == id)
+                    .Get();
+                var likeCount = likes.Models?.Count ?? 0;
+
+                // 7. Check xem user đã like chưa
+                bool isLiked = false;
+                if (currentUserId.HasValue)
+                {
+                    var userLike = await _supabaseService.Client
+                        .From<likeDislike>()
+                        .Where(x => x.user_id == currentUserId.Value && x.recipe_id == id)
+                        .Get();
+                    isLiked = userLike.Models?.Count > 0;
+                }
+
+                // 8. Lấy Comments
+                var comments = await _supabaseService.Client
+                    .From<Comment>()
+                    .Where(x => x.recipe_id == id)
+                    .Order("created_at", Supabase.Postgrest.Constants.Ordering.Descending)
+                    .Get();
+
+                // 9. Lấy thông tin user cho từng comment
+                var commentDetails = new List<dynamic>();
+                foreach (var comment in comments.Models ?? new List<Comment>())
+                {
+                    var commenter = await _supabaseService.Client
+                        .From<User>()
+                        .Where(x => x.user_id == comment.user_id)
+                        .Single();
+
+                    commentDetails.Add(new
+                    {
+                        Comment = comment,
+                        User = commenter
+                    });
+                }
+
+                // 10. Check xem user đã lưu vào notebook chưa
+                bool isSaved = false;
+                if (currentUserId.HasValue)
+                {
+                    var notebook = await _supabaseService.Client
+                        .From<Notebook>()
+                        .Where(x => x.user_id == currentUserId.Value && x.recipe_id == id)
+                        .Get();
+                    isSaved = notebook.Models?.Count > 0;
+                }
+
+                // 11. Lấy Recipe Types
+                var recipeTypes = await _supabaseService.Client
+                    .From<RecipeRecipeType>()
+                    .Where(x => x.recipe_id == id)
+                    .Get();
+
+                var typeNames = new List<string>();
+                foreach (var rt in recipeTypes.Models ?? new List<RecipeRecipeType>())
+                {
+                    var type = await _supabaseService.Client
+                        .From<RecipeType>()
+                        .Where(x => x.recipe_type_id == rt.recipe_type_id)
+                        .Single();
+                    if (type != null && !string.IsNullOrEmpty(type.content))
+                        typeNames.Add(type.content);
+                }
+
+                // 12. Tạo ViewModel
+                var viewModel = new
+                {
+                    Recipe = recipe,
+                    Author = author,
+                    Ingredients = ingredients.Models ?? new List<Ingredient>(),
+                    Steps = steps.Models ?? new List<RecipeStep>(),
+                    StepMedia = stepMedia,
+                    LikeCount = likeCount,
+                    IsLiked = isLiked,
+                    Comments = commentDetails,
+                    CommentCount = commentDetails.Count,
+                    IsSaved = isSaved,
+                    TypeNames = typeNames,
+                    CurrentUserId = currentUserId
+                };
+
+                return View(viewModel);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading recipe detail");
+                TempData["ErrorMessage"] = "Lỗi khi tải công thức: " + ex.Message;
+                return RedirectToAction("Newsfeed", "Home");
+            }
+        }
+
+        // Toggle Like
+        [HttpPost]
+        public async Task<IActionResult> ToggleLike([FromBody] dynamic data)
+        {
+            try
+            {
+                var currentUserId = HttpContext.Session.GetInt32("UserId");
+                if (!currentUserId.HasValue)
+                {
+                    return Json(new { success = false, message = "Vui lòng đăng nhập" });
+                }
+
+                int recipeId = (int)data.recipeId;
+
+                // Check if already liked
+                var existingLike = await _supabaseService.Client
+                    .From<likeDislike>()
+                    .Where(x => x.user_id == currentUserId.Value && x.recipe_id == recipeId)
+                    .Get();
+
+                bool isLiked;
+                if (existingLike.Models?.Count > 0)
+                {
+                    // Unlike
+                    var likeToDelete = existingLike.Models.First();
+                    await _supabaseService.Client
+                        .From<likeDislike>()
+                        .Where(x => x.ld_id == likeToDelete.ld_id)
+                        .Delete();
+                    isLiked = false;
+                }
+                else
+                {
+                    // Like
+                    var newLike = new likeDislike
+                    {
+                        user_id = currentUserId.Value,
+                        recipe_id = recipeId,
+                        body = "liked"
+                    };
+                    await _supabaseService.Client
+                        .From<likeDislike>()
+                        .Insert(newLike);
+                    isLiked = true;
+                }
+
+                // Get updated like count
+                var likes = await _supabaseService.Client
+                    .From<likeDislike>()
+                    .Where(x => x.recipe_id == recipeId)
+                    .Get();
+                var likeCount = likes.Models?.Count ?? 0;
+
+                return Json(new { success = true, isLiked = isLiked, likeCount = likeCount });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error toggling like");
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        // Toggle Save to Notebook
+        [HttpPost]
+        public async Task<IActionResult> ToggleSave([FromBody] dynamic data)
+        {
+            try
+            {
+                var currentUserId = HttpContext.Session.GetInt32("UserId");
+                if (!currentUserId.HasValue)
+                {
+                    return Json(new { success = false, message = "Vui lòng đăng nhập" });
+                }
+
+                int recipeId = (int)data.recipeId;
+
+                // Check if already saved
+                var existingSave = await _supabaseService.Client
+                    .From<Notebook>()
+                    .Where(x => x.user_id == currentUserId.Value && x.recipe_id == recipeId)
+                    .Get();
+
+                bool isSaved;
+                if (existingSave.Models?.Count > 0)
+                {
+                    // Remove from notebook
+                    await _supabaseService.Client
+                        .From<Notebook>()
+                        .Where(x => x.user_id == currentUserId.Value && x.recipe_id == recipeId)
+                        .Delete();
+                    isSaved = false;
+                }
+                else
+                {
+                    // Add to notebook
+                    var newNotebook = new Notebook
+                    {
+                        user_id = currentUserId.Value,
+                        recipe_id = recipeId
+                    };
+                    await _supabaseService.Client
+                        .From<Notebook>()
+                        .Insert(newNotebook);
+                    isSaved = true;
+                }
+
+                return Json(new { success = true, isSaved = isSaved });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error toggling save");
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        // Add Comment
+        [HttpPost]
+        public async Task<IActionResult> AddComment([FromBody] dynamic data)
+        {
+            try
+            {
+                var currentUserId = HttpContext.Session.GetInt32("UserId");
+                if (!currentUserId.HasValue)
+                {
+                    return Json(new { success = false, message = "Vui lòng đăng nhập" });
+                }
+
+                int recipeId = (int)data.recipeId;
+                string body = (string)data.body;
+
+                if (string.IsNullOrWhiteSpace(body))
+                {
+                    return Json(new { success = false, message = "Nội dung bình luận không được để trống" });
+                }
+
+                var newComment = new Comment
+                {
+                    user_id = currentUserId.Value,
+                    recipe_id = recipeId,
+                    body = body.Trim()
+                };
+
+                await _supabaseService.Client
+                    .From<Comment>()
+                    .Insert(newComment);
+
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error adding comment");
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
         // TODO: Thêm các actions khác sau
         // [HttpGet] public IActionResult Edit(int id)
         // [HttpPost] public IActionResult Edit(AddRecipeViewModel model)
-        // [HttpGet] public IActionResult Details(int id) 
         // [HttpPost] public IActionResult Delete(int id)
         // [HttpGet] public IActionResult List() // My recipes
     }

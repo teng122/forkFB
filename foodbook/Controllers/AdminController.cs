@@ -131,37 +131,11 @@ namespace foodbook.Controllers
             }
         }
 
-        // Content Moderation
-        public async Task<IActionResult> ContentModeration()
-        {
-            return await Reports();
-        }
-
-        // Content Moderation (alternative route)
-        public async Task<IActionResult> Reports()
-        {
-            try
-            {
-                var reports = await _supabaseService.Client
-                    .From<Report>()
-                    .Select("user_id, recipe_id, body, status, created_at")
-                    .Order("created_at", Supabase.Postgrest.Constants.Ordering.Descending)
-                    .Get();
-
-                return View("ContentModeration", reports.Models);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error loading content moderation");
-                TempData["Error"] = "Không thể tải danh sách báo cáo: " + ex.Message;
-                return View("ContentModeration", new List<Report>());
-            }
-        }
 
         // Content Moderation (alternative route for /Admin/Content)
         public async Task<IActionResult> Content()
         {
-            return await Reports();
+            return RedirectToAction("ContentModeration");
         }
 
         // Category Management
@@ -300,7 +274,7 @@ namespace foodbook.Controllers
                 await _supabaseService.Client
                     .From<User>()
                     .Where(x => x.user_id == userId)
-                    .Set(x => x.status, "banned")
+                    .Set(x => x.status, "ban")
                     .Update();
 
                 TempData["Success"] = "Cấm người dùng thành công";
@@ -379,6 +353,228 @@ namespace foodbook.Controllers
                 TempData["Error"] = "Không thể từ chối nội dung: " + ex.Message;
                 return RedirectToAction("ContentModeration");
             }
+        }
+
+        // Content Moderation Actions
+        [HttpGet]
+        public async Task<IActionResult> ContentModeration()
+        {
+            try
+            {
+                // Lấy danh sách recipes với thông tin báo cáo
+                var recipes = await _supabaseService.Client
+                    .From<Recipe>()
+                    .Get();
+
+                var recipeList = new List<dynamic>();
+
+                foreach (var recipe in recipes.Models ?? new List<Recipe>())
+                {
+                    // Lấy thông tin user
+                    var user = await _supabaseService.Client
+                        .From<User>()
+                        .Where(x => x.user_id == recipe.user_id)
+                        .Single();
+
+                    // Đếm số lượng reports
+                    var reports = await _supabaseService.Client
+                        .From<Report>()
+                        .Where(x => x.recipe_id == recipe.recipe_id)
+                        .Get();
+
+                    var reportCount = reports.Models?.Count ?? 0;
+
+                    recipeList.Add(new
+                    {
+                        RecipeId = recipe.recipe_id,
+                        Title = recipe.name,
+                        Author = user?.username ?? "Unknown",
+                        Status = GetRecipeStatus(recipe),
+                        Date = recipe.created_at,
+                        ReportCount = reportCount,
+                        Recipe = recipe,
+                        User = user
+                    });
+                }
+
+                return View(recipeList);
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = "Lỗi khi tải dữ liệu: " + ex.Message;
+                return View(new List<dynamic>());
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ViewRecipeDetails(int recipeId)
+        {
+            try
+            {
+                // Lấy thông tin recipe
+                var recipe = await _supabaseService.Client
+                    .From<Recipe>()
+                    .Where(x => x.recipe_id == recipeId)
+                    .Single();
+
+                if (recipe == null)
+                {
+                    return NotFound();
+                }
+
+                // Lấy thông tin user
+                var user = await _supabaseService.Client
+                    .From<User>()
+                    .Where(x => x.user_id == recipe.user_id)
+                    .Single();
+
+                // Lấy các bước nấu
+                var steps = await _supabaseService.Client
+                    .From<RecipeStep>()
+                    .Where(x => x.recipe_id == recipeId)
+                    .Order("step", Supabase.Postgrest.Constants.Ordering.Ascending)
+                    .Get();
+
+                // Lấy nguyên liệu
+                var ingredients = await _supabaseService.Client
+                    .From<Ingredient>()
+                    .Where(x => x.recipe_id == recipeId)
+                    .Get();
+
+                // Lấy media cho các bước
+                var stepMedia = new Dictionary<int, List<Media>>();
+                foreach (var step in steps.Models ?? new List<RecipeStep>())
+                {
+                    var media = await _supabaseService.Client
+                        .From<RecipeStepMedia>()
+                        .Where(x => x.recipe_id == recipeId && x.step == step.step)
+                        .Get();
+
+                    var mediaList = new List<Media>();
+                    foreach (var mediaItem in media.Models ?? new List<RecipeStepMedia>())
+                    {
+                        var mediaData = await _supabaseService.Client
+                            .From<Media>()
+                            .Where(x => x.media_id == mediaItem.media_id)
+                            .Single();
+                        if (mediaData != null)
+                            mediaList.Add(mediaData);
+                    }
+                    stepMedia[step.step] = mediaList;
+                }
+
+                var viewModel = new
+                {
+                    Recipe = recipe,
+                    User = user,
+                    Steps = steps.Models ?? new List<RecipeStep>(),
+                    Ingredients = ingredients.Models ?? new List<Ingredient>(),
+                    StepMedia = stepMedia
+                };
+
+                return View(viewModel);
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = "Lỗi khi tải chi tiết công thức: " + ex.Message;
+                return RedirectToAction("ContentModeration");
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> FlagRecipe(int recipeId, string reason = "Vi phạm quy định")
+        {
+            try
+            {
+                // Cập nhật status của recipe (có thể thêm cột status vào Recipe table)
+                // Hoặc tạo một bảng riêng để track moderation status
+                
+                // Tạm thời, tôi sẽ tạo một report từ admin
+                var adminUserId = HttpContext.Session.GetInt32("UserId") ?? 0;
+                
+                var report = new Report
+                {
+                    user_id = adminUserId,
+                    recipe_id = recipeId,
+                    body = $"Admin flag: {reason}",
+                    status = "Đã xử lý"
+                };
+
+                await _supabaseService.Client
+                    .From<Report>()
+                    .Insert(report);
+
+                TempData["SuccessMessage"] = "Đã cắm cờ công thức thành công";
+                return RedirectToAction("ContentModeration");
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = "Lỗi khi cắm cờ công thức: " + ex.Message;
+                return RedirectToAction("ContentModeration");
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> MarkReportProcessed(int userId, int recipeId)
+        {
+            try
+            {
+                await _supabaseService.Client
+                    .From<Report>()
+                    .Where(x => x.user_id == userId && x.recipe_id == recipeId)
+                    .Set(x => x.status, "Đã xử lý")
+                    .Update();
+
+                TempData["SuccessMessage"] = "Đã đánh dấu report đã xử lý";
+                return RedirectToAction("ContentModeration");
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = "Lỗi khi cập nhật trạng thái report: " + ex.Message;
+                return RedirectToAction("ContentModeration");
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ViewReportDetails(int recipeId)
+        {
+            try
+            {
+                // Lấy tất cả reports cho recipe này
+                var reports = await _supabaseService.Client
+                    .From<Report>()
+                    .Where(x => x.recipe_id == recipeId)
+                    .Get();
+
+                var reportDetails = new List<dynamic>();
+
+                foreach (var report in reports.Models ?? new List<Report>())
+                {
+                    var reporter = await _supabaseService.Client
+                        .From<User>()
+                        .Where(x => x.user_id == report.user_id)
+                        .Single();
+
+                    reportDetails.Add(new
+                    {
+                        Report = report,
+                        Reporter = reporter
+                    });
+                }
+
+                return View(reportDetails);
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = "Lỗi khi tải chi tiết báo cáo: " + ex.Message;
+                return RedirectToAction("ContentModeration");
+            }
+        }
+
+        private string GetRecipeStatus(Recipe recipe)
+        {
+            // Tạm thời return "Approved" - có thể mở rộng thêm cột status vào Recipe table
+            return "Approved";
         }
     }
 }

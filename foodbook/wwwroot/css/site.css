@@ -428,6 +428,15 @@ body {
     min-width: 200px;
 }
 
+@media (max-width: 768px) {
+    .tags-dropdown-popup {
+        max-width: calc(100vw - 20px);
+        min-width: calc(100vw - 20px);
+        left: 10px !important;
+        right: 10px !important;
+    }
+}
+
 .tags-dropdown-content {
     background: white;
     border: 1px solid #e5e7eb;
@@ -1188,5 +1197,14 @@ body {
     width: 100%;
     justify-content: center;
     padding: 0.5rem 1rem;
+  }
+  
+  /* Mobile notifications */
+  .alert.position-fixed {
+    top: 70px !important;
+    left: 10px !important;
+    right: 10px !important;
+    min-width: auto !important;
+    max-width: none !important;
   }
 }

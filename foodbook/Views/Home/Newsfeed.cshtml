@@ -28,8 +28,8 @@
                         </div>
 
                         <!-- Bọc ảnh + nội dung bằng link -->
-                        <a asp-controller="Home"
-                           asp-action="Recipe_Detail"
+                        <a asp-controller="Recipe"
+                           asp-action="Detail"
                            asp-route-id="@recipe.RecipeId"
                            class="text-decoration-none text-dark feed-link">
 
@@ -131,11 +131,47 @@ function showTagsPopup(recipeId, tagsString) {
         const rect = firstTag.getBoundingClientRect();
         const dropdown = document.getElementById('tagsDropdown');
         
-        // Đặt vị trí dropdown ngay dưới tag đầu tiên
-        dropdown.style.position = 'fixed';
-        dropdown.style.top = (rect.bottom + window.scrollY + 5) + 'px';
-        dropdown.style.left = rect.left + 'px';
-        dropdown.style.zIndex = '9999';
+        // Kiểm tra nếu là mobile
+        const isMobile = window.innerWidth <= 768;
+        
+        if (isMobile) {
+            // Trên mobile, hiển thị dropdown ở giữa màn hình
+            dropdown.style.position = 'fixed';
+            dropdown.style.top = '50%';
+            dropdown.style.left = '50%';
+            dropdown.style.transform = 'translate(-50%, -50%)';
+            dropdown.style.zIndex = '9999';
+        } else {
+            // Trên desktop, tính toán vị trí dropdown
+            let topPosition = rect.bottom + 5;
+            let leftPosition = rect.left;
+            
+            // Kiểm tra nếu dropdown vượt quá màn hình
+            const dropdownWidth = 300; // max-width của dropdown
+            const dropdownHeight = 200; // max-height của dropdown
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+            
+            // Điều chỉnh vị trí ngang nếu cần
+            if (leftPosition + dropdownWidth > viewportWidth) {
+                leftPosition = viewportWidth - dropdownWidth - 10;
+            }
+            if (leftPosition < 10) {
+                leftPosition = 10;
+            }
+            
+            // Điều chỉnh vị trí dọc nếu cần
+            if (topPosition + dropdownHeight > viewportHeight) {
+                topPosition = rect.top - dropdownHeight - 5;
+            }
+            
+            // Đặt vị trí dropdown
+            dropdown.style.position = 'fixed';
+            dropdown.style.top = topPosition + 'px';
+            dropdown.style.left = leftPosition + 'px';
+            dropdown.style.transform = 'none';
+            dropdown.style.zIndex = '9999';
+        }
         
         // Hiển thị dropdown
         dropdown.style.display = 'block';
@@ -229,7 +265,7 @@ function createRecipeCard(recipe) {
                     <button class="btn btn-success rounded-pill px-3 mt-2 follow-btn follow-btn-sm">Theo dõi</button>
                 </div>
                 
-                <a href="/Home/Recipe_Detail/${recipe.recipeId}" class="text-decoration-none text-dark">
+                <a href="/Recipe/Detail/${recipe.recipeId}" class="text-decoration-none text-dark">
                     <div class="feed-card-body p-3">
                         <div class="thumb mb-3">
                             <img src="${recipe.thumbnailImg || '/images/no-thumbnail.jpg'}" 

@@ -35,7 +35,7 @@ namespace foodbook.Models
         public DateTime created_at { get; set; }
         
         [Column("status")]
-        public string status { get; set; } = "active";
+        public string? status { get; set; } = null;
         
         [Column("role")]
         public string role { get; set; } = "user"; // user, admin, moderator
