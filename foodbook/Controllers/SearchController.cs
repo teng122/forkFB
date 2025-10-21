@@ -101,28 +101,39 @@ namespace foodbook.Controllers
                     .From<Recipe>()
                     .Select("*");
 
-                // Apply filters
+                // Apply text search filter
                 if (!string.IsNullOrEmpty(request.SearchTerm))
                 {
                     query = query.Where(x => x.name.Contains(request.SearchTerm));
                 }
+
+                // Get all recipes first
+                var allRecipes = await query.Get();
+                var filteredRecipes = allRecipes.Models.ToList();
 
                 // Apply ingredient filter
                 if (request.SelectedIngredients != null && request.SelectedIngredients.Any())
                 {
                     var ingredientRecipes = await _supabaseService.Client
                         .From<Ingredient>()
-                        .Select("recipe_id")
+                        .Select("recipe_id, name")
                         .Get();
 
                     var filteredIngredientRecipes = ingredientRecipes.Models
-                        .Where(x => request.SelectedIngredients.Contains(x.name))
+                        .Where(x => x.name != null && request.SelectedIngredients.Contains(x.name))
                         .Select(x => x.recipe_id)
                         .ToList();
                     
                     if (filteredIngredientRecipes.Any())
                     {
-                        // We'll filter after getting all recipes
+                        filteredRecipes = filteredRecipes
+                            .Where(x => x.recipe_id.HasValue && filteredIngredientRecipes.Contains(x.recipe_id.Value))
+                            .ToList();
+                    }
+                    else
+                    {
+                        // If no ingredients match, return empty results
+                        filteredRecipes = new List<Recipe>();
                     }
                 }
 
@@ -131,7 +142,7 @@ namespace foodbook.Controllers
                 {
                     var typeRecipes = await _supabaseService.Client
                         .From<RecipeRecipeType>()
-                        .Select("recipe_id")
+                        .Select("recipe_id, recipe_type_id")
                         .Get();
 
                     var typeDetails = await _supabaseService.Client
@@ -140,7 +151,7 @@ namespace foodbook.Controllers
                         .Get();
 
                     var filteredTypeDetails = typeDetails.Models
-                        .Where(x => request.SelectedTypes.Contains(x.content))
+                        .Where(x => x.content != null && request.SelectedTypes.Contains(x.content))
                         .Select(x => x.recipe_type_id)
                         .ToList();
                     
@@ -153,8 +164,20 @@ namespace foodbook.Controllers
 
                         if (filteredTypeRecipes.Any())
                         {
-                            // We'll filter after getting all recipes
+                            filteredRecipes = filteredRecipes
+                                .Where(x => x.recipe_id.HasValue && filteredTypeRecipes.Contains(x.recipe_id.Value))
+                                .ToList();
                         }
+                        else
+                        {
+                            // If no types match, return empty results
+                            filteredRecipes = new List<Recipe>();
+                        }
+                    }
+                    else
+                    {
+                        // If no types match, return empty results
+                        filteredRecipes = new List<Recipe>();
                     }
                 }
 
@@ -162,21 +185,23 @@ namespace foodbook.Controllers
                 switch (request.SortBy)
                 {
                     case "likes":
-                        query = query.Order("created_at", Supabase.Postgrest.Constants.Ordering.Descending);
+                        // For likes sorting, we need to get likes count for each recipe
+                        // For now, just sort by creation date
+                        filteredRecipes = filteredRecipes
+                            .OrderByDescending(x => x.created_at)
+                            .ToList();
                         break;
                     case "time":
-                        query = query.Order("created_at", Supabase.Postgrest.Constants.Ordering.Descending);
-                        break;
                     default:
-                        query = query.Order("created_at", Supabase.Postgrest.Constants.Ordering.Descending);
+                        filteredRecipes = filteredRecipes
+                            .OrderByDescending(x => x.created_at)
+                            .ToList();
                         break;
                 }
 
-                var recipes = await query.Get();
-
                 // Map to SearchResultViewModel
                 var searchResults = new List<SearchResultViewModel>();
-                foreach (var recipe in recipes.Models)
+                foreach (var recipe in filteredRecipes)
                 {
                     // Get user info
                     var user = await _supabaseService.Client
