@@ -8,7 +8,7 @@ namespace foodbook.Models
     public class Comment : BaseModel
     {
         [PrimaryKey("comment_id", shouldInsert: false)]
-        public int comment_id { get; set; }
+        public int? comment_id { get; set; }
 
         [Required]
         [Column("user_id")]

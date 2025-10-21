@@ -85,6 +85,14 @@ CREATE TABLE public.RecipeStep_Media (
   CONSTRAINT fk_rsm_recipestep FOREIGN KEY (step) REFERENCES public.RecipeStep(step),
   CONSTRAINT fk_rsm_media FOREIGN KEY (media_id) REFERENCES public.Media(media_id)
 );
+CREATE TABLE public.Recipe_RecipeType (
+  recipe_id integer NOT NULL,
+  recipe_type_id integer NOT NULL,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT Recipe_RecipeType_pkey PRIMARY KEY (recipe_id, recipe_type_id),
+  CONSTRAINT fk_rrt_recipe FOREIGN KEY (recipe_id) REFERENCES public.Recipe(recipe_id),
+  CONSTRAINT fk_rrt_recipe_type FOREIGN KEY (recipe_type_id) REFERENCES public.Recipe_type(recipe_type_id)
+);
 CREATE TABLE public.Recipe_type (
   recipe_type_id integer GENERATED ALWAYS AS IDENTITY NOT NULL,
   content character varying,
