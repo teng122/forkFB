@@ -9,6 +9,7 @@
         public DateTime CreatedAt { get; set; }
         public string Level { get; set; }
 
+        public int UserId { get; set; }
         public string UserName { get; set; } = "Ẩn danh";
         public string UserAvatarUrl { get; set; }
 
@@ -17,5 +18,8 @@
         public int SharesCount { get; set; } = 0;
         
         public List<string> Tags { get; set; } = new List<string>();
+        
+        public bool IsFollowing { get; set; } = false;
+        public bool IsOwnPost { get; set; } = false;
     }
 }

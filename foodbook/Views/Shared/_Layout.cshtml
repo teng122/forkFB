@@ -16,7 +16,13 @@
 </head>
 
 <body>
-    @{ var currentController = ViewContext.RouteData.Values["Controller"] as string; var currentAction = ViewContext.RouteData.Values["Action"] as string; var isAccountPage = string.Equals(currentController, "Account", StringComparison.OrdinalIgnoreCase) && (string.Equals(currentAction, "Login", StringComparison.OrdinalIgnoreCase) || string.Equals(currentAction, "Register", StringComparison.OrdinalIgnoreCase) || string.Equals(currentAction, "ForgotPassword", StringComparison.OrdinalIgnoreCase) || string.Equals(currentAction, "VerifyEmail", StringComparison.OrdinalIgnoreCase) || string.Equals(currentAction, "VerifySuccess", StringComparison.OrdinalIgnoreCase) || string.Equals(currentAction, "ResetPassword", StringComparison.OrdinalIgnoreCase)); }
+    @{ 
+        var currentController = ViewContext.RouteData.Values["Controller"] as string; 
+        var currentAction = ViewContext.RouteData.Values["Action"] as string; 
+        var currentId = ViewContext.RouteData.Values["id"] as string;
+        var isAccountPage = string.Equals(currentController, "Account", StringComparison.OrdinalIgnoreCase) && (string.Equals(currentAction, "Login", StringComparison.OrdinalIgnoreCase) || string.Equals(currentAction, "Register", StringComparison.OrdinalIgnoreCase) || string.Equals(currentAction, "ForgotPassword", StringComparison.OrdinalIgnoreCase) || string.Equals(currentAction, "VerifyEmail", StringComparison.OrdinalIgnoreCase) || string.Equals(currentAction, "VerifySuccess", StringComparison.OrdinalIgnoreCase) || string.Equals(currentAction, "ResetPassword", StringComparison.OrdinalIgnoreCase));
+        var isOwnProfile = string.Equals(currentController, "Profile", StringComparison.OrdinalIgnoreCase) && string.Equals(currentAction, "Info", StringComparison.OrdinalIgnoreCase) && string.IsNullOrEmpty(currentId);
+    }
     <header>
         <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom box-shadow mb-3">
             <div class="container-fluid">
@@ -49,7 +55,7 @@
                         <div class="d-lg-none w-100 mb-3">
                             @{ var avatar = Context.Session.GetString("avatar_img"); var avatarSrc = string.IsNullOrEmpty(avatar) ? Url.Content("~/images/default-avatar.jpg") : avatar; }
                             <div class="d-flex align-items-center justify-content-between">
-                                <a class="d-flex align-items-center text-decoration-none" href="@Url.Action("Info", "Profile")">
+                                <a class="d-flex align-items-center text-decoration-none" href="/Profile/Info">
                                     <img id="navbar-avatar" src="@avatarSrc"
                                          alt="User Profile" 
                                          class="rounded-circle me-2" 
@@ -108,7 +114,7 @@
                             </div>
                             
                             <div class="user-profile">
-                                <a class="d-flex align-items-center text-decoration-none" href="@Url.Action("Info", "Profile")">
+                                <a class="d-flex align-items-center text-decoration-none" href="/Profile/Info">
                                     <img id="navbar-avatar" src="@avatarSrc"
                                          alt="User Profile" 
                                          class="rounded-circle me-2" 
@@ -223,7 +229,7 @@
                 <h6 class="sidebar-section-title">TÀI KHOẢN CỦA TÔI</h6>
                 <ul class="sidebar-menu">
                     <li class="sidebar-menu-item">
-                        <a class="sidebar-menu-link @(currentController == "Profile" && currentAction == "Info" ? "active" : "")" asp-controller="Profile" asp-action="Info">
+                        <a class="sidebar-menu-link @(isOwnProfile ? "active" : "")" href="/Profile/Info">
                             <i class="sidebar-menu-icon bi bi-person"></i>
                             <span>Hồ sơ của tôi</span>
                         </a>

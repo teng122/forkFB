@@ -47,8 +47,12 @@
                 
                 <div class="profile-stats">
                     <span class="stat-item"><strong>@(Model?.RecipeCount ?? 28)</strong> Công thức</span>
+                    <a href="@Url.Action("Followers", "Profile", new { id = user?.user_id })" class="stat-item-link">
                     <span class="stat-item"><strong>@(Model?.FollowersCount ?? 1200)</strong> Người theo dõi</span>
+                    </a>
+                    <a href="@Url.Action("Following", "Profile", new { id = user?.user_id })" class="stat-item-link">
                     <span class="stat-item"><strong>@(Model?.FollowingCount ?? 345)</strong> Đang theo dõi</span>
+                    </a>
                 </div>
                 
                 
@@ -87,135 +91,19 @@
 
                 <div class="tab-content" id="pills-tabContent">
                     <div class="tab-pane fade show active" id="pills-posts" role="tabpanel" aria-labelledby="pills-posts-tab">
-                        @* RECIPE GRID - 4 columns *@
-                        @if (Model.Recipes != null && Model.Recipes.Any())
-                        {
-                            <div class="row g-4">
-                                @foreach (var recipe in Model.Recipes)
-                                {
-                                    // Xử lý Thumbnail là STRING URL
-                                    string thumbSrc = Url.Content("~/images/no-thumbnail.png");
-
-                                    // Giả định thuộc tính ThumbnailImg của RecipeViewModel LƯU TRỰC TIẾP URL
-                                    if (!string.IsNullOrEmpty(recipe.ThumbnailImg))
-                                    {
-                                        thumbSrc = recipe.ThumbnailImg;
-                                    }
-
-                                    <div class="col-lg-3 col-md-4 col-sm-6">
-                                        <div class="recipe-card h-100">
-                                            <div class="recipe-image">
-                                                <img src="@thumbSrc" class="w-100" style="height:200px; object-fit:cover;" alt="@recipe.Name" />
-                                            </div>
-                                            <div class="recipe-content">
-                                                <h6 class="recipe-title">@recipe.Name</h6>
-                                                <div class="recipe-actions">
-                                                    <div class="recipe-stats">
-                                                        <span><i class="bi bi-hand-thumbs-up text-success"></i> @recipe.Likes</span>
-                                                        <span><i class="bi bi-clock"></i> @recipe.CookTime phút</span>
-                                                    </div>
-                                                    @if (isOwnProfile)
-                                                    {
-                                                        <button class="btn btn-outline-danger">
-                                                            <i class="bi bi-trash"></i>
-                                                        </button>
-                                                    }
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                }
+                        <div id="posts-container">
+                            <!-- Posts will be loaded here -->
                             </div>
-                        }
-                        else
-                        {
-                            @* Hiển thị recipe mẫu giống ảnh khi chưa có dữ liệu *@
-                            <div class="row g-4">
-                                <div class="col-lg-3 col-md-4 col-sm-6">
-                                    <div class="recipe-card h-100">
-                                        <div class="recipe-image">
-                                            <img src="https://images.unsplash.com/photo-1551218808-94e220e084d2?w=400&h=200&fit=crop" class="w-100" style="height:200px; object-fit:cover;" alt="Phở Cuốn Hà Nội" />
-                                        </div>
-                                        <div class="recipe-content">
-                                            <h6 class="recipe-title">Phở Cuốn Hà Nội</h6>
-                                            <div class="recipe-actions">
-                                                <div class="recipe-stats">
-                                                    <span><i class="bi bi-hand-thumbs-up text-success"></i> 54</span>
-                                                    <span><i class="bi bi-clock"></i> 60 phút</span>
-                                                </div>
-                                                <button class="btn btn-outline-danger">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-lg-3 col-md-4 col-sm-6">
-                                    <div class="recipe-card h-100">
-                                        <div class="recipe-image">
-                                            <img src="https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=400&h=200&fit=crop" class="w-100" style="height:200px; object-fit:cover;" alt="Bún Chả Gia Truyền" />
-                                        </div>
-                                        <div class="recipe-content">
-                                            <h6 class="recipe-title">Bún Chả Gia Truyền</h6>
-                                            <div class="recipe-actions">
-                                                <div class="recipe-stats">
-                                                    <span><i class="bi bi-hand-thumbs-up text-success"></i> 42</span>
-                                                    <span><i class="bi bi-clock"></i> 45 phút</span>
-                                                </div>
-                                                <button class="btn btn-outline-danger">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-lg-3 col-md-4 col-sm-6">
-                                    <div class="recipe-card h-100">
-                                        <div class="recipe-image">
-                                            <img src="https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=200&fit=crop" class="w-100" style="height:200px; object-fit:cover;" alt="Gỏi Cuốn Tôm Thịt" />
-                                        </div>
-                                        <div class="recipe-content">
-                                            <h6 class="recipe-title">Gỏi Cuốn Tôm Thịt</h6>
-                                            <div class="recipe-actions">
-                                                <div class="recipe-stats">
-                                                    <span><i class="bi bi-hand-thumbs-up text-success"></i> 38</span>
-                                                    <span><i class="bi bi-clock"></i> 25 phút</span>
-                                                </div>
-                                                <button class="btn btn-outline-danger">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-lg-3 col-md-4 col-sm-6">
-                                    <div class="recipe-card h-100">
-                                        <div class="recipe-image">
-                                            <img src="https://images.unsplash.com/photo-1586190848861-99aa4a171e90?w=400&h=200&fit=crop" class="w-100" style="height:200px; object-fit:cover;" alt="Bánh Mì Thập Cẩm" />
-                                        </div>
-                                        <div class="recipe-content">
-                                            <h6 class="recipe-title">Bánh Mì Thập Cẩm</h6>
-                                            <div class="recipe-actions">
-                                                <div class="recipe-stats">
-                                                    <span><i class="bi bi-hand-thumbs-up text-success"></i> 54</span>
-                                                    <span><i class="bi bi-clock"></i> 15 phút</span>
-                                                </div>
-                                                <button class="btn btn-outline-danger">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        }
                     </div>
 
                     <div class="tab-pane fade" id="pills-reacted" role="tabpanel" aria-labelledby="pills-reacted-tab">
+                        <div id="reacted-content">
                         <div class="text-center py-5">
-                            <i class="bi bi-heart text-muted" style="font-size: 3rem;"></i>
-                            <h5 class="text-muted mt-3">Chưa có bài đăng nào được reaction</h5>
-                            <p class="text-muted">Các bài đăng bạn đã thích sẽ hiển thị ở đây</p>
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <p class="mt-3 text-muted">Đang tải danh sách đã reaction...</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -227,97 +115,159 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     
+    @Html.AntiForgeryToken()
+    
     <script>
-        // Infinite Scroll for Profile Posts
-        let currentPage = 1;
-        let isLoading = false;
-        let hasMore = true;
-        let currentTab = 'posts'; // 'posts' or 'reacted'
+        // Global variables for posts
+        const currentUserId = @(Model?.User?.user_id ?? 0);
         const isOwnProfile = @(isOwnProfile ? "true" : "false");
+        let postsPage = 1;
+        let postsLoading = false;
+        let postsLoaded = false;
 
-        function loadMorePosts() {
-            if (isLoading || !hasMore) return;
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            loadPosts();
+            setupTabHandlers();
+        });
+
+        // Load posts function
+        async function loadPosts() {
+            if (postsLoading || postsLoaded) return;
             
-            isLoading = true;
-            currentPage++;
+            postsLoading = true;
+            const container = document.getElementById('posts-container');
             
-            // Show loading indicator
-            const loadingDiv = document.createElement('div');
-            loadingDiv.className = 'col-12 text-center py-4';
-            loadingDiv.innerHTML = '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>';
-            
-            const activeTab = document.querySelector('.tab-pane.active');
-            const row = activeTab.querySelector('.row.g-4');
-            if (row) {
-                row.appendChild(loadingDiv);
-            }
-            
-            // Determine endpoint based on current tab
-            const endpoint = currentTab === 'posts' ? 'LoadMoreProfilePosts' : 'LoadMoreReactedPosts';
-            
-            fetch(`/Profile/${endpoint}?page=${currentPage}&pageSize=4`)
-                .then(response => response.json())
-                .then(data => {
-                    // Remove loading indicator
-                    loadingDiv.remove();
+            // Show loading
+            container.innerHTML = `
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-3 text-muted">Đang tải bài đăng...</p>
+                </div>
+            `;
+
+            try {
+                const response = await fetch(`/Profile/GetUserPosts?userId=${currentUserId}&page=1&pageSize=8`);
+                const data = await response.json();
+
+                if (data.success && data.recipes && data.recipes.length > 0) {
+                    // Show posts
+                    container.innerHTML = `
+                        <div class="row g-4" id="posts-grid">
+                            ${data.recipes.map(recipe => createRecipeCard(recipe)).join('')}
+                        </div>
+                        <div class="text-center mt-4" id="load-more-container">
+                            <button id="load-more-btn" class="btn btn-outline-primary">
+                                <i class="bi bi-arrow-down-circle me-2"></i>Tải thêm
+                            </button>
+                        </div>
+                    `;
                     
-                    if (data.success && data.recipes && data.recipes.length > 0) {
-                        // Add new recipes to the grid
-                        const row = activeTab.querySelector('.row.g-4');
-                        if (row) {
-                            data.recipes.forEach(recipe => {
-                                const recipeHtml = createRecipeCard(recipe);
-                                row.insertAdjacentHTML('beforeend', recipeHtml);
-                            });
-                        }
-                        
-                        hasMore = data.hasMore;
-                    } else {
-                        hasMore = false;
-                        if (data.recipes && data.recipes.length === 0) {
-                            // Show "no more posts" message
-                            const noMoreDiv = document.createElement('div');
-                            noMoreDiv.className = 'col-12 text-center py-4 text-muted';
-                            noMoreDiv.innerHTML = '<p>Đã hiển thị tất cả bài đăng!</p>';
-                            const row = activeTab.querySelector('.row.g-4');
-                            if (row) {
-                                row.appendChild(noMoreDiv);
-                            }
-                        }
-                    }
-                })
-                .catch(error => {
-                    console.error('Error loading more posts:', error);
-                    loadingDiv.remove();
-                })
-                .finally(() => {
-                    isLoading = false;
-                });
+                    // Add event listener for load more button
+                    document.getElementById('load-more-btn').addEventListener('click', loadMorePosts);
+                    postsLoaded = true;
+                } else {
+                    // Show empty state
+                    container.innerHTML = `
+                        <div class="text-center py-5">
+                            <i class="bi bi-journal-text text-muted" style="font-size: 3rem;"></i>
+                            <h5 class="text-muted mt-3">Chưa có bài đăng nào</h5>
+                            <p class="text-muted">Các công thức bạn tạo sẽ hiển thị ở đây</p>
+                        </div>
+                    `;
+                    postsLoaded = true;
+                }
+            } catch (error) {
+                console.error('Error loading posts:', error);
+                container.innerHTML = `
+                    <div class="text-center py-5">
+                        <i class="bi bi-exclamation-triangle text-warning" style="font-size: 3rem;"></i>
+                        <h5 class="text-muted mt-3">Lỗi khi tải dữ liệu</h5>
+                        <p class="text-muted">Vui lòng thử lại sau</p>
+                    </div>
+                `;
+            } finally {
+                postsLoading = false;
+            }
         }
 
+        // Load more posts function
+        async function loadMorePosts() {
+            if (postsLoading) return;
+            
+            postsLoading = true;
+            postsPage++;
+            
+            const loadMoreBtn = document.getElementById('load-more-btn');
+            loadMoreBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Đang tải...';
+            loadMoreBtn.disabled = true;
+
+            try {
+                const response = await fetch(`/Profile/GetUserPosts?userId=${currentUserId}&page=${postsPage}&pageSize=8`);
+                const data = await response.json();
+
+                if (data.success && data.recipes && data.recipes.length > 0) {
+                    const grid = document.getElementById('posts-grid');
+                    data.recipes.forEach(recipe => {
+                        const recipeCard = createRecipeCard(recipe);
+                        grid.insertAdjacentHTML('beforeend', recipeCard);
+                    });
+
+                    // Check if no more data
+                    if (data.recipes.length < 8) {
+                        const container = document.getElementById('load-more-container');
+                        container.innerHTML = '<p class="text-muted">Đã hiển thị tất cả bài đăng!</p>';
+                    } else {
+                        loadMoreBtn.innerHTML = '<i class="bi bi-arrow-down-circle me-2"></i>Tải thêm';
+                        loadMoreBtn.disabled = false;
+                    }
+                } else {
+                    // No more data
+                    const container = document.getElementById('load-more-container');
+                    container.innerHTML = '<p class="text-muted">Đã hiển thị tất cả bài đăng!</p>';
+                }
+            } catch (error) {
+                console.error('Error loading more posts:', error);
+                postsPage--; // Rollback
+                loadMoreBtn.innerHTML = '<i class="bi bi-arrow-down-circle me-2"></i>Tải thêm';
+                loadMoreBtn.disabled = false;
+            } finally {
+                postsLoading = false;
+            }
+        }
+
+        // Create recipe card HTML
         function createRecipeCard(recipe) {
-            const deleteButton = isOwnProfile ? 
-                `<button class="btn btn-outline-danger">
+            const deleteBtn = isOwnProfile ? 
+                `<button class="btn btn-outline-danger btn-sm" onclick="deleteRecipe(${recipe.recipeId})">
                     <i class="bi bi-trash"></i>
                 </button>` : '';
             
             return `
-                <div class="col-lg-3 col-md-4 col-sm-6">
+                <div class="col-lg-3 col-md-4 col-sm-6" data-recipe-id="${recipe.recipeId}">
                     <div class="recipe-card h-100">
                         <div class="recipe-image">
-                            <img src="${recipe.thumbnailImg || '/images/no-thumbnail.png'}" 
-                                 class="w-100" 
-                                 style="height:200px; object-fit:cover;" 
-                                 alt="${recipe.name}" />
+                            <a href="/Recipe/Detail/${recipe.recipeId}">
+                                <img src="${recipe.thumbnailImg || '/images/no-thumbnail.png'}" 
+                                     class="w-100" 
+                                     style="height:200px; object-fit:cover;" 
+                                     alt="${recipe.name}" />
+                            </a>
                         </div>
                         <div class="recipe-content">
-                            <h6 class="recipe-title">${recipe.name}</h6>
+                            <h6 class="recipe-title">
+                                <a href="/Recipe/Detail/${recipe.recipeId}" class="text-decoration-none text-dark">
+                                    ${recipe.name}
+                                </a>
+                            </h6>
                             <div class="recipe-actions">
                                 <div class="recipe-stats">
                                     <span><i class="bi bi-hand-thumbs-up text-success"></i> ${recipe.likes || 0}</span>
                                     <span><i class="bi bi-clock"></i> ${recipe.cookTime || 0} phút</span>
                                 </div>
-                                ${deleteButton}
+                                ${deleteBtn}
                             </div>
                         </div>
                     </div>
@@ -325,35 +275,231 @@
             `;
         }
 
-        // Tab change handler
-        document.addEventListener('DOMContentLoaded', function() {
+        // Delete recipe function
+        async function deleteRecipe(recipeId) {
+            if (!confirm('Bạn có chắc chắn muốn xóa công thức này?')) {
+                return;
+            }
+
+            try {
+                const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+                const formData = new FormData();
+                formData.append('recipeId', recipeId);
+                formData.append('__RequestVerificationToken', token);
+
+                const response = await fetch('/Recipe/Delete', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+
+                if (data.success) {
+                    // Remove the recipe card from DOM
+                    const recipeCard = document.querySelector(`[data-recipe-id="${recipeId}"]`);
+                    if (recipeCard) {
+                        recipeCard.remove();
+                    }
+                    alert('Xóa công thức thành công!');
+                } else {
+                    alert('Lỗi khi xóa công thức: ' + data.message);
+                }
+            } catch (error) {
+                console.error('Error deleting recipe:', error);
+                alert('Lỗi khi xóa công thức');
+            }
+        }
+
+        // Setup tab handlers
+        function setupTabHandlers() {
             const tabButtons = document.querySelectorAll('[data-bs-toggle="pill"]');
             
             tabButtons.forEach(button => {
                 button.addEventListener('shown.bs.tab', function(event) {
                     const target = event.target.getAttribute('data-bs-target');
                     
-                    // Reset pagination when switching tabs
-                    currentPage = 1;
-                    hasMore = true;
-                    isLoading = false;
-                    
-                    // Update current tab
                     if (target === '#pills-posts') {
-                        currentTab = 'posts';
+                        // Reset posts state when switching to posts tab
+                        if (!postsLoaded) {
+                            loadPosts();
+                        }
                     } else if (target === '#pills-reacted') {
-                        currentTab = 'reacted';
+                        // Load reacted content
+                        loadReactedContent();
                     }
                 });
             });
-        });
+        }
 
-        // Scroll event listener
-        window.addEventListener('scroll', function() {
-            if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 1000) {
-                loadMorePosts();
+        // Load reacted content
+        function loadReactedContent() {
+            const reactedContent = document.getElementById('reacted-content');
+            if (!reactedContent) return;
+
+            // Check if already loaded
+            if (reactedContent.dataset.loaded === 'true') return;
+
+            fetch('/Profile/LoadReactedForProfile')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.reactions && data.reactions.length > 0) {
+                        // Create grid layout similar to posts
+                        const gridHtml = `
+                            <div class="row g-4" id="reacted-recipes-grid">
+                                ${data.reactions.map(recipe => createReactedRecipeCard(recipe)).join('')}
+                            </div>
+                            <div class="text-center mt-4">
+                                <button id="loadMoreReactedBtn" class="btn btn-outline-primary">
+                                    <i class="bi bi-arrow-down-circle me-2"></i>
+                                    Tải thêm
+                                </button>
+                            </div>
+                        `;
+                        reactedContent.innerHTML = gridHtml;
+                        reactedContent.dataset.loaded = 'true';
+                        
+                        // Add event listener for load more button
+                        document.getElementById('loadMoreReactedBtn')?.addEventListener('click', loadMoreReacted);
+                    } else {
+                        // Show empty state
+                        reactedContent.innerHTML = `
+                            <div class="text-center py-5">
+                                <i class="bi bi-heart text-muted" style="font-size: 3rem;"></i>
+                                <h5 class="text-muted mt-3">Chưa có bài đăng nào được reaction</h5>
+                                <p class="text-muted">Các bài đăng bạn đã thích sẽ hiển thị ở đây</p>
+                            </div>
+                        `;
+                        reactedContent.dataset.loaded = 'true';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading reacted content:', error);
+                    reactedContent.innerHTML = `
+                        <div class="text-center py-5">
+                            <i class="bi bi-exclamation-triangle text-warning" style="font-size: 3rem;"></i>
+                            <h5 class="text-muted mt-3">Lỗi khi tải dữ liệu</h5>
+                            <p class="text-muted">Vui lòng thử lại sau</p>
+                        </div>
+                    `;
+                });
+        }
+
+        // Create reacted recipe card
+        function createReactedRecipeCard(recipe) {
+            return `
+                <div class="col-lg-3 col-md-4 col-sm-6">
+                    <div class="recipe-card h-100">
+                        <div class="recipe-image">
+                            <a href="/Recipe/Detail/${recipe.recipeId}">
+                                <img src="${recipe.thumbnailImg || '/images/no-thumbnail.png'}" 
+                                     class="w-100" 
+                                     style="height:200px; object-fit:cover;" 
+                                     alt="${recipe.recipeName}" />
+                            </a>
+                        </div>
+                        <div class="recipe-content">
+                            <h6 class="recipe-title">
+                                <a href="/Recipe/Detail/${recipe.recipeId}" class="text-decoration-none text-dark">
+                                    ${recipe.recipeName}
+                                </a>
+                            </h6>
+                            <div class="recipe-actions">
+                                <div class="recipe-stats">
+                                    <span><i class="bi bi-hand-thumbs-up text-success"></i> ${recipe.likesCount || 0}</span>
+                                    <span><i class="bi bi-chat text-primary"></i> ${recipe.commentsCount || 0}</span>
+                                    <span><i class="bi bi-share text-info"></i> ${recipe.sharesCount || 0}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Load more reacted recipes
+        function loadMoreReacted() {
+            const loadMoreBtn = document.getElementById('loadMoreReactedBtn');
+            if (!loadMoreBtn || isLoading) return;
+
+            isLoading = true;
+            loadMoreBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Đang tải...';
+            loadMoreBtn.disabled = true;
+
+            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+            const formData = new FormData();
+            formData.append('page', currentPage + 1);
+            formData.append('pageSize', 8);
+            formData.append('__RequestVerificationToken', token);
+
+            fetch('/Profile/LoadMoreReactions', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.recipes && data.recipes.length > 0) {
+                    const grid = document.getElementById('reacted-recipes-grid');
+                    if (grid) {
+                        data.recipes.forEach(recipe => {
+                            const recipeCard = createReactedRecipeCard(recipe);
+                            grid.insertAdjacentHTML('beforeend', recipeCard);
+                        });
+                    }
+                    currentPage++;
+                    
+                    // Hide load more button if no more data
+                    if (data.recipes.length < 8) {
+                        loadMoreBtn.style.display = 'none';
+                    }
+                } else {
+                    loadMoreBtn.style.display = 'none';
+                }
+            })
+            .catch(error => {
+                console.error('Error loading more reacted recipes:', error);
+            })
+            .finally(() => {
+                isLoading = false;
+                loadMoreBtn.innerHTML = '<i class="bi bi-arrow-down-circle me-2"></i>Tải thêm';
+                loadMoreBtn.disabled = false;
+            });
+        }
+
+        // Delete recipe function
+        function deleteRecipe(recipeId) {
+            if (!confirm('Bạn có chắc chắn muốn xóa công thức này?')) {
+                return;
             }
-        });
+
+            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+            const formData = new FormData();
+            formData.append('recipeId', recipeId);
+            formData.append('__RequestVerificationToken', token);
+
+            fetch('/Recipe/Delete', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Remove the recipe card from DOM
+                    const recipeCard = document.querySelector(`[data-recipe-id="${recipeId}"]`);
+                    if (recipeCard) {
+                        recipeCard.remove();
+                    }
+                    
+                    // Show success message
+                    alert('Xóa công thức thành công!');
+                } else {
+                    alert('Lỗi khi xóa công thức: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error deleting recipe:', error);
+                alert('Lỗi khi xóa công thức');
+            });
+        }
     </script>
 }
 
@@ -418,6 +564,22 @@
 .stat-item strong {
     color: #212529;
     font-weight: bold;
+}
+
+.stat-item-link {
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.3s ease;
+}
+
+.stat-item-link:hover {
+    text-decoration: none;
+    color: #28a745;
+    transform: scale(1.05);
+}
+
+.stat-item-link:hover .stat-item {
+    color: #28a745;
 }
 
 .profile-edit-btn {

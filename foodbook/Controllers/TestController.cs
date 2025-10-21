@@ -135,5 +135,63 @@ namespace foodbook.Controllers
 
             return View("TestDatabase");
         }
+
+        [HttpGet]
+        public async Task<IActionResult> TestPosts()
+        {
+            try
+            {
+                // Get current user ID if logged in
+                var sessionEmail = HttpContext.Session.GetString("user_email");
+                int? currentUserId = null;
+                
+                if (!string.IsNullOrEmpty(sessionEmail))
+                {
+                    var currentUser = await _supabaseService.Client
+                        .From<User>()
+                        .Where(x => x.email == sessionEmail)
+                        .Single();
+                    
+                    currentUserId = currentUser?.user_id;
+                }
+
+                ViewBag.CurrentUserId = currentUserId;
+                return View();
+            }
+            catch (Exception ex)
+            {
+                ViewBag.Message = $"Lỗi: {ex.Message}";
+                return View();
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> TestNewsfeed()
+        {
+            try
+            {
+                // Get current user ID if logged in
+                var sessionEmail = HttpContext.Session.GetString("user_email");
+                int? currentUserId = null;
+                
+                if (!string.IsNullOrEmpty(sessionEmail))
+                {
+                    var currentUser = await _supabaseService.Client
+                        .From<User>()
+                        .Where(x => x.email == sessionEmail)
+                        .Single();
+                    
+                    currentUserId = currentUser?.user_id;
+                }
+
+                ViewBag.CurrentUserId = currentUserId;
+                return View();
+            }
+            catch (Exception ex)
+            {
+                ViewBag.Message = $"Lỗi: {ex.Message}";
+                return View();
+            }
+        }
     }
 }

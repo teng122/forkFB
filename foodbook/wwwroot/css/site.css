@@ -848,14 +848,17 @@ body {
 
 /* Input with Add Button */
 .input-with-add-btn {
-  display: flex;
+  display: flex !important;
+  flex-direction: row !important;
   gap: 0.5rem;
   align-items: center;
   position: relative;
+  flex-wrap: nowrap !important;
 }
 
 .autocomplete-input {
   flex: 1;
+  min-width: 0;
   border: 1px solid #d1d5db;
   border-radius: 8px;
   padding: 0.5rem 0.75rem;
@@ -879,11 +882,80 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .btn-add-circle:hover {
   color: #16a34a;
   transform: scale(1.1);
+}
+
+/* Responsive: Ensure input and button stay horizontal on all screen sizes */
+@media (max-width: 768px) {
+  .input-with-add-btn {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+  }
+  
+  .autocomplete-input {
+    flex: 1;
+    min-width: 0;
+    font-size: 0.85rem;
+  }
+  
+  .btn-add-circle {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+  }
+}
+
+/* Tag Container - Ensure tags and show more button are on same line */
+.tag-container {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  flex-wrap: nowrap !important;
+  gap: 0.25rem;
+}
+
+.tag-list {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  gap: 0.125rem;
+  flex: 1;
+}
+
+.tag-chip {
+  background-color: #f3f4f6;
+  color: #374151;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.tag-show-more-btn {
+  background-color: #f3f4f6;
+  color: #374151;
+  border: none;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.tag-show-more-btn:hover {
+  background-color: #e5e7eb;
+  color: #1f2937;
 }
 
 /* Autocomplete Dropdown */
@@ -1207,4 +1279,112 @@ body {
     min-width: auto !important;
     max-width: none !important;
   }
+}
+
+/* Follow Button Styles */
+.follow-btn {
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.follow-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(29, 215, 91, 0.3);
+}
+
+.follow-btn.btn-success {
+  background: linear-gradient(135deg, #1dd75b 0%, #16a34a 100%);
+  border: none;
+  color: white;
+  font-weight: 600;
+}
+
+.follow-btn.btn-success:hover {
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+  color: white;
+}
+
+.follow-btn.btn-outline-secondary {
+  background: transparent;
+  border: 2px solid #6c757d;
+  color: #6c757d;
+  font-weight: 600;
+}
+
+.follow-btn.btn-outline-secondary:hover {
+  background: #6c757d;
+  color: white;
+  border-color: #6c757d;
+}
+
+.follow-btn.btn-outline-secondary:active {
+  background: #5a6268;
+  border-color: #5a6268;
+}
+
+/* Follow button loading state */
+.follow-btn.loading {
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.follow-btn.loading::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 16px;
+  height: 16px;
+  margin: -8px 0 0 -8px;
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Follow button success animation */
+.follow-btn.success {
+  animation: followSuccess 0.6s ease;
+}
+
+@keyframes followSuccess {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+/* Profile stats hover effects */
+.stat-item-link {
+  transition: all 0.3s ease;
+  border-radius: 8px;
+  padding: 0.5rem;
+  margin: -0.5rem;
+}
+
+.stat-item-link:hover {
+  background-color: rgba(29, 215, 91, 0.1);
+  transform: scale(1.05);
+}
+
+/* User avatar hover effects in newsfeed */
+.user-inline-center a {
+  transition: all 0.3s ease;
+  border-radius: 50%;
+  padding: 4px;
+  margin: -4px;
+}
+
+.user-inline-center a:hover {
+  background-color: rgba(29, 215, 91, 0.1);
+  transform: scale(1.05);
+}
+
+.user-inline-center a:hover .user-avatar {
+  box-shadow: 0 0 0 3px rgba(29, 215, 91, 0.3);
 }

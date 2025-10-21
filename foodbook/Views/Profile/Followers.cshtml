@@ -1,0 +1,285 @@
+@model foodbook.Models.ProfileViewModel
+
+@{
+    var user = Model?.User;
+    ViewData["Title"] = "Người theo dõi";
+    
+    // Logic hiển thị nút theo ngữ cảnh
+    var sessionEmail = Context.Session.GetString("user_email");
+    var isOwnProfile = !string.IsNullOrEmpty(sessionEmail) && 
+                     !string.IsNullOrEmpty(user?.email) && 
+                     string.Equals(sessionEmail, user.email, StringComparison.OrdinalIgnoreCase);
+}
+
+<div class="followers-page">
+    <div class="container mt-4">
+        <!-- Header -->
+        <div class="d-flex align-items-center mb-4">
+            <a href="@Url.Action("Info", "Profile", new { id = user?.user_id })" class="btn btn-outline-secondary me-3">
+                <i class="bi bi-arrow-left"></i> Quay lại
+            </a>
+            <div>
+                <h2 class="mb-0">Người theo dõi</h2>
+                <p class="text-muted mb-0">@(user?.full_name ?? user?.username ?? "Người dùng")</p>
+            </div>
+        </div>
+
+        <!-- Followers List -->
+        <div class="row" id="followers-container">
+            @if (Model?.Followers != null && Model.Followers.Any())
+            {
+                @foreach (var follower in Model.Followers)
+                {
+                    <div class="col-lg-4 col-md-6 mb-4">
+                        <div class="follower-card">
+                            <div class="follower-avatar">
+                                <img src="@(follower.AvatarUrl ?? "/images/default-avatar.jpg")" 
+                                     alt="Avatar" 
+                                     class="rounded-circle" 
+                                     width="60" 
+                                     height="60" 
+                                     style="object-fit: cover;">
+                            </div>
+                            <div class="follower-info">
+                                <h6 class="follower-name">
+                                    <a href="@Url.Action("Info", "Profile", new { id = follower.UserId })" 
+                                       class="text-decoration-none text-dark">
+                                        @(follower.FullName ?? follower.Username ?? "Ẩn danh")
+                                    </a>
+                                </h6>
+                                <p class="follower-bio text-muted small">
+                                    @(follower.Bio ?? "Chưa có giới thiệu")
+                                </p>
+                                <div class="follower-stats">
+                                    <span class="stat-item">
+                                        <strong>@(follower.RecipeCount ?? 0)</strong> công thức
+                                    </span>
+                                    <span class="stat-item">
+                                        <strong>@(follower.FollowersCount ?? 0)</strong> người theo dõi
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="follower-actions">
+                                @if (!isOwnProfile)
+                                {
+                                    <button class="btn btn-outline-primary btn-sm follow-btn" 
+                                            data-user-id="@follower.UserId">
+                                        <i class="bi bi-person-plus"></i> Theo dõi
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="col-12">
+                    <div class="text-center py-5">
+                        <i class="bi bi-people text-muted" style="font-size: 4rem;"></i>
+                        <h5 class="text-muted mt-3">Chưa có người theo dõi</h5>
+                        <p class="text-muted">Khi có người theo dõi, họ sẽ hiển thị ở đây</p>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Load More Button -->
+        @if (Model?.Followers != null && Model.Followers.Count() >= 12)
+        {
+            <div class="text-center mt-4">
+                <button id="loadMoreFollowersBtn" class="btn btn-outline-primary">
+                    <i class="bi bi-arrow-down-circle me-2"></i>
+                    Tải thêm
+                </button>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    
+    <script>
+        let currentPage = 1;
+        const pageSize = 12;
+        let isLoading = false;
+
+        // Load more followers
+        document.getElementById('loadMoreFollowersBtn')?.addEventListener('click', async function() {
+            if (isLoading) return;
+            
+            isLoading = true;
+            this.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Đang tải...';
+            this.disabled = true;
+
+            try {
+                currentPage++;
+                const userId = @(user?.user_id ?? 0);
+                
+                const response = await fetch(`/Profile/LoadMoreFollowers?userId=${userId}&page=${currentPage}&pageSize=${pageSize}`);
+                const data = await response.json();
+
+                if (data.success && data.followers && data.followers.length > 0) {
+                    const container = document.getElementById('followers-container');
+                    
+                    data.followers.forEach(follower => {
+                        const followerCard = createFollowerCard(follower);
+                        container.insertAdjacentHTML('beforeend', followerCard);
+                    });
+
+                    // Hide load more button if no more data
+                    if (data.followers.length < pageSize) {
+                        this.style.display = 'none';
+                    }
+                } else {
+                    this.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error loading more followers:', error);
+                currentPage--; // Rollback page number
+            } finally {
+                isLoading = false;
+                this.innerHTML = '<i class="bi bi-arrow-down-circle me-2"></i>Tải thêm';
+                this.disabled = false;
+            }
+        });
+
+        function createFollowerCard(follower) {
+            return `
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="follower-card">
+                        <div class="follower-avatar">
+                            <img src="${follower.avatarUrl || '/images/default-avatar.jpg'}" 
+                                 alt="Avatar" 
+                                 class="rounded-circle" 
+                                 width="60" 
+                                 height="60" 
+                                 style="object-fit: cover;">
+                        </div>
+                        <div class="follower-info">
+                            <h6 class="follower-name">
+                                <a href="/Profile/Info/${follower.userId}" 
+                                   class="text-decoration-none text-dark">
+                                    ${follower.fullName || follower.username || 'Ẩn danh'}
+                                </a>
+                            </h6>
+                            <p class="follower-bio text-muted small">
+                                ${follower.bio || 'Chưa có giới thiệu'}
+                            </p>
+                            <div class="follower-stats">
+                                <span class="stat-item">
+                                    <strong>${follower.recipeCount || 0}</strong> công thức
+                                </span>
+                                <span class="stat-item">
+                                    <strong>${follower.followersCount || 0}</strong> người theo dõi
+                                </span>
+                            </div>
+                        </div>
+                        <div class="follower-actions">
+                            <button class="btn btn-outline-primary btn-sm follow-btn" 
+                                    data-user-id="${follower.userId}">
+                                <i class="bi bi-person-plus"></i> Theo dõi
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+    </script>
+}
+
+<style>
+.followers-page {
+    background: #f8f9fa;
+    min-height: 100vh;
+    padding: 2rem 0;
+}
+
+.follower-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+    border: none;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.follower-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.follower-avatar {
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+.follower-info {
+    flex-grow: 1;
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+.follower-name {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.follower-name a:hover {
+    color: #28a745 !important;
+}
+
+.follower-bio {
+    font-size: 0.875rem;
+    line-height: 1.4;
+    margin-bottom: 1rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.follower-stats {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    font-size: 0.875rem;
+    color: #6c757d;
+}
+
+.stat-item strong {
+    color: #212529;
+    font-weight: 600;
+}
+
+.follower-actions {
+    text-align: center;
+}
+
+.follow-btn {
+    border-radius: 20px;
+    padding: 0.375rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.follow-btn:hover {
+    transform: scale(1.05);
+}
+
+@@media (max-width: 768px) {
+    .follower-stats {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .follower-card {
+        padding: 1rem;
+    }
+}
+</style>

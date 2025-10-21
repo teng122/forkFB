@@ -4,6 +4,8 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
+@Html.AntiForgeryToken()
+
 <!-- Back Button -->
 <div class="mb-3">
     <a href="javascript:history.back()" class="text-decoration-none text-muted" style="font-size: 14px;">
@@ -36,7 +38,14 @@
            class="text-decoration-none text-dark fw-medium" style="font-size: 14px;">
             @Model.Author?.username
         </a>
-        <button class="btn btn-outline-success btn-sm follow-btn">Theo dõi</button>
+        @if (!Model.IsOwnRecipe)
+        {
+            <button class="btn @(Model.IsFollowing ? "btn-outline-secondary" : "btn-outline-success") btn-sm follow-btn" 
+                    data-user-id="@Model.Author.user_id" 
+                    data-is-following="@Model.IsFollowing.ToString().ToLower()">
+                @(Model.IsFollowing ? "Đã theo dõi" : "Theo dõi")
+            </button>
+        }
     </div>
     
     <!-- Save Button -->
@@ -49,17 +58,17 @@
 
 <!-- Recipe Stats -->
 <div class="d-flex align-items-center gap-3 text-muted mb-3 recipe-stats">
-    <span class="stat-item cursor-pointer" id="btnLike" data-recipe-id="@Model.Recipe.recipe_id" data-is-liked="@Model.IsLiked">
-        <i class="bi @(Model.IsLiked ? "bi-heart-fill text-danger" : "bi-heart")"></i>
+    <span class="stat-item cursor-pointer" id="btnLike" data-recipe-id="@Model.Recipe.recipe_id" data-is-liked="@Model.IsLiked.ToString().ToLower()">
+        <i class="bi @(Model.IsLiked ? "bi-hand-thumbs-up-fill text-primary" : "bi-hand-thumbs-up")"></i>
         <span id="likeCount">@Model.LikeCount</span>
     </span>
     <span class="stat-item">
         <i class="bi bi-chat"></i>
         <span>@Model.CommentCount</span>
     </span>
-    <span class="stat-item">
-        <i class="bi bi-bookmark"></i>
-        Bao lưu
+    <span class="stat-item cursor-pointer" id="btnShare" data-recipe-id="@Model.Recipe.recipe_id">
+        <i class="bi bi-share"></i>
+        <span id="shareCount">@Model.ShareCount</span>
     </span>
     <span class="stat-item">
         <i class="bi bi-clock"></i>
@@ -645,51 +654,28 @@ function navigateStepMedia(stepNumber, direction) {
     mediaItems[currentMediaIndexes[stepNumber]].style.display = 'block';
 }
 
-// Like functionality
-document.getElementById('btnLike')?.addEventListener('click', async function() {
-    const recipeId = this.dataset.recipeId;
-    
-    try {
-        const response = await fetch('/Recipe/ToggleLike', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ recipeId: parseInt(recipeId) })
-        });
-        
-        if (response.ok) {
-            const result = await response.json();
-            
-            if (result.success) {
-                const icon = this.querySelector('i');
-                if (result.isLiked) {
-                    icon.classList.remove('bi-heart');
-                    icon.classList.add('bi-heart-fill', 'text-danger');
-                } else {
-                    icon.classList.remove('bi-heart-fill', 'text-danger');
-                    icon.classList.add('bi-heart');
-                }
-                this.dataset.isLiked = result.isLiked;
-                document.getElementById('likeCount').textContent = result.likeCount;
-            }
-        }
-    } catch (error) {
-        console.error('Error toggling like:', error);
-    }
-});
 
 // Save to notebook functionality
 document.getElementById('btnSaveRecipe')?.addEventListener('click', async function() {
+    console.log('Save button clicked');
     const recipeId = this.dataset.recipeId;
+    const isSaved = this.dataset.isSaved === 'true';
+    
+    console.log('Recipe ID:', recipeId, 'Is Saved:', isSaved);
     
     try {
+        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+        console.log('CSRF Token:', token);
+        
+        const formData = new FormData();
+        formData.append('recipeId', recipeId);
+        formData.append('isSaved', isSaved);
+        formData.append('__RequestVerificationToken', token);
+
+        console.log('Sending request to /Recipe/ToggleSave');
         const response = await fetch('/Recipe/ToggleSave', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ recipeId: parseInt(recipeId) })
+            body: formData
         });
         
         if (response.ok) {
@@ -712,16 +698,171 @@ document.getElementById('btnSaveRecipe')?.addEventListener('click', async functi
     }
 });
 
+// Like functionality
+document.getElementById('btnLike')?.addEventListener('click', async function() {
+    console.log('Like button clicked');
+    const recipeId = this.dataset.recipeId;
+    const isLiked = this.dataset.isLiked === 'true';
+    
+    console.log('Recipe ID:', recipeId, 'Is Liked:', isLiked);
+    
+    try {
+        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+        console.log('CSRF Token:', token);
+        
+        const formData = new FormData();
+        formData.append('recipeId', recipeId);
+        formData.append('isLiked', isLiked);
+        formData.append('__RequestVerificationToken', token);
+
+        console.log('Sending request to /Recipe/ToggleLike');
+        const response = await fetch('/Recipe/ToggleLike', {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            if (result.success) {
+                const icon = this.querySelector('i');
+                const countSpan = this.querySelector('#likeCount');
+                
+                if (result.isLiked) {
+                    icon.classList.remove('bi-hand-thumbs-up');
+                    icon.classList.add('bi-hand-thumbs-up-fill', 'text-primary');
+                } else {
+                    icon.classList.remove('bi-hand-thumbs-up-fill', 'text-primary');
+                    icon.classList.add('bi-hand-thumbs-up');
+                }
+                
+                countSpan.textContent = result.likeCount;
+                this.dataset.isLiked = result.isLiked;
+            }
+        }
+    } catch (error) {
+        console.error('Error toggling like:', error);
+    }
+});
+
+// Follow functionality
+document.querySelector('.follow-btn')?.addEventListener('click', async function() {
+    const userId = this.dataset.userId;
+    const isFollowing = this.dataset.isFollowing === 'true';
+    
+    try {
+        const response = await fetch('/Home/ToggleFollow', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `userId=${userId}&isFollowing=${isFollowing}&__RequestVerificationToken=${document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''}`
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            if (result.success) {
+                if (result.isFollowing) {
+                    this.classList.remove('btn-outline-success');
+                    this.classList.add('btn-outline-secondary');
+                    this.textContent = 'Đã theo dõi';
+                } else {
+                    this.classList.remove('btn-outline-secondary');
+                    this.classList.add('btn-outline-success');
+                    this.textContent = 'Theo dõi';
+                }
+                this.dataset.isFollowing = result.isFollowing;
+            }
+        }
+    } catch (error) {
+        console.error('Error toggling follow:', error);
+    }
+});
+
+// Share functionality
+document.getElementById('btnShare')?.addEventListener('click', async function() {
+    const recipeId = this.dataset.recipeId;
+    const recipeUrl = window.location.href;
+    const recipeTitle = document.querySelector('.recipe-title')?.textContent || 'Công thức nấu ăn';
+    
+    try {
+        // Check if Web Share API is supported
+        if (navigator.share) {
+            await navigator.share({
+                title: recipeTitle,
+                text: `Xem công thức "${recipeTitle}" trên FoodBook`,
+                url: recipeUrl
+            });
+            
+            // Record share in database
+            await recordShare(recipeId);
+        } else {
+            // Fallback: Copy to clipboard
+            await navigator.clipboard.writeText(recipeUrl);
+            alert('Đã sao chép link công thức vào clipboard!');
+            
+            // Record share in database
+            await recordShare(recipeId);
+        }
+    } catch (error) {
+        console.error('Error sharing:', error);
+        // Fallback: Copy to clipboard
+        try {
+            await navigator.clipboard.writeText(recipeUrl);
+            alert('Đã sao chép link công thức vào clipboard!');
+            await recordShare(recipeId);
+        } catch (clipboardError) {
+            console.error('Clipboard error:', clipboardError);
+            alert('Không thể chia sẻ. Vui lòng thử lại.');
+        }
+    }
+});
+
+async function recordShare(recipeId) {
+    try {
+        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+        const formData = new FormData();
+        formData.append('recipeId', recipeId);
+        formData.append('__RequestVerificationToken', token);
+
+        const response = await fetch('/Recipe/RecordShare', {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            if (result.success) {
+                console.log('Share recorded successfully');
+                // Update share count
+                const shareCountSpan = document.getElementById('shareCount');
+                if (shareCountSpan) {
+                    const currentCount = parseInt(shareCountSpan.textContent) || 0;
+                    shareCountSpan.textContent = currentCount + 1;
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Error recording share:', error);
+    }
+}
+
 // Comment functionality
 document.getElementById('commentForm')?.addEventListener('submit', async function(e) {
     e.preventDefault();
+    console.log('Comment form submitted');
     
     const recipeId = @Model.Recipe.recipe_id;
     const body = document.getElementById('commentBody').value;
     
-    if (!body.trim()) return;
+    console.log('Recipe ID:', recipeId, 'Comment Body:', body);
+    
+    if (!body.trim()) {
+        console.log('Comment body is empty');
+        return;
+    }
     
     try {
+        console.log('Sending request to /Recipe/AddComment');
         const response = await fetch('/Recipe/AddComment', {
             method: 'POST',
             headers: {

@@ -17,6 +17,9 @@ namespace foodbook.Models
 
         [Column("body")]
         public string body { get; set; }
+
+        [Column("created_at")]
+        public DateTime created_at { get; set; }
     }
 }
 
