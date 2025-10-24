@@ -32,7 +32,7 @@ namespace foodbook.Controllers
             {
                 // Load suggestions from DB: distinct Ingredient names and all RecipeType contents
                 var ingredientNames = _supabaseService.Client
-                    .From<Ingredient>()
+                    .From<IngredientMaster>()
                     .Select("name")
                     .Get().Result.Models
                     .Where(i => !string.IsNullOrWhiteSpace(i.name))
@@ -173,25 +173,57 @@ namespace foodbook.Controllers
                     _logger.LogInformation("No MainMedia provided for thumbnail");
                 }
 
-                // 3. Lưu Ingredients
+                // 3. Lưu Ingredients với cấu trúc mới (giữ nguyên giao diện cũ)
                 if (model.Ingredients != null && model.Ingredients.Any())
                 {
                     _logger.LogInformation("Saving {Count} ingredients", model.Ingredients.Count);
                     
                     foreach (var ingredientName in model.Ingredients)
                     {
-                        var ingredient = new Ingredient
+                        if (string.IsNullOrWhiteSpace(ingredientName)) continue;
+
+                        var name = ingredientName.Trim();
+                        _logger.LogInformation("Processing ingredient: {Name}", name);
+
+                        // Tìm hoặc tạo nguyên liệu trong bảng Ingredient_Master
+                        var existingIngredient = await _supabaseService.Client
+                            .From<IngredientMaster>()
+                            .Select("ingredient_id, name")
+                            .Where(x => x.name == name)
+                            .Get();
+
+                        int ingredientId;
+                        if (existingIngredient.Models.Any())
+                        {
+                            ingredientId = existingIngredient.Models.First().ingredient_id.Value;
+                            _logger.LogInformation("  - Found existing ingredient: ID={Id}, Name={Name}", 
+                                ingredientId, name);
+                        }
+                        else
+                        {
+                            // Tạo nguyên liệu mới
+                            var newIngredient = new IngredientMaster 
+                            { 
+                                name = name, 
+                                created_at = DateTime.UtcNow 
+                            };
+                            var insertResult = await _supabaseService.Client.From<IngredientMaster>().Insert(newIngredient);
+                            ingredientId = insertResult.Models.FirstOrDefault()?.ingredient_id ?? 0;
+                            _logger.LogInformation("  - Created new ingredient: ID={Id}, Name={Name}", 
+                                ingredientId, name);
+                        }
+
+                        // Tạo link trong bảng trung gian Recipe_Ingredient
+                        var recipeIngredient = new RecipeIngredient
                         {
                             recipe_id = recipeId,
-                            name = ingredientName,
+                            ingredient_id = ingredientId,
                             created_at = DateTime.UtcNow
                         };
 
-                        await _supabaseService.Client
-                            .From<Ingredient>()
-                            .Insert(ingredient);
-                            
-                        _logger.LogInformation("  - Saved ingredient: {Name}", ingredientName);
+                        await _supabaseService.Client.From<RecipeIngredient>().Insert(recipeIngredient);
+                        _logger.LogInformation("  - Created Recipe_Ingredient link: RecipeId={RecipeId}, IngredientId={IngredientId}", 
+                            recipeId, ingredientId);
                     }
                 }
                 else
@@ -425,11 +457,22 @@ namespace foodbook.Controllers
                     .Where(x => x.user_id == recipe.user_id)
                     .Single();
 
-                // 3. Lấy danh sách Ingredients
-                var ingredients = await _supabaseService.Client
-                    .From<Ingredient>()
+                // 3. Lấy danh sách Ingredients từ Recipe_Ingredient và Ingredient_Master
+                var recipeIngredientsResult = await _supabaseService.Client
+                    .From<RecipeIngredient>()
                     .Where(x => x.recipe_id == id)
                     .Get();
+
+                var ingredients = new List<IngredientMaster>();
+                foreach (var ri in recipeIngredientsResult.Models ?? new List<RecipeIngredient>())
+                {
+                    var ingredient = await _supabaseService.Client
+                        .From<IngredientMaster>()
+                        .Where(x => x.ingredient_id == ri.ingredient_id)
+                        .Single();
+                    if (ingredient != null)
+                        ingredients.Add(ingredient);
+                }
 
                 // 4. Lấy các RecipeSteps
                 var steps = await _supabaseService.Client
@@ -564,7 +607,7 @@ namespace foodbook.Controllers
                 {
                     Recipe = recipe,
                     Author = author,
-                    Ingredients = ingredients.Models ?? new List<Ingredient>(),
+                    Ingredients = ingredients,
                     Steps = steps.Models ?? new List<RecipeStep>(),
                     StepMedia = stepMedia,
                     LikeCount = likeCount,
@@ -893,9 +936,9 @@ namespace foodbook.Controllers
                     .Where(x => x.recipe_id == recipeId)
                     .Delete();
 
-                // Xóa ingredients
+                // Xóa recipe ingredients (chỉ xóa link, không xóa nguyên liệu gốc)
                 await _supabaseService.Client
-                    .From<Ingredient>()
+                    .From<RecipeIngredient>()
                     .Where(x => x.recipe_id == recipeId)
                     .Delete();
 

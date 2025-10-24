@@ -62,10 +62,20 @@
                             <div class="follower-actions">
                                 @if (!isOwnProfile)
                                 {
-                                    <button class="btn btn-outline-primary btn-sm follow-btn" 
-                                            data-user-id="@follower.UserId">
-                                        <i class="bi bi-person-plus"></i> Theo dõi
-                                    </button>
+                                    @if (follower.IsFollowing)
+                                    {
+                                        <button class="btn btn-outline-secondary btn-sm unfollow-btn" 
+                                                data-user-id="@follower.UserId">
+                                            <i class="bi bi-person-check"></i> Đã follow
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <button class="btn btn-outline-success btn-sm follow-btn" 
+                                                data-user-id="@follower.UserId">
+                                            <i class="bi bi-person-plus"></i> Follow
+                                        </button>
+                                    }
                                 }
                             </div>
                         </div>
@@ -177,10 +187,16 @@
                             </div>
                         </div>
                         <div class="follower-actions">
-                            <button class="btn btn-outline-primary btn-sm follow-btn" 
-                                    data-user-id="${follower.userId}">
-                                <i class="bi bi-person-plus"></i> Theo dõi
-                            </button>
+                            ${follower.isFollowing ? 
+                                `<button class="btn btn-outline-secondary btn-sm unfollow-btn" 
+                                        data-user-id="${follower.userId}">
+                                    <i class="bi bi-person-check"></i> Đã follow
+                                </button>` :
+                                `<button class="btn btn-outline-success btn-sm follow-btn" 
+                                        data-user-id="${follower.userId}">
+                                    <i class="bi bi-person-plus"></i> Follow
+                                </button>`
+                            }
                         </div>
                     </div>
                 </div>

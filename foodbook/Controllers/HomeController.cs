@@ -78,20 +78,28 @@ namespace foodbook.Controllers
                         tags.Add($"#{r.level}");
                     }
                     
-                    // Load ingredients
+                    // Load ingredients từ Recipe_Ingredient và Ingredient_Master
                     try
                     {
-                        var ingredients = await _supabaseService.Client
-                            .From<Ingredient>()
-                            .Select("name")
+                        // Get ingredient IDs from Recipe_Ingredient
+                        var recipeIngredients = await _supabaseService.Client
+                            .From<RecipeIngredient>()
+                            .Select("ingredient_id")
                             .Where(x => x.recipe_id == recipeId)
                             .Get();
                             
-                        foreach (var ing in ingredients.Models)
+                        foreach (var ri in recipeIngredients.Models)
                         {
-                            if (!string.IsNullOrEmpty(ing.name))
+                            // Get ingredient name from Ingredient_Master
+                            var ingredientResult = await _supabaseService.Client
+                                .From<IngredientMaster>()
+                                .Select("name")
+                                .Where(x => x.ingredient_id == ri.ingredient_id)
+                                .Single();
+                                
+                            if (ingredientResult != null && !string.IsNullOrEmpty(ingredientResult.name))
                             {
-                                tags.Add($"#{ing.name.Trim()}");
+                                tags.Add($"#{ingredientResult.name.Trim()}");
                             }
                         }
                     }
@@ -929,20 +937,28 @@ namespace foodbook.Controllers
                         tags.Add($"#{r.level}");
                     }
                     
-                    // Load ingredients
+                    // Load ingredients từ Recipe_Ingredient và Ingredient_Master
                     try
                     {
-                        var ingredients = await _supabaseService.Client
-                            .From<Ingredient>()
-                            .Select("name")
+                        // Get ingredient IDs from Recipe_Ingredient
+                        var recipeIngredients = await _supabaseService.Client
+                            .From<RecipeIngredient>()
+                            .Select("ingredient_id")
                             .Where(x => x.recipe_id == recipeId)
                             .Get();
                             
-                        foreach (var ing in ingredients.Models)
+                        foreach (var ri in recipeIngredients.Models)
                         {
-                            if (!string.IsNullOrEmpty(ing.name))
+                            // Get ingredient name from Ingredient_Master
+                            var ingredientResult = await _supabaseService.Client
+                                .From<IngredientMaster>()
+                                .Select("name")
+                                .Where(x => x.ingredient_id == ri.ingredient_id)
+                                .Single();
+                                
+                            if (ingredientResult != null && !string.IsNullOrEmpty(ingredientResult.name))
                             {
-                                tags.Add($"#{ing.name.Trim()}");
+                                tags.Add($"#{ingredientResult.name.Trim()}");
                             }
                         }
                     }

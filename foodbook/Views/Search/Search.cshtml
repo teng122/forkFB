@@ -2,6 +2,10 @@
 @{
     ViewData["Title"] = "Tìm kiếm";
     Layout = "~/Views/Shared/_Layout.cshtml";
+    
+    // Serialize data for JavaScript
+    var ingredientsJson = System.Text.Json.JsonSerializer.Serialize(Model.Ingredients ?? new List<string>());
+    var recipeTypesJson = System.Text.Json.JsonSerializer.Serialize(Model.RecipeTypes ?? new List<string>());
 }
 
 <!-- Search Bar -->
@@ -25,15 +29,19 @@
                     <div class="filter-card">
                         <h6 class="filter-title">Nguyên liệu</h6>
                         <div class="filter-content">
-                            @foreach (var ingredient in Model.Ingredients.Take(6))
-                            {
-                                <div class="filter-item">
-                                    <input class="form-check-input ingredient-filter" type="checkbox" value="@ingredient" id="ingredient_@ingredient">
-                                    <label class="form-check-label" for="ingredient_@ingredient">
-                                        @ingredient
-                                    </label>
+                            <div class="tag-search-container">
+                                <div class="tag-input-wrapper">
+                                    <input type="text" 
+                                           class="form-control tag-search-input" 
+                                           id="ingredientSearchInput" 
+                                           placeholder="Gõ để tìm nguyên liệu..."
+                                           data-suggestions='@Html.Raw(ingredientsJson)'>
+                                    <div class="tag-suggestions" id="ingredientSuggestions"></div>
                                 </div>
-                            }
+                            </div>
+                            <div class="selected-tags" id="selectedIngredients">
+                                <!-- Selected ingredients will be displayed here -->
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -45,28 +53,32 @@
                         <div class="filter-content">
                             <!-- Tìm kiếm theo -->
                             <div class="search-type-option">
-                                <input class="form-check-input search-type-filter" type="radio" value="user" name="searchType" id="search_user">
-                                <label class="form-check-label" for="search_user">
-                                    <span>Người dùng</span>
-                                </label>
-                            </div>
-                            <div class="search-type-option">
                                 <input class="form-check-input search-type-filter" type="radio" value="recipe" name="searchType" id="search_recipe" checked>
                                 <label class="form-check-label" for="search_recipe">
                                     <span>Công thức</span>
                                 </label>
                             </div>
+                            <div class="search-type-option">
+                                <input class="form-check-input search-type-filter" type="radio" value="user" name="searchType" id="search_user">
+                                <label class="form-check-label" for="search_user">
+                                    <span>Người dùng</span>
+                                </label>
+                            </div>
                             
-                            <!-- Phân loại recipe types -->
-                            @foreach (var type in Model.RecipeTypes.Take(6))
-                            {
-                                <div class="filter-tag">
-                                    <input class="form-check-input type-filter" type="checkbox" value="@type" id="type_@type">
-                                    <label class="form-check-label" for="type_@type">
-                                        <span>@type</span>
-                                    </label>
+                            <!-- Phân loại recipe types với search -->
+                            <div class="tag-search-container">
+                                <div class="tag-input-wrapper">
+                                    <input type="text" 
+                                           class="form-control tag-search-input" 
+                                           id="typeSearchInput" 
+                                           placeholder="Gõ để tìm phân loại..."
+                                           data-suggestions='@Html.Raw(recipeTypesJson)'>
+                                    <div class="tag-suggestions" id="typeSuggestions"></div>
                                 </div>
-                            }
+                            </div>
+                            <div class="selected-tags" id="selectedTypes">
+                                <!-- Selected types will be displayed here -->
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -103,21 +115,27 @@
                 @foreach (var recipe in Model.SearchResults)
                 {
                     <div class="col-md-6 col-lg-4 col-xl-3 mb-4">
-                        <div class="card h-100 shadow-sm">
-                            <a href="@Url.Action("Detail", "Recipe", new { id = recipe.RecipeId })" class="text-decoration-none">
-                                <img src="@recipe.ThumbnailImg" class="card-img-top" alt="@recipe.RecipeName" style="height: 200px; object-fit: cover;">
-                            </a>
-                            <div class="card-body d-flex flex-column">
-                                <h5 class="card-title">@recipe.RecipeName</h5>
-                                <div class="mt-auto">
-                                    <div class="d-flex align-items-center mb-2">
-                                        <i class="fas fa-thumbs-up text-primary me-1"></i>
-                                        <span class="text-muted">@recipe.LikesCount</span>
+                        <div class="recipe-card">
+                            <div class="recipe-image-wrapper">
+                                <img src="@recipe.ThumbnailImg" class="recipe-image" alt="@recipe.RecipeName">
+                            </div>
+                            <div class="recipe-card-body">
+                                <h5 class="recipe-title">@recipe.RecipeName</h5>
+                                <div class="recipe-info">
+                                    <div class="recipe-likes">
+                                        <i class="fas fa-thumbs-up"></i>
+                                        <span>@recipe.LikesCount</span>
                                     </div>
-                                    <div class="text-muted mb-2">Độ khó: @recipe.Level</div>
-                                    <div class="text-muted mb-3">@recipe.UserName</div>
-                                    <a href="@Url.Action("Detail", "Recipe", new { id = recipe.RecipeId })" class="btn btn-outline-primary btn-sm w-100">
-                                        <i class="fas fa-arrow-right"></i> Xem chi tiết
+                                    <div class="recipe-difficulty">
+                                        Độ khó: <strong>@recipe.Level</strong>
+                                    </div>
+                                </div>
+                                <div class="recipe-author">
+                                    <a href="@Url.Action("Info", "Profile", new { id = recipe.UserId })">@recipe.UserName</a>
+                                </div>
+                                <div class="recipe-actions">
+                                    <a href="@Url.Action("Detail", "Recipe", new { id = recipe.RecipeId })" class="btn-view-detail">
+                                        Xem chi tiết
                                     </a>
                                 </div>
                             </div>
@@ -126,6 +144,12 @@
                 }
             </div>
         </div>
+    </div>
+
+    <!-- Back to Top Button -->
+    <button id="backToTop" class="back-to-top-btn" title="Lên đầu trang">
+        <i class="fas fa-arrow-up"></i>
+    </button>
 
 <style>
 /* Search Page Styles - Match Image Exactly */
@@ -328,58 +352,250 @@
     margin-bottom: 1.5rem;
 }
 
-.card {
-    transition: transform 0.2s ease-in-out;
-    border: none;
-    border-radius: 16px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+/* Recipe Card Styles - Match Image */
+.recipe-card {
     background: white;
+    border-radius: 12px;
     overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
 }
 
-.card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+.recipe-card:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
 }
 
-.card-img-top {
-    border-radius: 16px 16px 0 0;
-    height: 200px;
-    object-fit: cover;
+.recipe-image-wrapper {
     width: 100%;
+    height: 220px;
+    overflow: hidden;
+    background-color: #f8f9fa;
+    position: relative;
 }
 
-.card-body {
+.recipe-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.recipe-card:hover .recipe-image {
+    transform: scale(1.05);
+}
+
+.recipe-card-body {
     padding: 1.25rem;
-    background: white;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    flex: 1;
 }
 
-.card-title {
+.recipe-title {
     font-size: 1.1rem;
     font-weight: 600;
-    color: #333;
-    margin-bottom: 0.75rem;
-    line-height: 1.3;
+    color: #2c3e50;
+    margin: 0;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.card .d-flex {
-    margin-bottom: 0.5rem;
+.recipe-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.9rem;
+    color: #6c757d;
 }
 
-.card .btn {
+.recipe-likes {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: #3498db;
+    font-weight: 500;
+}
+
+.recipe-likes i {
+    font-size: 1rem;
+}
+
+.recipe-difficulty {
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+.recipe-difficulty strong {
+    color: #2c3e50;
+}
+
+.recipe-author {
+    font-size: 0.9rem;
+    color: #16a34a;
+    font-weight: 500;
+}
+
+.recipe-author a {
+    color: #16a34a;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.recipe-author a:hover {
+    color: #15803d;
+    text-decoration: underline;
+}
+
+.recipe-actions {
+    margin-top: auto;
+    padding-top: 0.75rem;
+}
+
+.btn-view-detail {
+    display: block;
+    width: 100%;
+    text-align: center;
+    padding: 0.65rem 1rem;
+    background-color: #f8f9fa;
+    color: #2c3e50;
+    text-decoration: none;
     border-radius: 8px;
     font-weight: 500;
-    padding: 0.5rem 1rem;
-    background-color: #f8f9fa;
+    font-size: 0.95rem;
     border: 1px solid #dee2e6;
-    color: #333;
     transition: all 0.2s ease;
 }
 
-.card .btn:hover {
+.btn-view-detail:hover {
     background-color: #e9ecef;
-    border-color: #adb5bd;
-    color: #333;
+    border-color: #ced4da;
+    color: #1a252f;
+    transform: translateY(-1px);
+}
+
+/* User Card Styles */
+.user-card {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.user-card:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+}
+
+.user-card-header {
+    padding: 2rem;
+    text-align: center;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.user-avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid white;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.user-card-body {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    flex: 1;
+    text-align: center;
+}
+
+.user-fullname {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin: 0;
+}
+
+.user-username {
+    font-size: 0.95rem;
+    color: #6c757d;
+    margin: 0;
+    font-weight: 500;
+}
+
+.user-bio {
+    font-size: 0.9rem;
+    color: #495057;
+    line-height: 1.5;
+    margin: 0.5rem 0;
+    min-height: 40px;
+}
+
+.user-stats {
+    display: flex;
+    justify-content: space-around;
+    gap: 1rem;
+    margin: 1rem 0;
+    padding: 1rem 0;
+    border-top: 1px solid #e9ecef;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.user-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.85rem;
+    color: #6c757d;
+}
+
+.user-stat i {
+    font-size: 1.2rem;
+    color: #667eea;
+}
+
+.user-stat strong {
+    color: #2c3e50;
+}
+
+.user-actions {
+    margin-top: auto;
+}
+
+.btn-view-profile {
+    display: block;
+    width: 100%;
+    text-align: center;
+    padding: 0.75rem 1rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 0.95rem;
+    border: none;
+    transition: all 0.2s ease;
+}
+
+.btn-view-profile:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    color: white;
 }
 
 /* Responsive */
@@ -407,8 +623,8 @@
 
 /* Nguyên liệu specific grid */
 .filter-card:nth-child(1) .filter-content {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+    display: flex;
+    flex-direction: column;
     gap: 0.75rem;
 }
 
@@ -468,15 +684,236 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* Tag Search Styles - Rule34 Video Style */
+.tag-search-container {
+    width: 100%;
+}
+
+.tag-input-wrapper {
+    position: relative;
+    width: 100%;
+    border: 2px solid #e1e5e9;
+    border-radius: 8px;
+    background: white;
+    transition: all 0.3s ease;
+}
+
+.tag-input-wrapper:focus-within {
+    border-color: #1dd75b;
+    box-shadow: 0 0 0 3px rgba(29, 215, 91, 0.1);
+}
+
+.tag-search-input {
+    border: none;
+    outline: none;
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 14px;
+    background: transparent;
+    border-radius: 8px;
+}
+
+.tag-search-input::placeholder {
+    color: #6c757d;
+    font-style: italic;
+}
+
+.tag-suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #e1e5e9;
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1000;
+    display: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.suggestion-item {
+    padding: 8px 12px;
+    cursor: pointer;
+    border-bottom: 1px solid #f8f9fa;
+    transition: all 0.2s ease;
+    font-size: 14px;
+    color: #333;
+}
+
+.suggestion-item:hover {
+    background-color: #f8f9fa;
+    color: #1dd75b;
+}
+
+.suggestion-item:last-child {
+    border-bottom: none;
+}
+
+/* Selected Tags - Rule34 Style */
+.selected-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+    min-height: 0;
+}
+
+.selected-tag {
+    background: linear-gradient(135deg, #1dd75b, #16a34a);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 16px;
+    font-size: 12px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 2px 4px rgba(29, 215, 91, 0.3);
+    transition: all 0.2s ease;
+    animation: tagAppear 0.3s ease;
+    margin-right: 4px;
+    margin-bottom: 2px;
+    white-space: nowrap;
+}
+
+.selected-tag:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(29, 215, 91, 0.4);
+}
+
+.selected-tag .remove-btn {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    padding: 0;
+    font-size: 14px;
+    line-height: 1;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.selected-tag .remove-btn:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: #ff6b6b;
+}
+
+@@keyframes tagAppear {
+    from {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* Back to Top Button */
+.back-to-top-btn {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 50px;
+    height: 50px;
+    background-color: #1dd75b;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    box-shadow: 0 4px 12px rgba(29, 215, 91, 0.3);
+    transition: all 0.3s ease;
+    z-index: 1000;
+}
+
+.back-to-top-btn:hover {
+    background-color: #16a34a;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(29, 215, 91, 0.4);
+}
+
+.back-to-top-btn.show {
+    display: flex;
+}
 </style>
 
 <script>
-document.getElementById('searchBtn').addEventListener('click', performSearch);
+// Global variables
+let selectedIngredients = [];
+let selectedTypes = [];
+
+// Initialize search functionality
+document.addEventListener('DOMContentLoaded', function() {
+    initializeIngredientSearch();
+    initializeTypeSearch();
+    initializeBackToTop();
+    
+    // Add event listener for search button
+    const searchBtn = document.getElementById('searchBtn');
+    if (searchBtn) {
+        searchBtn.addEventListener('click', performSearch);
+    }
+    
+    // Add sort change handlers
+    const sortOrder = document.getElementById('sortOrderSelect');
+    const sortCheckboxes = document.querySelectorAll('.sort-checkbox');
+    
+    if (sortOrder) {
+        sortOrder.addEventListener('change', performSearch);
+    }
+    
+    sortCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            // Uncheck other checkboxes (only one sort criteria at a time)
+            sortCheckboxes.forEach(cb => {
+                if (cb !== this) cb.checked = false;
+            });
+            performSearch();
+        });
+    });
+    
+    // Make entire search-type-option clickable
+    const searchTypeOptions = document.querySelectorAll('.search-type-option');
+    searchTypeOptions.forEach(option => {
+        option.addEventListener('click', function(e) {
+            const radio = this.querySelector('input[type="radio"]');
+            if (radio && !radio.checked) {
+                radio.checked = true;
+                // Trigger change event to also fire performSearch
+                radio.dispatchEvent(new Event('change'));
+            }
+        });
+        
+        // Add cursor pointer style
+        option.style.cursor = 'pointer';
+    });
+    
+    // Also trigger search when radio button changes
+    const searchTypeRadios = document.querySelectorAll('.search-type-filter');
+    searchTypeRadios.forEach(radio => {
+        radio.addEventListener('change', performSearch);
+    });
+});
 
 function performSearch() {
+    console.log('=== PERFORM SEARCH START ===');
+    console.log('Global selectedIngredients:', selectedIngredients);
+    console.log('Global selectedTypes:', selectedTypes);
+    
     const searchTerm = document.getElementById('searchInput').value;
-    const selectedIngredients = Array.from(document.querySelectorAll('.ingredient-filter:checked')).map(cb => cb.value);
-    const selectedTypes = Array.from(document.querySelectorAll('.type-filter:checked')).map(cb => cb.value);
     const searchType = document.querySelector('input[name="searchType"]:checked')?.value || 'recipe';
     const sortType = document.querySelector('.sort-checkbox:checked')?.value || 'time';
     const sortOrder = document.getElementById('sortOrderSelect').value;
@@ -490,17 +927,33 @@ function performSearch() {
         sortBy: sortBy
     };
 
-    fetch('@Url.Action("Search", "Search")', {
+    console.log('Request data:', requestData);
+
+    // Choose endpoint based on search type
+    const endpoint = searchType === 'user' 
+        ? '@Url.Action("SearchUsers", "Search")'
+        : '@Url.Action("Search", "Search")';
+
+    fetch(endpoint, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
         body: JSON.stringify(requestData)
     })
-    .then(response => response.json())
+    .then(response => {
+        console.log('Response status:', response.status);
+        return response.json();
+    })
     .then(data => {
+        console.log('Response data:', data);
         if (data.success) {
-            updateSearchResults(data.results);
+            console.log('Updating search results with', data.results.length, 'items');
+            if (data.searchType === 'user') {
+                updateUserSearchResults(data.results);
+            } else {
+                updateSearchResults(data.results);
+            }
         } else {
             showAlert('danger', data.message);
         }
@@ -532,21 +985,84 @@ function updateSearchResults(results) {
     results.forEach(recipe => {
         html += `
             <div class="col-md-6 col-lg-4 col-xl-3 mb-4">
-                <div class="card h-100 shadow-sm">
-                    <a href="/Recipe/Detail/${recipe.recipeId}" class="text-decoration-none">
-                        <img src="${recipe.thumbnailImg}" class="card-img-top" alt="${recipe.recipeName}" style="height: 200px; object-fit: cover;">
-                    </a>
-                    <div class="card-body d-flex flex-column">
-                        <h5 class="card-title">${recipe.recipeName}</h5>
-                        <div class="mt-auto">
-                            <div class="d-flex align-items-center mb-2">
-                                <i class="fas fa-thumbs-up text-primary me-1"></i>
-                                <span class="text-muted">${recipe.likesCount}</span>
+                <div class="recipe-card">
+                    <div class="recipe-image-wrapper">
+                        <img src="${recipe.thumbnailImg}" class="recipe-image" alt="${recipe.recipeName}">
+                    </div>
+                    <div class="recipe-card-body">
+                        <h5 class="recipe-title">${recipe.recipeName}</h5>
+                        <div class="recipe-info">
+                            <div class="recipe-likes">
+                                <i class="fas fa-thumbs-up"></i>
+                                <span>${recipe.likesCount}</span>
                             </div>
-                            <div class="text-muted mb-2">Độ khó: ${recipe.level}</div>
-                            <div class="text-muted mb-3">${recipe.userName}</div>
-                            <a href="/Recipe/Detail/${recipe.recipeId}" class="btn btn-outline-primary btn-sm w-100">
-                                <i class="fas fa-arrow-right"></i> Xem chi tiết
+                            <div class="recipe-difficulty">
+                                Độ khó: <strong>${recipe.level}</strong>
+                            </div>
+                        </div>
+                        <div class="recipe-author">
+                            <a href="/Profile/Info?id=${recipe.userId}">${recipe.userName}</a>
+                        </div>
+                        <div class="recipe-actions">
+                            <a href="/Recipe/Detail/${recipe.recipeId}" class="btn-view-detail">
+                                Xem chi tiết
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    resultsContainer.innerHTML = html;
+}
+
+function updateUserSearchResults(results) {
+    const resultsContainer = document.getElementById('searchResults');
+    const resultsTitle = document.getElementById('resultsTitle');
+    
+    resultsTitle.textContent = `Kết quả tìm kiếm (${results.length} người dùng)`;
+    
+    if (results.length === 0) {
+        resultsContainer.innerHTML = `
+            <div class="col-12 text-center py-5">
+                <i class="fas fa-user-slash fa-3x text-muted mb-3"></i>
+                <h4 class="text-muted">Không tìm thấy người dùng</h4>
+                <p class="text-muted">Hãy thử thay đổi từ khóa tìm kiếm.</p>
+            </div>
+        `;
+        return;
+    }
+
+    let html = '';
+    results.forEach(user => {
+        const bioPreview = user.bio && user.bio.length > 80 
+            ? user.bio.substring(0, 80) + '...' 
+            : (user.bio || 'Chưa có giới thiệu');
+        
+        html += `
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="user-card">
+                    <div class="user-card-header">
+                        <img src="${user.avatarUrl}" class="user-avatar" alt="${user.fullName}">
+                    </div>
+                    <div class="user-card-body">
+                        <h5 class="user-fullname">${user.fullName}</h5>
+                        <p class="user-username">@@${user.userName}</p>
+                        <p class="user-bio">${bioPreview}</p>
+                        <div class="user-stats">
+                            <div class="user-stat">
+                                <i class="fas fa-users"></i>
+                                <span><strong>${user.followersCount}</strong> người theo dõi</span>
+                            </div>
+                            <div class="user-stat">
+                                <i class="fas fa-book"></i>
+                                <span><strong>${user.recipesCount}</strong> công thức</span>
+                            </div>
+                        </div>
+                        <div class="user-actions">
+                            <a href="/Profile/Info?id=${user.userId}" class="btn-view-profile">
+                                Xem trang cá nhân
                             </a>
                         </div>
                     </div>
@@ -576,5 +1092,239 @@ function showAlert(type, message) {
             alertDiv.remove();
         }
     }, 3000);
+}
+
+// Initialize ingredient search functionality
+function initializeIngredientSearch() {
+    const input = document.getElementById('ingredientSearchInput');
+    const suggestions = document.getElementById('ingredientSuggestions');
+    
+    // Debug: Log raw data
+    const suggestionsData = input.getAttribute('data-suggestions');
+    console.log('Raw suggestions data:', suggestionsData);
+    
+    let allSuggestions = [];
+    try {
+        allSuggestions = JSON.parse(suggestionsData || '[]');
+    } catch (e) {
+        console.error('Error parsing suggestions:', e);
+        allSuggestions = [];
+    }
+    
+    // Debug: Log parsed suggestions
+    console.log('Parsed ingredient suggestions:', allSuggestions);
+    console.log('Suggestions count:', allSuggestions.length);
+
+    input.addEventListener('input', function() {
+        const value = this.value.toLowerCase();
+        if (value.length < 1) {
+            suggestions.style.display = 'none';
+            return;
+        }
+
+        const filtered = allSuggestions.filter(item => 
+            item && item.toLowerCase().includes(value) && !selectedIngredients.includes(item)
+        );
+
+        console.log('Filtered suggestions for "' + value + '":', filtered);
+
+        if (filtered.length > 0) {
+            suggestions.innerHTML = filtered.map(item => 
+                `<div class="suggestion-item" data-ingredient="${item}">${item}</div>`
+            ).join('');
+            suggestions.style.display = 'block';
+        } else {
+            suggestions.style.display = 'none';
+        }
+    });
+
+    // Event delegation for suggestion clicks
+    suggestions.addEventListener('click', function(e) {
+        if (e.target.classList.contains('suggestion-item')) {
+            const ingredient = e.target.getAttribute('data-ingredient');
+            selectIngredient(ingredient);
+        }
+    });
+
+    // Handle Enter key to add custom ingredient
+    input.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const value = this.value.trim();
+            if (value && !selectedIngredients.includes(value)) {
+                selectIngredient(value);
+            }
+        }
+    });
+
+    // Hide suggestions when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!input.contains(e.target) && !suggestions.contains(e.target)) {
+            suggestions.style.display = 'none';
+        }
+    });
+}
+
+// Initialize type search functionality
+function initializeTypeSearch() {
+    const input = document.getElementById('typeSearchInput');
+    const suggestions = document.getElementById('typeSuggestions');
+    
+    // Debug: Log raw data
+    const suggestionsData = input.getAttribute('data-suggestions');
+    console.log('Raw type suggestions data:', suggestionsData);
+    
+    let allSuggestions = [];
+    try {
+        allSuggestions = JSON.parse(suggestionsData || '[]');
+    } catch (e) {
+        console.error('Error parsing type suggestions:', e);
+        allSuggestions = [];
+    }
+    
+    // Debug: Log parsed suggestions
+    console.log('Parsed type suggestions:', allSuggestions);
+    console.log('Type suggestions count:', allSuggestions.length);
+
+    input.addEventListener('input', function() {
+        const value = this.value.toLowerCase();
+        if (value.length < 1) {
+            suggestions.style.display = 'none';
+            return;
+        }
+
+        const filtered = allSuggestions.filter(item => 
+            item && item.toLowerCase().includes(value) && !selectedTypes.includes(item)
+        );
+
+        console.log('Filtered type suggestions for "' + value + '":', filtered);
+
+        if (filtered.length > 0) {
+            suggestions.innerHTML = filtered.map(item => 
+                `<div class="suggestion-item" data-type="${item}">${item}</div>`
+            ).join('');
+            suggestions.style.display = 'block';
+        } else {
+            suggestions.style.display = 'none';
+        }
+    });
+
+    // Event delegation for suggestion clicks
+    suggestions.addEventListener('click', function(e) {
+        if (e.target.classList.contains('suggestion-item')) {
+            const type = e.target.getAttribute('data-type');
+            selectType(type);
+        }
+    });
+
+    // Handle Enter key to add custom type
+    input.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const value = this.value.trim();
+            if (value && !selectedTypes.includes(value)) {
+                selectType(value);
+            }
+        }
+    });
+
+    // Hide suggestions when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!input.contains(e.target) && !suggestions.contains(e.target)) {
+            suggestions.style.display = 'none';
+        }
+    });
+}
+
+// Select ingredient
+function selectIngredient(ingredient) {
+    console.log('selectIngredient called with:', ingredient);
+    if (!selectedIngredients.includes(ingredient)) {
+        selectedIngredients.push(ingredient);
+        console.log('Updated selectedIngredients:', selectedIngredients);
+        updateSelectedIngredients();
+    }
+    document.getElementById('ingredientSearchInput').value = '';
+    document.getElementById('ingredientSuggestions').style.display = 'none';
+}
+
+// Select type
+function selectType(type) {
+    console.log('selectType called with:', type);
+    if (!selectedTypes.includes(type)) {
+        selectedTypes.push(type);
+        console.log('Updated selectedTypes:', selectedTypes);
+        updateSelectedTypes();
+    }
+    document.getElementById('typeSearchInput').value = '';
+    document.getElementById('typeSuggestions').style.display = 'none';
+}
+
+// Remove ingredient
+function removeIngredient(ingredient) {
+    selectedIngredients = selectedIngredients.filter(item => item !== ingredient);
+    updateSelectedIngredients();
+}
+
+// Remove type
+function removeType(type) {
+    selectedTypes = selectedTypes.filter(item => item !== type);
+    updateSelectedTypes();
+}
+
+// Update selected ingredients display
+function updateSelectedIngredients() {
+    const container = document.getElementById('selectedIngredients');
+    container.innerHTML = '';
+    
+    // Add tags to container (outside input)
+    selectedIngredients.forEach(ingredient => {
+        const tag = document.createElement('div');
+        tag.className = 'selected-tag';
+        tag.innerHTML = `
+            ${ingredient}
+            <button class="remove-btn" onclick="removeIngredient('${ingredient}')">×</button>
+        `;
+        container.appendChild(tag);
+    });
+}
+
+// Update selected types display
+function updateSelectedTypes() {
+    const container = document.getElementById('selectedTypes');
+    container.innerHTML = '';
+    
+    // Add tags to container (outside input)
+    selectedTypes.forEach(type => {
+        const tag = document.createElement('div');
+        tag.className = 'selected-tag';
+        tag.innerHTML = `
+            ${type}
+            <button class="remove-btn" onclick="removeType('${type}')">×</button>
+        `;
+        container.appendChild(tag);
+    });
+}
+
+// Initialize back to top button
+function initializeBackToTop() {
+    const backToTopBtn = document.getElementById('backToTop');
+    
+    // Show/hide button based on scroll position
+    window.addEventListener('scroll', function() {
+        if (window.pageYOffset > 300) {
+            backToTopBtn.classList.add('show');
+        } else {
+            backToTopBtn.classList.remove('show');
+        }
+    });
+    
+    // Scroll to top when clicked
+    backToTopBtn.addEventListener('click', function() {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    });
 }
 </script>
