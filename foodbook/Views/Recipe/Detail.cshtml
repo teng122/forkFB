@@ -48,12 +48,22 @@
         }
     </div>
     
-    <!-- Save Button -->
-    <button class="btn btn-success btn-sm save-btn" id="btnSaveRecipe" 
-            data-recipe-id="@Model.Recipe.recipe_id" data-is-saved="@Model.IsSaved">
-        <i class="bi @(Model.IsSaved ? "bi-bookmark-fill" : "bi-bookmark")"></i>
-        Lưu vào sổ tay
-    </button>
+    <!-- Action Buttons -->
+    <div class="d-flex gap-2">
+        <button class="btn btn-success btn-sm save-btn" id="btnSaveRecipe" 
+                data-recipe-id="@Model.Recipe.recipe_id" data-is-saved="@Model.IsSaved">
+            <i class="bi @(Model.IsSaved ? "bi-bookmark-fill" : "bi-bookmark")"></i>
+            Lưu vào sổ tay
+        </button>
+        
+        @if (!Model.IsOwnRecipe)
+        {
+            <button class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#reportRecipeModal">
+                <i class="bi bi-flag"></i>
+                Báo cáo
+            </button>
+        }
+    </div>
 </div>
 
 <!-- Recipe Stats -->
@@ -891,3 +901,112 @@ function showImageModal(imageUrl) {
     new bootstrap.Modal(document.getElementById('imageModal')).show();
 }
 </script>
+
+<!-- Report Recipe Modal -->
+<div class="modal fade" id="reportRecipeModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold">Báo cáo công thức</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted mb-3">Vui lòng cho chúng tôi biết lý do báo cáo công thức này:</p>
+                <div class="mb-3">
+                    <label for="reportReason" class="form-label">Lý do <span class="text-danger">*</span></label>
+                    <textarea class="form-control" id="reportReason" rows="4" 
+                              placeholder="Ví dụ: Nội dung không phù hợp, spam, vi phạm bản quyền..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-danger" id="btnReportRecipe">Gửi báo cáo</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Report Recipe functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const btnReportRecipe = document.getElementById('btnReportRecipe');
+    if (btnReportRecipe) {
+        btnReportRecipe.addEventListener('click', async function() {
+            const reason = document.getElementById('reportReason').value;
+            const recipeId = @Model.Recipe.recipe_id;
+            
+            if (!reason.trim()) {
+                showAlertModal('Vui lòng nhập lý do báo cáo', 'warning');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/Recipe/ReportRecipe', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ 
+                        recipeId: recipeId,
+                        reason: reason.trim()
+                    })
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('reportRecipeModal'));
+                    if (modal) {
+                        modal.hide();
+                    }
+                    document.getElementById('reportReason').value = '';
+                    showAlertModal(result.message, 'success');
+                } else {
+                    showAlertModal(result.message, 'error');
+                }
+            } catch (error) {
+                console.error('Error reporting recipe:', error);
+                showAlertModal('Có lỗi xảy ra. Vui lòng thử lại.', 'error');
+            }
+        });
+    }
+});
+
+// Alert Modal functionality
+function showAlertModal(message, type) {
+    const alertModal = document.getElementById('alertModal');
+    const alertMessage = document.getElementById('alertMessage');
+    const alertIcon = document.getElementById('alertIcon');
+    const alertTitle = document.getElementById('alertTitle');
+    
+    alertMessage.textContent = message;
+    
+    if (type === 'success') {
+        alertIcon.className = 'fas fa-check-circle text-success';
+        alertTitle.textContent = 'Thành công';
+    } else if (type === 'error') {
+        alertIcon.className = 'fas fa-times-circle text-danger';
+        alertTitle.textContent = 'Lỗi';
+    } else {
+        alertIcon.className = 'fas fa-exclamation-triangle text-warning';
+        alertTitle.textContent = 'Cảnh báo';
+    }
+    
+    new bootstrap.Modal(alertModal).show();
+}
+</script>
+
+<!-- Alert Modal -->
+<div class="modal fade" id="alertModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center p-4">
+                <i id="alertIcon" class="fas fa-check-circle" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                <h5 id="alertTitle" class="mb-3">Thành công</h5>
+                <p id="alertMessage" class="mb-0"></p>
+            </div>
+            <div class="modal-footer border-0 justify-content-center">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>

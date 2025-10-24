@@ -40,18 +40,6 @@
                     </button>
                     
                     <div class="navbar-collapse collapse d-lg-inline-flex justify-content-between align-items-center">
-                        <!-- Mobile Search - Only visible on mobile -->
-                        <div class="d-lg-none w-100 mb-3">
-                            <div class="search-container">
-                                <div class="input-group">
-                                    <span class="input-group-text bg-white border-end-0">
-                                        <i class="bi bi-search text-muted"></i>
-                                    </span>
-                                    <input type="text" class="form-control border-start-0" placeholder="Tìm kiếm công thức, người dùng">
-                                </div>
-                            </div>
-                        </div>
-                        
                         <!-- Mobile User Info - Only visible on mobile -->
                         <div class="d-lg-none w-100 mb-3">
                             @{ var avatar = Context.Session.GetString("avatar_img"); var avatarSrc = string.IsNullOrEmpty(avatar) ? Url.Content("~/images/default-avatar.jpg") : avatar; }
@@ -68,13 +56,10 @@
                         
                         <ul class="navbar-nav me-auto">
                             <li class="nav-item">
-                                <a class="nav-link text-green fw-bold" asp-area="" asp-controller="Home" asp-action="Index">Bảng tin</a>
+                                <a class="nav-link @(currentController == "Home" && currentAction == "Index" ? "text-green fw-bold" : "text-dark")" asp-area="" asp-controller="Home" asp-action="Index">Bảng tin</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Recipes">Công thức</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Search" asp-action="Search">Tìm kiếm</a>
+                                <a class="nav-link @(currentController == "Search" && currentAction == "Search" ? "text-green fw-bold" : "text-dark")" asp-area="" asp-controller="Search" asp-action="Search">Tìm kiếm</a>
                             </li>
                             @if (Context.Session.IsAdmin())
                             {
@@ -103,17 +88,8 @@
                             }
                         </ul>
                         
-                        <!-- Desktop Search and User Profile - Only visible on desktop -->
+                        <!-- Desktop User Profile - Only visible on desktop -->
                         <div class="d-none d-lg-flex align-items-center">
-                            <div class="search-container me-3">
-                                <div class="input-group">
-                                    <span class="input-group-text bg-white border-end-0">
-                                        <i class="bi bi-search text-muted"></i>
-                                    </span>
-                                    <input type="text" class="form-control border-start-0" placeholder="Tìm kiếm công thức, người dùng">
-                                </div>
-                            </div>
-                            
                             <div class="user-profile">
                                 <a class="d-flex align-items-center text-decoration-none" href="/Profile/Info">
                                     <img id="navbar-avatar" src="@avatarSrc"
@@ -205,7 +181,7 @@
                             </a>
                         </li>
                         <li class="sidebar-menu-item">
-                            <a class="sidebar-menu-link @(currentController == "Admin" && currentAction == "Content" ? "active" : "")" asp-controller="Admin" asp-action="Content">
+                            <a class="sidebar-menu-link @(currentController == "Admin" && (currentAction == "Content" || currentAction == "ContentModeration") ? "active" : "")" asp-controller="Admin" asp-action="ContentModeration">
                                 <i class="sidebar-menu-icon bi bi-bookmark-check"></i>
                                 <span>Kiểm duyệt nội dung</span>
                             </a>
@@ -236,7 +212,7 @@
                         </a>
                     </li>
                     <li class="sidebar-menu-item">
-                        <a class="sidebar-menu-link @(currentController == "Home" && currentAction == "MyRecipes" ? "active" : "")" asp-controller="Home" asp-action="MyRecipes">
+                        <a class="sidebar-menu-link @(currentController == "User" && currentAction == "Notebook" ? "active" : "")" asp-controller="User" asp-action="Notebook">
                             <i class="sidebar-menu-icon bi bi-book"></i>
                             <span>Sổ tay của tôi</span>
                         </a>

@@ -59,6 +59,7 @@ CREATE TABLE public.Recipe (
   cook_time integer,
   created_at timestamp with time zone DEFAULT now(),
   level USER-DEFINED DEFAULT 'dễ'::recipe_level,
+  status USER-DEFINED DEFAULT 'active'::recipe_status,
   CONSTRAINT Recipe_pkey PRIMARY KEY (recipe_id),
   CONSTRAINT fk_recipe_user FOREIGN KEY (user_id) REFERENCES public.User(user_id)
 );
@@ -146,6 +147,16 @@ CREATE TABLE public.User-Trigger (
   status USER-DEFINED DEFAULT 'active'::user_status,
   is_verified boolean,
   role USER-DEFINED
+);
+CREATE TABLE public.User_Report (
+  reporter_id integer NOT NULL,
+  reported_user_id integer NOT NULL,
+  body text,
+  status text NOT NULL DEFAULT 'Đang xử lý'::text,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT User_Report_pkey PRIMARY KEY (reporter_id, reported_user_id),
+  CONSTRAINT fk_reporter FOREIGN KEY (reporter_id) REFERENCES public.User(user_id),
+  CONSTRAINT fk_reported_user FOREIGN KEY (reported_user_id) REFERENCES public.User(user_id)
 );
 CREATE TABLE public.like_dislike (
   ld_id integer GENERATED ALWAYS AS IDENTITY NOT NULL,

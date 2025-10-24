@@ -4,162 +4,463 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<div class="container-fluid">
-            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                <h1 class="h2">Sổ tay</h1>
-            </div>
-
-            <!-- Search and Filter -->
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <div class="input-group">
-                        <span class="input-group-text"><i class="fas fa-search"></i></span>
-                        <input type="text" class="form-control" placeholder="Tìm kiếm công thức, trong sổ tay" id="searchInput">
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="d-flex gap-2">
-                        <select class="form-select" style="width: auto;">
-                            <option>Ngày lưu (Mới nhất)</option>
-                            <option>Ngày lưu (Cũ nhất)</option>
-                            <option>Tên A-Z</option>
-                            <option>Tên Z-A</option>
-                        </select>
-                        <button class="btn btn-outline-secondary">
-                            <i class="fas fa-filter"></i> Lọc công thức
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Recipe Grid -->
-            <div class="row">
-                @if (Model != null && Model.Any())
-                {
-                    @foreach (var recipe in Model)
-                    {
-                        <div class="col-md-6 col-lg-4 col-xl-3 mb-4">
-                            <div class="card h-100 shadow-sm">
-                                <a href="@Url.Action("Detail", "Recipe", new { id = recipe.RecipeId })" class="text-decoration-none">
-                                    <img src="@recipe.ThumbnailImg" class="card-img-top" alt="@recipe.RecipeName" style="height: 200px; object-fit: cover;">
-                                </a>
-                                <div class="card-body d-flex flex-column">
-                                    <h5 class="card-title">@recipe.RecipeName</h5>
-                                    <div class="mt-auto">
-                                        <div class="d-flex align-items-center mb-2">
-                                            <i class="fas fa-thumbs-up text-primary me-1"></i>
-                                            <span class="text-muted">@recipe.LikesCount</span>
-                                        </div>
-                                        <div class="text-muted mb-2">Độ khó: @recipe.Level</div>
-                                        <div class="text-muted mb-3">@recipe.UserName</div>
-                                        <div class="d-flex gap-2">
-                                            <a href="@Url.Action("Detail", "Recipe", new { id = recipe.RecipeId })" class="btn btn-outline-primary btn-sm flex-fill">
-                                                <i class="fas fa-arrow-right"></i> Xem chi tiết
-                                            </a>
-                                            <button class="btn btn-outline-danger btn-sm" onclick="removeFromNotebook(@recipe.RecipeId)" title="Xóa khỏi sổ tay">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    }
-                }
-                else
-                {
-                    <div class="col-12 text-center py-5">
-                        <i class="fas fa-book fa-3x text-muted mb-3"></i>
-                        <h4 class="text-muted">Sổ tay trống</h4>
-                        <p class="text-muted">Bạn chưa lưu công thức nào vào sổ tay.</p>
-                        <a href="@Url.Action("Newsfeed", "Home")" class="btn btn-primary">
-                            <i class="fas fa-search"></i> Khám phá công thức
-                        </a>
-                    </div>
-                }
-            </div>
+<!-- Page Header -->
+<div class="notebook-header">
+    <h2 class="notebook-title">Sổ tay</h2>
 </div>
 
-<!-- Bootstrap CSS -->
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<!-- Search and Filter Bar -->
+<div class="notebook-filter-bar">
+    <div class="notebook-search">
+        <span class="search-icon">
+            <i class="fas fa-search"></i>
+        </span>
+        <input type="text" class="notebook-search-input" id="searchInput" placeholder="Tìm kiếm công thức, trong sổ tay">
+    </div>
+    <div class="notebook-actions">
+        <select class="notebook-sort-select" id="sortSelect">
+            <option value="newest">Ngày lưu (Mới nhất)</option>
+            <option value="oldest">Ngày lưu (Cũ nhất)</option>
+            <option value="az">Tên A-Z</option>
+            <option value="za">Tên Z-A</option>
+        </select>
+    </div>
+</div>
+
+<!-- Recipe Grid -->
+<div class="notebook-results-wrapper">
+    <div class="row" id="notebookResults">
+        @if (Model != null && Model.Any())
+        {
+            @foreach (var recipe in Model)
+            {
+                <div class="col-md-6 col-lg-4 col-xl-3 mb-4 notebook-recipe-item" data-recipe-id="@recipe.RecipeId" data-created-at="@recipe.CreatedAt.ToString("o")">
+                    <div class="recipe-card">
+                        <div class="recipe-image-wrapper">
+                            <img src="@recipe.ThumbnailImg" class="recipe-image" alt="@recipe.RecipeName">
+                        </div>
+                        <div class="recipe-card-body">
+                            <h5 class="recipe-title">@recipe.RecipeName</h5>
+                            <div class="recipe-info">
+                                <div class="recipe-likes">
+                                    <i class="fas fa-thumbs-up"></i>
+                                    <span>@recipe.LikesCount</span>
+                                </div>
+                                <div class="recipe-difficulty">
+                                    Độ khó: <a href="@Url.Action("Search", "Search")?difficulty=@Uri.EscapeDataString(recipe.Level)" class="difficulty-link"><strong>@recipe.Level</strong></a>
+                                </div>
+                            </div>
+                            <div class="recipe-author">
+                                <a href="@Url.Action("Info", "Profile", new { id = recipe.UserId })">@recipe.UserName</a>
+                            </div>
+                            <div class="recipe-actions">
+                                <a href="@Url.Action("Detail", "Recipe", new { id = recipe.RecipeId })" class="btn-view-detail">
+                                    <i class="fas fa-arrow-right me-1"></i> Xem chi tiết
+                                </a>
+                                <button class="btn-remove-notebook" onclick="removeFromNotebook(@recipe.RecipeId)" title="Xóa khỏi sổ tay">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="col-12 text-center py-5">
+                <div class="empty-notebook">
+                    <i class="fas fa-book fa-3x text-muted mb-3"></i>
+                    <h4 class="text-muted">Sổ tay trống</h4>
+                    <p class="text-muted">Bạn chưa lưu công thức nào vào sổ tay.</p>
+                    <a href="@Url.Action("Newsfeed", "Home")" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Khám phá công thức
+                    </a>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold">Xác nhận xóa</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-0">Bạn có chắc chắn muốn xóa công thức này khỏi sổ tay?</p>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Xóa</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Font Awesome -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 
 <style>
-.sidebar {
-    position: fixed;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    z-index: 100;
-    padding: 48px 0 0;
-    box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
+/* Notebook Page Styles */
+.notebook-header {
+    margin-bottom: 2rem;
 }
 
-.sidebar .nav-link {
-    font-weight: 500;
+.notebook-title {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: #111827;
+    margin: 0;
+}
+
+/* Search and Filter Bar */
+.notebook-filter-bar {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    align-items: center;
+}
+
+.notebook-search {
+    flex: 1;
+    position: relative;
+    display: flex;
+    align-items: center;
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+}
+
+.search-icon {
+    color: #6c757d;
+    margin-right: 0.75rem;
+    font-size: 1rem;
+}
+
+.notebook-search-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-size: 0.95rem;
     color: #333;
 }
 
-.sidebar .nav-link.active {
-    color: #007bff;
+.notebook-search-input::placeholder {
+    color: #9ca3af;
 }
 
-.sidebar .nav-link:hover {
-    color: #007bff;
+.notebook-actions {
+    display: flex;
+    gap: 0.75rem;
 }
 
-.sidebar-heading {
-    font-size: .75rem;
-    text-transform: uppercase;
+.notebook-sort-select {
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    font-size: 0.95rem;
+    color: #333;
+    cursor: pointer;
+    outline: none;
+    min-width: 180px;
 }
 
-.card {
-    transition: transform 0.2s ease-in-out;
+.notebook-sort-select:focus {
+    border-color: #1dd75b;
+    box-shadow: 0 0 0 0.2rem rgba(29, 215, 91, 0.1);
 }
 
-.card:hover {
+
+/* Results */
+.notebook-results-wrapper {
+    margin-top: 2rem;
+}
+
+/* Recipe Card Styles - Match Search Page */
+.notebook-recipe-item {
+    transition: opacity 0.3s ease;
+}
+
+.recipe-card {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.recipe-card:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
     transform: translateY(-2px);
+}
+
+.recipe-image-wrapper {
+    width: 100%;
+    height: 220px;
+    overflow: hidden;
+    background-color: #f8f9fa;
+    position: relative;
+}
+
+.recipe-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.recipe-card:hover .recipe-image {
+    transform: scale(1.05);
+}
+
+.recipe-card-body {
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    flex: 1;
+}
+
+.recipe-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin: 0;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.recipe-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+.recipe-likes {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: #3498db;
+    font-weight: 500;
+}
+
+.recipe-likes i {
+    font-size: 1rem;
+}
+
+.recipe-difficulty {
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+.recipe-difficulty strong {
+    color: #2c3e50;
+}
+
+.recipe-author {
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.recipe-author a {
+    color: #16a34a;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.recipe-author a:hover {
+    color: #15803d;
+    text-decoration: underline;
+}
+
+.difficulty-link {
+    color: #2c3e50;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.difficulty-link:hover {
+    color: #1dd75b;
+    text-decoration: underline;
+}
+
+.recipe-actions {
+    margin-top: auto;
+    padding-top: 0.75rem;
+    display: flex;
+    gap: 0.5rem;
+}
+
+.btn-view-detail {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.65rem 1rem;
+    background-color: #f8f9fa;
+    color: #2c3e50;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 0.95rem;
+    border: 1px solid #dee2e6;
+    transition: all 0.2s ease;
+}
+
+.btn-view-detail:hover {
+    background-color: #e9ecef;
+    border-color: #ced4da;
+    color: #1a252f;
+    transform: translateY(-1px);
+}
+
+.btn-remove-notebook {
+    background-color: transparent;
+    color: #ef4444;
+    border: 1px solid #ef4444;
+    border-radius: 8px;
+    padding: 0.65rem 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-remove-notebook:hover {
+    background-color: #ef4444;
+    color: white;
+    transform: translateY(-1px);
+}
+
+/* Empty State */
+.empty-notebook {
+    padding: 3rem 1rem;
+}
+
+/* Responsive */
+@@media (max-width: 768px) {
+    .notebook-filter-bar {
+        flex-direction: column;
+    }
+    
+    .notebook-search {
+        width: 100%;
+    }
+    
+    .notebook-actions {
+        width: 100%;
+    }
+    
+    .notebook-sort-select {
+        width: 100%;
+    }
 }
 </style>
 
 <script>
+// Store the recipe ID to delete
+let recipeIdToDelete = null;
+
+// Show delete confirmation modal
 function removeFromNotebook(recipeId) {
-    if (confirm('Bạn có chắc chắn muốn xóa công thức này khỏi sổ tay?')) {
-        fetch('@Url.Action("RemoveFromNotebook", "User")', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: 'recipeId=' + recipeId
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Remove the card from the page
-                const card = document.querySelector(`[onclick="removeFromNotebook(${recipeId})"]`).closest('.col-md-6');
-                card.remove();
-                
-                // Show success message
-                showAlert('success', data.message);
-            } else {
-                showAlert('danger', data.message);
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showAlert('danger', 'Có lỗi xảy ra khi xóa công thức');
-        });
-    }
+    recipeIdToDelete = recipeId;
+    const modal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+    modal.show();
 }
 
+// Handle confirm delete button click
+document.addEventListener('DOMContentLoaded', function() {
+    const confirmBtn = document.getElementById('confirmDeleteBtn');
+    if (confirmBtn) {
+        confirmBtn.addEventListener('click', function() {
+            if (recipeIdToDelete) {
+                performDelete(recipeIdToDelete);
+                // Hide modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('deleteConfirmModal'));
+                modal.hide();
+            }
+        });
+    }
+});
+
+// Perform the actual delete
+function performDelete(recipeId) {
+    fetch('@Url.Action("RemoveFromNotebook", "User")', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: 'recipeId=' + recipeId
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Remove the card from the page with animation
+            const item = document.querySelector(`[data-recipe-id="${recipeId}"]`);
+            if (item) {
+                item.style.transition = 'all 0.3s ease';
+                item.style.opacity = '0';
+                item.style.transform = 'scale(0.8)';
+                setTimeout(() => {
+                    item.remove();
+                    
+                    // Check if notebook is empty
+                    const results = document.getElementById('notebookResults');
+                    if (results.children.length === 0) {
+                        results.innerHTML = `
+                            <div class="col-12 text-center py-5">
+                                <div class="empty-notebook">
+                                    <i class="fas fa-book fa-3x text-muted mb-3"></i>
+                                    <h4 class="text-muted">Sổ tay trống</h4>
+                                    <p class="text-muted">Bạn chưa lưu công thức nào vào sổ tay.</p>
+                                    <a href="@Url.Action("Newsfeed", "Home")" class="btn btn-primary">
+                                        <i class="fas fa-search"></i> Khám phá công thức
+                                    </a>
+                                </div>
+                            </div>
+                        `;
+                    }
+                }, 300);
+            }
+            
+            // Show success message
+            showAlert('success', data.message || 'Đã xóa công thức khỏi sổ tay');
+        } else {
+            showAlert('danger', data.message || 'Không thể xóa công thức');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('danger', 'Có lỗi xảy ra khi xóa công thức');
+    });
+}
+
+// Show alert
 function showAlert(type, message) {
     const alertDiv = document.createElement('div');
     alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
-    alertDiv.style.top = '20px';
+    alertDiv.style.top = '90px';
     alertDiv.style.right = '20px';
     alertDiv.style.zIndex = '9999';
+    alertDiv.style.minWidth = '300px';
     alertDiv.innerHTML = `
+        <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'} me-2"></i>
         ${message}
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     `;
@@ -172,4 +473,59 @@ function showAlert(type, message) {
         }
     }, 3000);
 }
+
+// Search functionality
+document.getElementById('searchInput').addEventListener('input', function(e) {
+    const searchTerm = e.target.value.toLowerCase();
+    const items = document.querySelectorAll('.notebook-recipe-item');
+    
+    items.forEach(item => {
+        const title = item.querySelector('.recipe-title').textContent.toLowerCase();
+        const author = item.querySelector('.recipe-author').textContent.toLowerCase();
+        
+        if (title.includes(searchTerm) || author.includes(searchTerm)) {
+            item.style.display = '';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+});
+
+// Sort functionality
+document.getElementById('sortSelect').addEventListener('change', function(e) {
+    const sortType = e.target.value;
+    const container = document.getElementById('notebookResults');
+    const items = Array.from(container.querySelectorAll('.notebook-recipe-item'));
+    
+    items.sort((a, b) => {
+        const titleA = a.querySelector('.recipe-title').textContent;
+        const titleB = b.querySelector('.recipe-title').textContent;
+        const dateA = new Date(a.getAttribute('data-created-at'));
+        const dateB = new Date(b.getAttribute('data-created-at'));
+        
+        switch(sortType) {
+            case 'az':
+                return titleA.localeCompare(titleB, 'vi');
+            case 'za':
+                return titleB.localeCompare(titleA, 'vi');
+            case 'newest':
+                return dateB - dateA; // Mới nhất trước
+            case 'oldest':
+                return dateA - dateB; // Cũ nhất trước
+            default:
+                return 0;
+        }
+    });
+    
+    // Re-append sorted items with animation
+    items.forEach((item, index) => {
+        item.style.opacity = '0';
+        setTimeout(() => {
+            container.appendChild(item);
+            setTimeout(() => {
+                item.style.opacity = '1';
+            }, 50);
+        }, index * 50);
+    });
+});
 </script>

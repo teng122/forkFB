@@ -129,6 +129,8 @@ namespace foodbook.Controllers
                     request.SelectedIngredients != null ? string.Join(", ", request.SelectedIngredients) : "None");
                 _logger.LogInformation("Selected types: {Types}", 
                     request.SelectedTypes != null ? string.Join(", ", request.SelectedTypes) : "None");
+                _logger.LogInformation("Selected difficulties: {Difficulties}", 
+                    request.SelectedDifficulties != null ? string.Join(", ", request.SelectedDifficulties) : "None");
 
                 // 1. Start with all recipes
                 var allRecipesResult = await _supabaseService.Client
@@ -142,7 +144,8 @@ namespace foodbook.Controllers
                 // Check if we have any filters
                 bool hasFilters = !string.IsNullOrEmpty(request.SearchTerm) ||
                                  (request.SelectedIngredients != null && request.SelectedIngredients.Any()) ||
-                                 (request.SelectedTypes != null && request.SelectedTypes.Any());
+                                 (request.SelectedTypes != null && request.SelectedTypes.Any()) ||
+                                 (request.SelectedDifficulties != null && request.SelectedDifficulties.Any());
 
                 _logger.LogInformation("Has filters: {HasFilters}", hasFilters);
 
@@ -274,7 +277,19 @@ namespace foodbook.Controllers
                     _logger.LogInformation("After type filter: {Count} recipes", filteredRecipes.Count);
                 }
 
-                // 5. Map to SearchResultViewModel FIRST (before sorting, because we need likes count)
+                // 5. Apply difficulty filter
+                if (request.SelectedDifficulties != null && request.SelectedDifficulties.Any())
+                {
+                    _logger.LogInformation("Applying difficulty filter for: {Difficulties}", string.Join(", ", request.SelectedDifficulties));
+                    
+                    filteredRecipes = filteredRecipes
+                        .Where(x => x.level != null && request.SelectedDifficulties.Contains(x.level, StringComparer.OrdinalIgnoreCase))
+                        .ToList();
+                    
+                    _logger.LogInformation("After difficulty filter: {Count} recipes", filteredRecipes.Count);
+                }
+
+                // 6. Map to SearchResultViewModel FIRST (before sorting, because we need likes count)
                 var searchResults = new List<SearchResultViewModel>();
                 foreach (var recipe in filteredRecipes)
                 {
@@ -307,7 +322,7 @@ namespace foodbook.Controllers
                     });
                 }
 
-                // 6. Apply sorting AFTER getting likes count
+                // 7. Apply sorting AFTER getting likes count
                 switch (request.SortBy)
                 {
                     case "likes_asc":

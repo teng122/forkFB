@@ -38,6 +38,9 @@ namespace foodbook.Models
         
         [Column("level")]
         public string level { get; set; } = "dễ"; // dễ, trung bình, khó
+        
+        [Column("status")]
+        public string status { get; set; } = "active"; // active, banned, pending, deleted
     }
 }
 

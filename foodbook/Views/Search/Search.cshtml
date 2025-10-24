@@ -52,18 +52,16 @@
                         <h6 class="filter-title">Phân loại</h6>
                         <div class="filter-content">
                             <!-- Tìm kiếm theo -->
-                            <div class="search-type-option">
-                                <input class="form-check-input search-type-filter" type="radio" value="recipe" name="searchType" id="search_recipe" checked>
-                                <label class="form-check-label" for="search_recipe">
+                            <h6 class="filter-subtitle">Tìm kiếm theo</h6>
+                            <div class="search-type-row">
+                                <div class="search-type-option" data-value="recipe" id="search_recipe_btn">
                                     <span>Công thức</span>
-                                </label>
-                            </div>
-                            <div class="search-type-option">
-                                <input class="form-check-input search-type-filter" type="radio" value="user" name="searchType" id="search_user">
-                                <label class="form-check-label" for="search_user">
+                                </div>
+                                <div class="search-type-option" data-value="user" id="search_user_btn">
                                     <span>Người dùng</span>
-                                </label>
+                                </div>
                             </div>
+                            <input type="hidden" id="searchTypeValue" value="recipe">
                             
                             <!-- Phân loại recipe types với search -->
                             <div class="tag-search-container">
@@ -78,6 +76,22 @@
                             </div>
                             <div class="selected-tags" id="selectedTypes">
                                 <!-- Selected types will be displayed here -->
+                            </div>
+                            
+                            <!-- Độ khó -->
+                            <div class="difficulty-filter-section" style="margin-top: 1rem;">
+                                <h6 class="filter-subtitle">Độ khó</h6>
+                                <div class="difficulty-row">
+                                    <div class="difficulty-option" data-value="dễ">
+                                        <span>Dễ</span>
+                                    </div>
+                                    <div class="difficulty-option" data-value="bình thường">
+                                        <span>Bình thường</span>
+                                    </div>
+                                    <div class="difficulty-option" data-value="khó">
+                                        <span>Khó</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -673,10 +687,93 @@
     font-weight: 600;
 }
 
-/* Khi radio button được chọn, ô đó chuyển màu xanh lá */
-.search-type-option:has(.search-type-filter:checked) {
+/* Filter Subtitle */
+.filter-subtitle {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 0.75rem;
+    margin-top: 0.5rem;
+}
+
+/* Search Type Row - Horizontal Layout */
+.search-type-row {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.search-type-option {
+    flex: 1;
+    background-color: #f8f9fa;
+    border: 2px solid #dee2e6;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    color: #333;
+}
+
+.search-type-option span {
+    display: block;
+    width: 100%;
+}
+
+.search-type-option:hover {
+    background-color: #e9ecef;
+    border-color: #adb5bd;
+}
+
+.search-type-option.active {
     background-color: #d4edda;
     border-color: #28a745;
+    color: #155724;
+    font-weight: 600;
+}
+
+/* Difficulty Row - Horizontal Layout */
+.difficulty-row {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.difficulty-option {
+    flex: 1;
+    background-color: #f8f9fa;
+    border: 2px solid #dee2e6;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    color: #333;
+    align-content:center;
+}
+
+.difficulty-option span {
+    display: block;
+    width: 100%;
+}
+
+.difficulty-option:hover {
+    background-color: #e9ecef;
+    border-color: #adb5bd;
+}
+
+.difficulty-option.active {
+    background-color: #d4edda;
+    border-color: #28a745;
+    color: #155724;
+    font-weight: 600;
 }
 
 @@media (max-width: 576px) {
@@ -753,7 +850,7 @@
     border-bottom: none;
 }
 
-/* Selected Tags - Rule34 Style */
+/* Selected Tags - Simple Gray Style */
 .selected-tags {
     display: flex;
     flex-wrap: wrap;
@@ -763,8 +860,8 @@
 }
 
 .selected-tag {
-    background: linear-gradient(135deg, #1dd75b, #16a34a);
-    color: white;
+    background: #e5e7eb;
+    color: #374151;
     padding: 4px 8px;
     border-radius: 16px;
     font-size: 12px;
@@ -772,7 +869,7 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    box-shadow: 0 2px 4px rgba(29, 215, 91, 0.3);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
     transition: all 0.2s ease;
     animation: tagAppear 0.3s ease;
     margin-right: 4px;
@@ -781,14 +878,15 @@
 }
 
 .selected-tag:hover {
+    background: #d1d5db;
     transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(29, 215, 91, 0.4);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
 }
 
 .selected-tag .remove-btn {
     background: none;
     border: none;
-    color: white;
+    color: #6b7280;
     cursor: pointer;
     padding: 0;
     font-size: 14px;
@@ -803,8 +901,8 @@
 }
 
 .selected-tag .remove-btn:hover {
-    background-color: rgba(255, 255, 255, 0.2);
-    color: #ff6b6b;
+    background-color: rgba(0, 0, 0, 0.1);
+    color: #ef4444;
 }
 
 @@keyframes tagAppear {
@@ -860,6 +958,9 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeIngredientSearch();
     initializeTypeSearch();
     initializeBackToTop();
+    initializeDifficultyFilter();
+    initializeSearchTypeFilter();
+    initializeUrlParameters();
     
     // Add event listener for search button
     const searchBtn = document.getElementById('searchBtn');
@@ -884,28 +985,6 @@ document.addEventListener('DOMContentLoaded', function() {
             performSearch();
         });
     });
-    
-    // Make entire search-type-option clickable
-    const searchTypeOptions = document.querySelectorAll('.search-type-option');
-    searchTypeOptions.forEach(option => {
-        option.addEventListener('click', function(e) {
-            const radio = this.querySelector('input[type="radio"]');
-            if (radio && !radio.checked) {
-                radio.checked = true;
-                // Trigger change event to also fire performSearch
-                radio.dispatchEvent(new Event('change'));
-            }
-        });
-        
-        // Add cursor pointer style
-        option.style.cursor = 'pointer';
-    });
-    
-    // Also trigger search when radio button changes
-    const searchTypeRadios = document.querySelectorAll('.search-type-filter');
-    searchTypeRadios.forEach(radio => {
-        radio.addEventListener('change', performSearch);
-    });
 });
 
 function performSearch() {
@@ -914,15 +993,20 @@ function performSearch() {
     console.log('Global selectedTypes:', selectedTypes);
     
     const searchTerm = document.getElementById('searchInput').value;
-    const searchType = document.querySelector('input[name="searchType"]:checked')?.value || 'recipe';
+    const searchType = document.getElementById('searchTypeValue').value || 'recipe';
     const sortType = document.querySelector('.sort-checkbox:checked')?.value || 'time';
     const sortOrder = document.getElementById('sortOrderSelect').value;
     const sortBy = sortType + '_' + sortOrder;
+    
+    // Get selected difficulties
+    const selectedDifficulties = Array.from(document.querySelectorAll('.difficulty-option.active'))
+        .map(option => option.getAttribute('data-value'));
 
     const requestData = {
         searchTerm: searchTerm,
         selectedIngredients: selectedIngredients,
         selectedTypes: selectedTypes,
+        selectedDifficulties: selectedDifficulties,
         searchType: searchType,
         sortBy: sortBy
     };
@@ -1304,6 +1388,75 @@ function updateSelectedTypes() {
         `;
         container.appendChild(tag);
     });
+}
+
+// Initialize search type filter
+function initializeSearchTypeFilter() {
+    const searchTypeOptions = document.querySelectorAll('.search-type-option');
+    
+    // Set initial active state
+    document.getElementById('search_recipe_btn').classList.add('active');
+    
+    searchTypeOptions.forEach(option => {
+        option.addEventListener('click', function() {
+            // Remove active from all
+            searchTypeOptions.forEach(opt => opt.classList.remove('active'));
+            // Add active to clicked
+            this.classList.add('active');
+            // Update hidden input
+            document.getElementById('searchTypeValue').value = this.getAttribute('data-value');
+            // Perform search
+            performSearch();
+        });
+    });
+}
+
+// Initialize difficulty filter
+function initializeDifficultyFilter() {
+    const difficultyOptions = document.querySelectorAll('.difficulty-option');
+    
+    difficultyOptions.forEach(option => {
+        option.addEventListener('click', function() {
+            // Toggle active class
+            this.classList.toggle('active');
+            // Perform search
+            performSearch();
+        });
+    });
+}
+
+// Initialize URL parameters (handle filters from URL)
+function initializeUrlParameters() {
+    const urlParams = new URLSearchParams(window.location.search);
+    let shouldSearch = false;
+    
+    // Check for difficulty parameter
+    const difficulty = urlParams.get('difficulty');
+    if (difficulty) {
+        const decodedDifficulty = decodeURIComponent(difficulty);
+        const difficultyOption = document.querySelector(`.difficulty-option[data-value="${decodedDifficulty}"]`);
+        if (difficultyOption) {
+            difficultyOption.classList.add('active');
+            shouldSearch = true;
+        }
+    }
+    
+    // Check for type parameter (recipe type/category)
+    const type = urlParams.get('type');
+    if (type) {
+        const decodedType = decodeURIComponent(type);
+        // Add the type to selectedTypes
+        if (!selectedTypes.includes(decodedType)) {
+            selectedTypes.push(decodedType);
+            updateSelectedTypes();
+            shouldSearch = true;
+        }
+    }
+    
+    // Perform search if any parameter was found
+    if (shouldSearch) {
+        performSearch();
+    }
 }
 
 // Initialize back to top button
