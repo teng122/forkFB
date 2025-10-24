@@ -1850,5 +1850,75 @@ namespace foodbook.Controllers
         {
             public int UserId { get; set; }
         }
+
+        // POST: /Profile/ReportUser
+        [HttpPost]
+        public async Task<IActionResult> ReportUser([FromBody] ReportUserRequest request)
+        {
+            try
+            {
+                var sessionEmail = HttpContext.Session.GetString("user_email");
+                if (string.IsNullOrEmpty(sessionEmail))
+                {
+                    return Json(new { success = false, message = "Vui lòng đăng nhập" });
+                }
+
+                // Get current user
+                var currentUser = await _supabaseService.Client
+                    .From<User>()
+                    .Filter("email", Operator.Equals, sessionEmail)
+                    .Single();
+
+                if (currentUser?.user_id == null)
+                {
+                    return Json(new { success = false, message = "Không tìm thấy thông tin người dùng" });
+                }
+
+                var reporterId = currentUser.user_id.Value;
+                var reportedUserId = request.UserId;
+
+                // Không cho phép report chính mình
+                if (reporterId == reportedUserId)
+                {
+                    return Json(new { success = false, message = "Bạn không thể báo cáo chính mình" });
+                }
+
+                // Kiểm tra xem đã report chưa
+                var existingReport = await _supabaseService.Client
+                    .From<UserReport>()
+                    .Where(x => x.reporter_id == reporterId && x.reported_user_id == reportedUserId)
+                    .Get();
+
+                if (existingReport.Models.Any())
+                {
+                    return Json(new { success = false, message = "Bạn đã báo cáo người dùng này rồi" });
+                }
+
+                // Tạo report mới
+                var newReport = new UserReport
+                {
+                    reporter_id = reporterId,
+                    reported_user_id = reportedUserId,
+                    body = request.Reason ?? "Không có lý do cụ thể",
+                    status = "Đang xử lý",
+                    created_at = DateTime.UtcNow
+                };
+
+                await _supabaseService.Client.From<UserReport>().Insert(newReport);
+
+                return Json(new { success = true, message = "Báo cáo đã được gửi thành công" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Có lỗi xảy ra: " + ex.Message });
+            }
+        }
+
+        // Request model for ReportUser
+        public class ReportUserRequest
+        {
+            public int UserId { get; set; }
+            public string? Reason { get; set; }
+        }
     }
 }

@@ -75,7 +75,7 @@ namespace foodbook.Controllers
                     // Thêm level làm tag đầu tiên
                     if (!string.IsNullOrEmpty(r.level))
                     {
-                        tags.Add($"#{r.level}");
+                        tags.Add($"{r.level}");
                     }
                     
                     // Load ingredients từ Recipe_Ingredient và Ingredient_Master
@@ -99,7 +99,7 @@ namespace foodbook.Controllers
                                 
                             if (ingredientResult != null && !string.IsNullOrEmpty(ingredientResult.name))
                             {
-                                tags.Add($"#{ingredientResult.name.Trim()}");
+                                tags.Add($"{ingredientResult.name.Trim()}");
                             }
                         }
                     }
@@ -127,7 +127,7 @@ namespace foodbook.Controllers
 
                             if (typeDetail.Models.Any() && !string.IsNullOrEmpty(typeDetail.Models.First().content))
                             {
-                                tags.Add($"#{typeDetail.Models.First().content.Trim()}");
+                                tags.Add($"{typeDetail.Models.First().content.Trim()}");
                             }
                         }
                     }
@@ -704,7 +704,7 @@ namespace foodbook.Controllers
                     // Thêm level làm tag đầu tiên
                     if (!string.IsNullOrEmpty(r.level))
                     {
-                        tags.Add($"#{r.level}");
+                        tags.Add($"{r.level}");
                     }
 
                     // Load ingredients
@@ -934,7 +934,7 @@ namespace foodbook.Controllers
                     // Thêm level làm tag đầu tiên
                     if (!string.IsNullOrEmpty(r.level))
                     {
-                        tags.Add($"#{r.level}");
+                        tags.Add($"{r.level}");
                     }
                     
                     // Load ingredients từ Recipe_Ingredient và Ingredient_Master
@@ -958,7 +958,7 @@ namespace foodbook.Controllers
                                 
                             if (ingredientResult != null && !string.IsNullOrEmpty(ingredientResult.name))
                             {
-                                tags.Add($"#{ingredientResult.name.Trim()}");
+                                tags.Add($"{ingredientResult.name.Trim()}");
                             }
                         }
                     }

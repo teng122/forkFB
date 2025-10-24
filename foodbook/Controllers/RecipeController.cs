@@ -957,6 +957,78 @@ namespace foodbook.Controllers
             }
         }
 
+        // POST: /Recipe/ReportRecipe
+        [HttpPost]
+        public async Task<IActionResult> ReportRecipe([FromBody] ReportRecipeRequest request)
+        {
+            try
+            {
+                var sessionEmail = HttpContext.Session.GetString("user_email");
+                if (string.IsNullOrEmpty(sessionEmail))
+                {
+                    return Json(new { success = false, message = "Vui lòng đăng nhập" });
+                }
+
+                // Get current user
+                var currentUser = await _supabaseService.Client
+                    .From<User>()
+                    .Filter("email", Supabase.Postgrest.Constants.Operator.Equals, sessionEmail)
+                    .Single();
+
+                if (currentUser?.user_id == null)
+                {
+                    return Json(new { success = false, message = "Không tìm thấy thông tin người dùng" });
+                }
+
+                var userId = currentUser.user_id.Value;
+                var recipeId = request.RecipeId;
+
+                // Kiểm tra xem đã report chưa
+                var existingReport = await _supabaseService.Client
+                    .From<Report>()
+                    .Where(x => x.user_id == userId && x.recipe_id == recipeId)
+                    .Get();
+
+                if (existingReport.Models.Any())
+                {
+                    return Json(new { success = false, message = "Bạn đã báo cáo công thức này rồi" });
+                }
+
+                // Tạo report mới
+                var newReport = new Report
+                {
+                    user_id = userId,
+                    recipe_id = recipeId,
+                    body = request.Reason ?? "Không có lý do cụ thể",
+                    status = "Đang xử lý",
+                    created_at = DateTime.UtcNow
+                };
+
+                await _supabaseService.Client.From<Report>().Insert(newReport);
+
+                return Json(new { success = true, message = "Báo cáo đã được gửi thành công" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error reporting recipe {RecipeId}", request.RecipeId);
+                
+                // Check for duplicate key error
+                if (ex.Message.Contains("23505") || ex.Message.Contains("duplicate key"))
+                {
+                    return Json(new { success = false, message = "Bạn đã báo cáo công thức này rồi" });
+                }
+                
+                return Json(new { success = false, message = "Có lỗi xảy ra. Vui lòng thử lại." });
+            }
+        }
+
+        // Request model for ReportRecipe
+        public class ReportRecipeRequest
+        {
+            public int RecipeId { get; set; }
+            public string? Reason { get; set; }
+        }
+
         // TODO: Thêm các actions khác sau
         // [HttpGet] public IActionResult Edit(int id)
         // [HttpPost] public IActionResult Edit(AddRecipeViewModel model)

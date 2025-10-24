@@ -67,12 +67,12 @@
                                 {
                                 @foreach (var tag in recipe.Tags.Take(3))
                                 {
-                                    <span class="tag-chip">@tag</span>
+                                    <span class="tag-chip tag-clickable" onclick="event.stopPropagation(); event.preventDefault(); searchByTagSmart('@tag')">@tag</span>
                                 }
                                 }
                                 else
                                 {
-                                    <span class="tag-chip">#@recipe.Level</span>
+                                    <span class="tag-chip tag-clickable" onclick="event.stopPropagation(); event.preventDefault(); searchByDifficulty('@recipe.Level')">@recipe.Level</span>
                                 }
                             </div>
                             @if (recipe.Tags != null && recipe.Tags.Count > 3)
@@ -133,9 +133,9 @@ function showTagsPopup(recipeId, tagsString) {
     // Parse tags từ string
     const tags = tagsString.split('|');
     
-    // Tạo HTML cho tags
+    // Tạo HTML cho tags với khả năng click
     const tagsHtml = tags.map(tag => 
-        `<span class="tag-chip">${tag}</span>`
+        `<span class="tag-chip tag-clickable" onclick="searchByTag('${tag}')">${tag}</span>`
     ).join('');
     
     // Load tags vào popup
@@ -212,7 +212,7 @@ document.addEventListener('click', function(event) {
 });
 
 function createRecipeCard(recipe) {
-    const tagsHtml = recipe.tags.map(tag => `<span class="tag-chip">${tag}</span>`).join('');
+    const tagsHtml = recipe.tags.slice(0, 3).map(tag => `<span class="tag-chip tag-clickable" onclick="event.stopPropagation(); event.preventDefault(); searchByTag('${tag}')">${tag}</span>`).join('');
     const showMoreBtn = recipe.tags.length > 3 ?
         `<button class="tag-show-more-btn" onclick="event.stopPropagation(); event.preventDefault(); showTagsPopup(${recipe.recipeId}, '${recipe.tags.join('|')}')">+${recipe.tags.length - 3}</button>` : '';
 
@@ -357,7 +357,7 @@ function loadMoreRecipes() {
 }
 
 function createRecipeCard(recipe) {
-    const tagsHtml = recipe.tags.map(tag => `<span class="tag-chip">${tag}</span>`).join('');
+    const tagsHtml = recipe.tags.slice(0, 3).map(tag => `<span class="tag-chip tag-clickable" onclick="event.stopPropagation(); event.preventDefault(); searchByTag('${tag}')">${tag}</span>`).join('');
     const showMoreBtn = recipe.tags.length > 3 ? 
         `<button class="tag-show-more-btn" onclick="event.stopPropagation(); event.preventDefault(); showTagsPopup(${recipe.recipeId}, '${recipe.tags.join('|')}')">+${recipe.tags.length - 3}</button>` : '';
     
@@ -395,7 +395,7 @@ function createRecipeCard(recipe) {
                         <h5 class="card-title fw-bold mb-2 feed-title">${recipe.recipeName}</h5>
                         <div class="tag-container mb-3" data-recipe-id="${recipe.recipeId}">
                             <div class="tag-list tag-collapsed">
-                                ${recipe.tags.slice(0, 3).map(tag => `<span class="tag-chip">${tag}</span>`).join('')}
+                                ${tagsHtml}
                             </div>
                             ${showMoreBtn}
                         </div>
@@ -494,4 +494,33 @@ window.addEventListener('scroll', function() {
         loadMoreRecipes();
     }
 });
+
+// Navigate to search page with tag filter
+function searchByTag(tag) {
+    // Encode tag để tránh lỗi với ký tự đặc biệt
+    const encodedTag = encodeURIComponent(tag);
+    // Chuyển đến trang search với tag
+    window.location.href = `/Search/Search?type=${encodedTag}`;
+}
+
+// Navigate to search page with difficulty filter
+function searchByDifficulty(difficulty) {
+    // Encode difficulty để tránh lỗi với ký tự đặc biệt
+    const encodedDifficulty = encodeURIComponent(difficulty);
+    // Chuyển đến trang search với difficulty
+    window.location.href = `/Search/Search?difficulty=${encodedDifficulty}`;
+}
+
+// Smart tag search - phân biệt độ khó và phân loại
+function searchByTagSmart(tag) {
+    const difficulties = ['dễ', 'bình thường', 'khó', 'Dễ', 'Bình thường', 'Khó', 'DỄ', 'BÌNH THƯỜNG', 'KHÓ'];
+    
+    // Kiểm tra xem tag có phải là độ khó không
+    if (difficulties.includes(tag)) {
+        searchByDifficulty(tag);
+    } else {
+        // Nếu không phải độ khó thì là nguyên liệu hoặc phân loại
+        searchByTag(tag);
+    }
+}
 </script>

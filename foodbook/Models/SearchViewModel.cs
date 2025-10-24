@@ -35,6 +35,7 @@ namespace foodbook.Models
         public string? SearchTerm { get; set; }
         public List<string>? SelectedIngredients { get; set; }
         public List<string>? SelectedTypes { get; set; }
+        public List<string>? SelectedDifficulties { get; set; }
         public string? SearchType { get; set; }
         public string SortBy { get; set; } = "time_desc";
     }

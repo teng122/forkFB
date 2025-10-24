@@ -6,6 +6,7 @@ namespace foodbook.Models
         public string RecipeName { get; set; } = string.Empty;
         public string ThumbnailImg { get; set; } = string.Empty;
         public string Level { get; set; } = string.Empty;
+        public int UserId { get; set; }
         public string UserName { get; set; } = string.Empty;
         public string UserAvatarUrl { get; set; } = string.Empty;
         public int LikesCount { get; set; }

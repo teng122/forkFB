@@ -76,6 +76,7 @@ namespace foodbook.Controllers
                             RecipeName = recipe.name ?? "Chưa có tên",
                             ThumbnailImg = recipe.thumbnail_img ?? "",
                             Level = recipe.level ?? "dễ",
+                            UserId = recipe.user_id,
                             UserName = userInfo?.full_name ?? "User",
                             UserAvatarUrl = userInfo?.avatar_img ?? "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png",
                             LikesCount = likesCount.Models.Count,

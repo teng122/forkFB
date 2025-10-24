@@ -4,14 +4,14 @@ using Supabase.Postgrest.Attributes;
 
 namespace foodbook.Models
 {
-    [Table("Report")]
-    public class Report : BaseModel
+    [Table("User_Report")]
+    public class UserReport : BaseModel
     {
-        [PrimaryKey("user_id", shouldInsert: true)]
-        public int user_id { get; set; }
+        [PrimaryKey("reporter_id", shouldInsert: true)]
+        public int reporter_id { get; set; }
 
-        [PrimaryKey("recipe_id", shouldInsert: true)]
-        public int recipe_id { get; set; }
+        [PrimaryKey("reported_user_id", shouldInsert: true)]
+        public int reported_user_id { get; set; }
 
         [Column("body")]
         public string? body { get; set; }
@@ -23,3 +23,4 @@ namespace foodbook.Models
         public DateTime created_at { get; set; } = DateTime.UtcNow;
     }
 }
+

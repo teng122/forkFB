@@ -402,6 +402,16 @@ body {
     flex-shrink: 0; 
     display: inline-block;
 }
+.tag-chip.tag-clickable {
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.tag-chip.tag-clickable:hover {
+    background: #1dd75b;
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(29, 215, 91, 0.3);
+}
 .tag-show-more-btn { 
     background: #e5e7eb; 
     color: #6b7280; 

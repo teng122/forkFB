@@ -12,6 +12,6 @@ namespace foodbook.Models
         public List<Recipe> RecentRecipes { get; set; } = new List<Recipe>();
         public List<Report> FlaggedContent { get; set; } = new List<Report>();
         public List<RecipeType> Categories { get; set; } = new List<RecipeType>();
-        public List<Ingredient> Ingredients { get; set; } = new List<Ingredient>();
+        public List<IngredientMaster> Ingredients { get; set; } = new List<IngredientMaster>();
     }
 }
