@@ -13,9 +13,21 @@ namespace foodbook.Models
         public string RecipeName { get; set; } = string.Empty;
         public string ThumbnailImg { get; set; } = string.Empty;
         public string Level { get; set; } = string.Empty;
+        public int UserId { get; set; }
         public string UserName { get; set; } = string.Empty;
         public string UserAvatarUrl { get; set; } = string.Empty;
         public int LikesCount { get; set; }
+    }
+    
+    public class UserSearchResultViewModel
+    {
+        public int UserId { get; set; }
+        public string UserName { get; set; } = string.Empty;
+        public string FullName { get; set; } = string.Empty;
+        public string AvatarUrl { get; set; } = string.Empty;
+        public string Bio { get; set; } = string.Empty;
+        public int FollowersCount { get; set; }
+        public int RecipesCount { get; set; }
     }
 
     public class SearchRequestModel
@@ -23,6 +35,7 @@ namespace foodbook.Models
         public string? SearchTerm { get; set; }
         public List<string>? SelectedIngredients { get; set; }
         public List<string>? SelectedTypes { get; set; }
-        public string SortBy { get; set; } = "time";
+        public string? SearchType { get; set; }
+        public string SortBy { get; set; } = "time_desc";
     }
 }

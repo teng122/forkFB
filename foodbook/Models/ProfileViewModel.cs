@@ -29,5 +29,6 @@ namespace foodbook.Models
         public int? RecipeCount { get; set; }
         public int? FollowersCount { get; set; }
         public DateTime? CreatedAt { get; set; }
+        public bool IsFollowing { get; set; } = false;
     }
 }

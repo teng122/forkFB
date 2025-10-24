@@ -1386,6 +1386,18 @@ namespace foodbook.Controllers
             {
                 var offset = (page - 1) * pageSize;
                 
+                // Lấy user hiện tại để check follow status
+                var sessionEmail = HttpContext.Session.GetString("user_email");
+                int? currentUserId = null;
+                if (!string.IsNullOrEmpty(sessionEmail))
+                {
+                    var currentUser = await _supabaseService.Client
+                        .From<User>()
+                        .Filter("email", Operator.Equals, sessionEmail)
+                        .Single();
+                    currentUserId = currentUser?.user_id;
+                }
+                
                 // Lấy danh sách user_id của những người follow user này
                 var follows = await _supabaseService.Client
                     .From<Follow>()
@@ -1423,6 +1435,17 @@ namespace foodbook.Controllers
                             .Where(x => x.following_id == followerId)
                             .Get();
 
+                        // Check nếu current user có đang follow follower này không
+                        bool isFollowing = false;
+                        if (currentUserId.HasValue && currentUserId.Value != followerId)
+                        {
+                            var followCheck = await _supabaseService.Client
+                                .From<Follow>()
+                                .Where(x => x.follower_id == currentUserId.Value && x.following_id == followerId)
+                                .Get();
+                            isFollowing = followCheck.Models?.Any() ?? false;
+                        }
+
                         followers.Add(new FollowerViewModel
                         {
                             UserId = follower.user_id ?? 0,
@@ -1432,7 +1455,8 @@ namespace foodbook.Controllers
                             AvatarUrl = follower.avatar_img,
                             RecipeCount = recipeCount.Models?.Count ?? 0,
                             FollowersCount = followersCount.Models?.Count ?? 0,
-                            CreatedAt = follower.created_at
+                            CreatedAt = follower.created_at,
+                            IsFollowing = isFollowing
                         });
                     }
                 }
@@ -1751,6 +1775,80 @@ namespace foodbook.Controllers
                     stackTrace = ex.StackTrace
                 });
             }
+        }
+
+        // Toggle Follow/Unfollow
+        [HttpPost]
+        public async Task<IActionResult> ToggleFollow([FromBody] ToggleFollowRequest request)
+        {
+            try
+            {
+                var sessionEmail = HttpContext.Session.GetString("user_email");
+                if (string.IsNullOrEmpty(sessionEmail))
+                {
+                    return Json(new { success = false, message = "Bạn cần đăng nhập để thực hiện thao tác này" });
+                }
+
+                // Get current user
+                var currentUser = await _supabaseService.Client
+                    .From<User>()
+                    .Where(x => x.email == sessionEmail)
+                    .Single();
+
+                if (currentUser == null || !currentUser.user_id.HasValue)
+                {
+                    return Json(new { success = false, message = "Không tìm thấy thông tin người dùng" });
+                }
+
+                var currentUserId = currentUser.user_id.Value;
+                var targetUserId = request.UserId;
+
+                if (currentUserId == targetUserId)
+                {
+                    return Json(new { success = false, message = "Bạn không thể theo dõi chính mình" });
+                }
+
+                // Check if already following
+                var existingFollow = await _supabaseService.Client
+                    .From<Follow>()
+                    .Where(x => x.follower_id == currentUserId && x.following_id == targetUserId)
+                    .Get();
+
+                bool isNowFollowing;
+
+                if (existingFollow.Models.Any())
+                {
+                    // Already following -> Unfollow
+                    await _supabaseService.Client
+                        .From<Follow>()
+                        .Where(x => x.follower_id == currentUserId && x.following_id == targetUserId)
+                        .Delete();
+                    isNowFollowing = false;
+                }
+                else
+                {
+                    // Not following -> Follow
+                    var newFollow = new Follow
+                    {
+                        follower_id = currentUserId,
+                        following_id = targetUserId
+                    };
+                    await _supabaseService.Client.From<Follow>().Insert(newFollow);
+                    isNowFollowing = true;
+                }
+
+                return Json(new { success = true, isFollowing = isNowFollowing });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Có lỗi xảy ra: " + ex.Message });
+            }
+        }
+
+        // Request model for ToggleFollow
+        public class ToggleFollowRequest
+        {
+            public int UserId { get; set; }
         }
     }
 }

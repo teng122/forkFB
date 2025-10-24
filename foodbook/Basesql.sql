@@ -29,13 +29,11 @@ CREATE TABLE public.Follow (
   CONSTRAINT fk_follow_follower FOREIGN KEY (follower_id) REFERENCES public.User(user_id),
   CONSTRAINT fk_follow_following FOREIGN KEY (following_id) REFERENCES public.User(user_id)
 );
-CREATE TABLE public.Ingredient (
+CREATE TABLE public.Ingredient_Master (
   ingredient_id integer GENERATED ALWAYS AS IDENTITY NOT NULL,
-  recipe_id integer NOT NULL,
-  name character varying,
+  name character varying NOT NULL UNIQUE,
   created_at timestamp with time zone DEFAULT now(),
-  CONSTRAINT Ingredient_pkey PRIMARY KEY (ingredient_id),
-  CONSTRAINT fk_ingredient_recipe FOREIGN KEY (recipe_id) REFERENCES public.Recipe(recipe_id)
+  CONSTRAINT Ingredient_Master_pkey PRIMARY KEY (ingredient_id)
 );
 CREATE TABLE public.Media (
   media_id integer GENERATED ALWAYS AS IDENTITY NOT NULL,
@@ -54,7 +52,6 @@ CREATE TABLE public.Notebook (
 CREATE TABLE public.Recipe (
   recipe_id integer GENERATED ALWAYS AS IDENTITY NOT NULL,
   user_id integer NOT NULL,
-  recipe_type_id integer,
   name character varying,
   thumbnail_img text,
   step_number integer,
@@ -63,8 +60,7 @@ CREATE TABLE public.Recipe (
   created_at timestamp with time zone DEFAULT now(),
   level USER-DEFINED DEFAULT 'dễ'::recipe_level,
   CONSTRAINT Recipe_pkey PRIMARY KEY (recipe_id),
-  CONSTRAINT fk_recipe_user FOREIGN KEY (user_id) REFERENCES public.User(user_id),
-  CONSTRAINT fk_recipe_type FOREIGN KEY (recipe_type_id) REFERENCES public.Recipe_type(recipe_type_id)
+  CONSTRAINT fk_recipe_user FOREIGN KEY (user_id) REFERENCES public.User(user_id)
 );
 CREATE TABLE public.RecipeStep (
   recipe_id integer NOT NULL,
@@ -84,6 +80,14 @@ CREATE TABLE public.RecipeStep_Media (
   CONSTRAINT fk_rsm_recipestep FOREIGN KEY (step) REFERENCES public.RecipeStep(recipe_id),
   CONSTRAINT fk_rsm_recipestep FOREIGN KEY (step) REFERENCES public.RecipeStep(step),
   CONSTRAINT fk_rsm_media FOREIGN KEY (media_id) REFERENCES public.Media(media_id)
+);
+CREATE TABLE public.Recipe_Ingredient (
+  recipe_id integer NOT NULL,
+  ingredient_id integer NOT NULL,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT Recipe_Ingredient_pkey PRIMARY KEY (recipe_id, ingredient_id),
+  CONSTRAINT fk_ri_recipe FOREIGN KEY (recipe_id) REFERENCES public.Recipe(recipe_id),
+  CONSTRAINT fk_ri_ingredient FOREIGN KEY (ingredient_id) REFERENCES public.Ingredient_Master(ingredient_id)
 );
 CREATE TABLE public.Recipe_RecipeType (
   recipe_id integer NOT NULL,

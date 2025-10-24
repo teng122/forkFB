@@ -18,45 +18,66 @@ namespace foodbook.Controllers
             _supabaseService = supabaseService;
         }
 
-        // Search page
+        // Search page - GET
         public async Task<IActionResult> Search()
         {
             try
             {
-                // Get all ingredients for filter
-                var ingredients = await _supabaseService.Client
-                    .From<Ingredient>()
+                _logger.LogInformation("=== SEARCH PAGE LOAD START ===");
+
+                // 1. Load ingredients from Ingredient_Master
+                var ingredientsResult = await _supabaseService.Client
+                    .From<IngredientMaster>()
                     .Select("name")
                     .Get();
 
-                // Get all recipe types for filter
-                var recipeTypes = await _supabaseService.Client
+                var ingredients = ingredientsResult.Models
+                    .Where(x => !string.IsNullOrWhiteSpace(x.name))
+                    .Select(x => x.name.Trim())
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .OrderBy(n => n)
+                    .ToList();
+
+                _logger.LogInformation("Loaded {Count} ingredients: {Ingredients}", 
+                    ingredients.Count, string.Join(", ", ingredients.Take(5)));
+
+                // 2. Load recipe types from Recipe_type
+                var recipeTypesResult = await _supabaseService.Client
                     .From<RecipeType>()
                     .Select("content")
                     .Get();
 
-                // Get all recipes for display
-                var recipes = await _supabaseService.Client
+                var recipeTypes = recipeTypesResult.Models
+                    .Where(x => !string.IsNullOrWhiteSpace(x.content))
+                    .Select(x => x.content.Trim())
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .OrderBy(n => n)
+                    .ToList();
+
+                _logger.LogInformation("Loaded {Count} recipe types: {Types}", 
+                    recipeTypes.Count, string.Join(", ", recipeTypes.Take(5)));
+
+                // 3. Load all recipes for display
+                var recipesResult = await _supabaseService.Client
                     .From<Recipe>()
                     .Select("*")
                     .Order("created_at", Supabase.Postgrest.Constants.Ordering.Descending)
                     .Get();
 
-                // Map to SearchViewModel
                 var searchResults = new List<SearchResultViewModel>();
-                foreach (var recipe in recipes.Models)
+                foreach (var recipe in recipesResult.Models)
                 {
                     // Get user info
-                    var user = await _supabaseService.Client
+                    var userResult = await _supabaseService.Client
                         .From<User>()
                         .Select("full_name, avatar_img")
                         .Where(x => x.user_id == recipe.user_id)
                         .Get();
 
-                    var userInfo = user.Models.FirstOrDefault();
+                    var userInfo = userResult.Models.FirstOrDefault();
 
                     // Get likes count
-                    var likesCount = await _supabaseService.Client
+                    var likesResult = await _supabaseService.Client
                         .From<likeDislike>()
                         .Select("ld_id")
                         .Where(x => x.recipe_id == recipe.recipe_id)
@@ -66,21 +87,26 @@ namespace foodbook.Controllers
                     {
                         RecipeId = recipe.recipe_id ?? 0,
                         RecipeName = recipe.name ?? "Chưa có tên",
-                        ThumbnailImg = recipe.thumbnail_img ?? "",
+                        ThumbnailImg = recipe.thumbnail_img ?? string.Empty,
                         Level = recipe.level ?? "dễ",
+                        UserId = recipe.user_id,
                         UserName = userInfo?.full_name ?? "User",
                         UserAvatarUrl = userInfo?.avatar_img ?? "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png",
-                        LikesCount = likesCount.Models.Count
+                        LikesCount = likesResult.Models.Count
                     });
                 }
 
+                _logger.LogInformation("Loaded {Count} recipes for display", searchResults.Count);
+
+                // 4. Create view model
                 var viewModel = new SearchViewModel
                 {
                     SearchResults = searchResults,
-                    Ingredients = ingredients.Models.Select(x => x.name).Distinct().ToList(),
-                    RecipeTypes = recipeTypes.Models.Select(x => x.content).ToList()
+                    Ingredients = ingredients,
+                    RecipeTypes = recipeTypes
                 };
 
+                _logger.LogInformation("=== SEARCH PAGE LOAD COMPLETE ===");
                 return View("Search", viewModel);
             }
             catch (Exception ex)
@@ -91,129 +117,178 @@ namespace foodbook.Controllers
             }
         }
 
-        // Search with filters
+        // Search with filters - POST
         [HttpPost]
-        public async Task<IActionResult> Search(SearchRequestModel request)
+        public async Task<IActionResult> Search([FromBody] SearchRequestModel request)
         {
             try
             {
-                var query = _supabaseService.Client
-                    .From<Recipe>()
-                    .Select("*");
+                _logger.LogInformation("=== SEARCH REQUEST START ===");
+                _logger.LogInformation("Search term: {Term}", request.SearchTerm);
+                _logger.LogInformation("Selected ingredients: {Ingredients}", 
+                    request.SelectedIngredients != null ? string.Join(", ", request.SelectedIngredients) : "None");
+                _logger.LogInformation("Selected types: {Types}", 
+                    request.SelectedTypes != null ? string.Join(", ", request.SelectedTypes) : "None");
 
-                // Apply text search filter
+                // 1. Start with all recipes
+                var allRecipesResult = await _supabaseService.Client
+                    .From<Recipe>()
+                    .Select("*")
+                    .Get();
+
+                var filteredRecipes = allRecipesResult.Models.ToList();
+                _logger.LogInformation("Starting with {Count} recipes", filteredRecipes.Count);
+
+                // Check if we have any filters
+                bool hasFilters = !string.IsNullOrEmpty(request.SearchTerm) ||
+                                 (request.SelectedIngredients != null && request.SelectedIngredients.Any()) ||
+                                 (request.SelectedTypes != null && request.SelectedTypes.Any());
+
+                _logger.LogInformation("Has filters: {HasFilters}", hasFilters);
+
+                // 2. Apply text search filter based on search type
                 if (!string.IsNullOrEmpty(request.SearchTerm))
                 {
-                    query = query.Where(x => x.name.Contains(request.SearchTerm));
-                }
-
-                // Get all recipes first
-                var allRecipes = await query.Get();
-                var filteredRecipes = allRecipes.Models.ToList();
-
-                // Apply ingredient filter
-                if (request.SelectedIngredients != null && request.SelectedIngredients.Any())
-                {
-                    var ingredientRecipes = await _supabaseService.Client
-                        .From<Ingredient>()
-                        .Select("recipe_id, name")
-                        .Get();
-
-                    var filteredIngredientRecipes = ingredientRecipes.Models
-                        .Where(x => x.name != null && request.SelectedIngredients.Contains(x.name))
-                        .Select(x => x.recipe_id)
-                        .ToList();
-                    
-                    if (filteredIngredientRecipes.Any())
+                    if (request.SearchType == "user")
                     {
+                        // Search by user name
+                        var users = await _supabaseService.Client
+                            .From<User>()
+                            .Select("user_id, full_name, username")
+                            .Get();
+
+                        var matchingUserIds = users.Models
+                            .Where(u => (u.full_name != null && u.full_name.Contains(request.SearchTerm, StringComparison.OrdinalIgnoreCase)) ||
+                                       (u.username != null && u.username.Contains(request.SearchTerm, StringComparison.OrdinalIgnoreCase)))
+                            .Select(u => u.user_id)
+                            .ToList();
+
+                        _logger.LogInformation("Found {Count} matching users for '{Term}'", matchingUserIds.Count, request.SearchTerm);
+
                         filteredRecipes = filteredRecipes
-                            .Where(x => x.recipe_id.HasValue && filteredIngredientRecipes.Contains(x.recipe_id.Value))
+                            .Where(x => matchingUserIds.Contains(x.user_id))
                             .ToList();
                     }
                     else
                     {
-                        // If no ingredients match, return empty results
-                        filteredRecipes = new List<Recipe>();
+                        // Search by recipe name
+                        filteredRecipes = filteredRecipes
+                            .Where(x => x.name != null && x.name.Contains(request.SearchTerm, StringComparison.OrdinalIgnoreCase))
+                            .ToList();
                     }
+                    
+                    _logger.LogInformation("After text search '{Term}' (type: {Type}): {Count} recipes", 
+                        request.SearchTerm, request.SearchType ?? "recipe", filteredRecipes.Count);
                 }
 
-                // Apply recipe type filter
-                if (request.SelectedTypes != null && request.SelectedTypes.Any())
+                // 3. Apply ingredient filter (AND logic - recipe phải có TẤT CẢ ingredients)
+                if (request.SelectedIngredients != null && request.SelectedIngredients.Any())
                 {
-                    var typeRecipes = await _supabaseService.Client
-                        .From<RecipeRecipeType>()
-                        .Select("recipe_id, recipe_type_id")
+                    // Get ingredient IDs from names
+                    var ingredientIdsResult = await _supabaseService.Client
+                        .From<IngredientMaster>()
+                        .Select("ingredient_id, name")
                         .Get();
 
-                    var typeDetails = await _supabaseService.Client
+                    var filteredIngredientIds = ingredientIdsResult.Models
+                        .Where(x => x.name != null && request.SelectedIngredients.Contains(x.name))
+                        .Select(x => x.ingredient_id)
+                        .ToList();
+
+                    _logger.LogInformation("Found {Count} matching ingredient IDs for: {Ingredients}", 
+                        filteredIngredientIds.Count, string.Join(", ", request.SelectedIngredients));
+
+                    if (filteredIngredientIds.Any() && filteredIngredientIds.Count == request.SelectedIngredients.Count)
+                    {
+                        // Get all Recipe_Ingredient relationships
+                        var recipeIngredientsResult = await _supabaseService.Client
+                            .From<RecipeIngredient>()
+                            .Select("recipe_id, ingredient_id")
+                            .Get();
+
+                        // Group by recipe_id and filter recipes that have ALL required ingredients
+                        var recipeIngredientGroups = recipeIngredientsResult.Models
+                            .Where(x => filteredIngredientIds.Contains(x.ingredient_id))
+                            .GroupBy(x => x.recipe_id);
+
+                        var filteredRecipeIds = recipeIngredientGroups
+                            .Where(g => g.Select(x => x.ingredient_id).Distinct().Count() >= filteredIngredientIds.Count)
+                            .Select(g => g.Key)
+                            .ToList();
+
+                        _logger.LogInformation("Found {Count} recipes with ALL matching ingredients", filteredRecipeIds.Count);
+
+                        filteredRecipes = filteredRecipes
+                            .Where(x => x.recipe_id.HasValue && filteredRecipeIds.Contains(x.recipe_id.Value))
+                            .ToList();
+                    }
+                    else
+                    {
+                        _logger.LogWarning("Not all ingredients found in database or recipe list is empty");
+                        filteredRecipes = new List<Recipe>();
+                    }
+
+                    _logger.LogInformation("After ingredient filter (AND): {Count} recipes", filteredRecipes.Count);
+                }
+
+                // 4. Apply recipe type filter
+                if (request.SelectedTypes != null && request.SelectedTypes.Any())
+                {
+                    // Get recipe type IDs from names
+                    var recipeTypeIdsResult = await _supabaseService.Client
                         .From<RecipeType>()
                         .Select("recipe_type_id, content")
                         .Get();
 
-                    var filteredTypeDetails = typeDetails.Models
+                    var filteredTypeIds = recipeTypeIdsResult.Models
                         .Where(x => x.content != null && request.SelectedTypes.Contains(x.content))
                         .Select(x => x.recipe_type_id)
                         .ToList();
-                    
-                    if (filteredTypeDetails.Any())
+
+                    _logger.LogInformation("Found {Count} matching recipe type IDs", filteredTypeIds.Count);
+
+                    if (filteredTypeIds.Any())
                     {
-                        var filteredTypeRecipes = typeRecipes.Models
-                            .Where(x => filteredTypeDetails.Contains(x.recipe_type_id))
+                        // Get recipe IDs from Recipe_RecipeType
+                        var recipeTypesResult = await _supabaseService.Client
+                            .From<RecipeRecipeType>()
+                            .Select("recipe_id, recipe_type_id")
+                            .Get();
+
+                        var filteredTypeRecipeIds = recipeTypesResult.Models
+                            .Where(x => filteredTypeIds.Contains(x.recipe_type_id))
                             .Select(x => x.recipe_id)
                             .ToList();
 
-                        if (filteredTypeRecipes.Any())
-                        {
-                            filteredRecipes = filteredRecipes
-                                .Where(x => x.recipe_id.HasValue && filteredTypeRecipes.Contains(x.recipe_id.Value))
-                                .ToList();
-                        }
-                        else
-                        {
-                            // If no types match, return empty results
-                            filteredRecipes = new List<Recipe>();
-                        }
+                        _logger.LogInformation("Found {Count} recipes with matching types", filteredTypeRecipeIds.Count);
+
+                        filteredRecipes = filteredRecipes
+                            .Where(x => x.recipe_id.HasValue && filteredTypeRecipeIds.Contains(x.recipe_id.Value))
+                            .ToList();
                     }
                     else
                     {
-                        // If no types match, return empty results
                         filteredRecipes = new List<Recipe>();
                     }
+
+                    _logger.LogInformation("After type filter: {Count} recipes", filteredRecipes.Count);
                 }
 
-                // Apply sorting
-                switch (request.SortBy)
-                {
-                    case "likes":
-                        // For likes sorting, we need to get likes count for each recipe
-                        // For now, just sort by creation date
-                        filteredRecipes = filteredRecipes
-                            .OrderByDescending(x => x.created_at)
-                            .ToList();
-                        break;
-                    case "time":
-                    default:
-                        filteredRecipes = filteredRecipes
-                            .OrderByDescending(x => x.created_at)
-                            .ToList();
-                        break;
-                }
-
-                // Map to SearchResultViewModel
+                // 5. Map to SearchResultViewModel FIRST (before sorting, because we need likes count)
                 var searchResults = new List<SearchResultViewModel>();
                 foreach (var recipe in filteredRecipes)
                 {
                     // Get user info
-                    var user = await _supabaseService.Client
+                    var userResult = await _supabaseService.Client
                         .From<User>()
                         .Select("full_name, avatar_img")
                         .Where(x => x.user_id == recipe.user_id)
                         .Get();
 
-                    var userInfo = user.Models.FirstOrDefault();
+                    var userInfo = userResult.Models.FirstOrDefault();
 
                     // Get likes count
-                    var likesCount = await _supabaseService.Client
+                    var likesResult = await _supabaseService.Client
                         .From<likeDislike>()
                         .Select("ld_id")
                         .Where(x => x.recipe_id == recipe.recipe_id)
@@ -223,20 +298,108 @@ namespace foodbook.Controllers
                     {
                         RecipeId = recipe.recipe_id ?? 0,
                         RecipeName = recipe.name ?? "Chưa có tên",
-                        ThumbnailImg = recipe.thumbnail_img ?? "",
+                        ThumbnailImg = recipe.thumbnail_img ?? string.Empty,
                         Level = recipe.level ?? "dễ",
+                        UserId = recipe.user_id,
                         UserName = userInfo?.full_name ?? "User",
                         UserAvatarUrl = userInfo?.avatar_img ?? "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png",
-                        LikesCount = likesCount.Models.Count
+                        LikesCount = likesResult.Models.Count
                     });
                 }
 
-                return Json(new { success = true, results = searchResults });
+                // 6. Apply sorting AFTER getting likes count
+                switch (request.SortBy)
+                {
+                    case "likes_asc":
+                        searchResults = searchResults.OrderBy(x => x.LikesCount).ToList();
+                        break;
+                    case "likes_desc":
+                        searchResults = searchResults.OrderByDescending(x => x.LikesCount).ToList();
+                        break;
+                    case "time_asc":
+                        // Need to get created_at from original recipes
+                        searchResults = searchResults
+                            .OrderBy(x => filteredRecipes.FirstOrDefault(r => r.recipe_id == x.RecipeId)?.created_at)
+                            .ToList();
+                        break;
+                    case "time_desc":
+                    default:
+                        searchResults = searchResults
+                            .OrderByDescending(x => filteredRecipes.FirstOrDefault(r => r.recipe_id == x.RecipeId)?.created_at)
+                            .ToList();
+                        break;
+                }
+
+                _logger.LogInformation("=== SEARCH REQUEST COMPLETE: {Count} results ===", searchResults.Count);
+                return Json(new { success = true, results = searchResults, searchType = request.SearchType ?? "recipe" });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error performing search");
                 return Json(new { success = false, message = "Không thể thực hiện tìm kiếm: " + ex.Message });
+            }
+        }
+
+        // Search for users - POST
+        [HttpPost]
+        public async Task<IActionResult> SearchUsers([FromBody] SearchRequestModel request)
+        {
+            try
+            {
+                _logger.LogInformation("=== USER SEARCH REQUEST START ===");
+                _logger.LogInformation("Search term: {Term}", request.SearchTerm);
+
+                var users = await _supabaseService.Client
+                    .From<User>()
+                    .Select("*")
+                    .Get();
+
+                var filteredUsers = users.Models.AsEnumerable();
+
+                // Apply text search
+                if (!string.IsNullOrEmpty(request.SearchTerm))
+                {
+                    filteredUsers = filteredUsers.Where(u => 
+                        (u.full_name != null && u.full_name.Contains(request.SearchTerm, StringComparison.OrdinalIgnoreCase)) ||
+                        (u.username != null && u.username.Contains(request.SearchTerm, StringComparison.OrdinalIgnoreCase))
+                    );
+                }
+
+                var userResults = new List<UserSearchResultViewModel>();
+                foreach (var user in filteredUsers)
+                {
+                    // Count followers
+                    var followersResult = await _supabaseService.Client
+                        .From<Follow>()
+                        .Where(x => x.following_id == user.user_id)
+                        .Get();
+
+                    // Count recipes
+                    var recipesResult = await _supabaseService.Client
+                        .From<Recipe>()
+                        .Select("recipe_id")
+                        .Where(x => x.user_id == user.user_id)
+                        .Get();
+
+                    userResults.Add(new UserSearchResultViewModel
+                    {
+                        UserId = user.user_id ?? 0,
+                        UserName = user.username ?? "User",
+                        FullName = user.full_name ?? "User",
+                        AvatarUrl = user.avatar_img ?? "/images/default-avatar.jpg",
+                        Bio = user.bio ?? "",
+                        FollowersCount = followersResult.Models.Count,
+                        RecipesCount = recipesResult.Models.Count
+                    });
+                }
+
+                _logger.LogInformation("=== USER SEARCH COMPLETE: {Count} results ===", userResults.Count);
+                return Json(new { success = true, results = userResults, searchType = "user" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error performing user search");
+                return Json(new { success = false, message = "Không thể tìm kiếm người dùng: " + ex.Message });
             }
         }
     }
