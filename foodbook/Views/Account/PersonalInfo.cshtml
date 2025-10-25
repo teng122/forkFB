@@ -174,6 +174,10 @@
         let postsPage = 1;
         let postsLoading = false;
         let postsLoaded = false;
+        
+        // Global variables for reacted recipes
+        let currentPage = 1;
+        let isLoading = false;
 
         // Initialize when page loads
         document.addEventListener('DOMContentLoaded', function() {
@@ -453,6 +457,13 @@
                                     ${recipe.recipeName}
                                 </a>
                             </h6>
+                            <div class="recipe-author mb-2">
+                                <a href="/Profile/Info?id=${recipe.userId}" class="text-decoration-none">
+                                    <small class="text-muted">
+                                        <i class="bi bi-person-circle"></i> ${recipe.userName || 'Người dùng'}
+                                    </small>
+                                </a>
+                            </div>
                             <div class="recipe-actions">
                                 <div class="recipe-stats">
                                     <span><i class="bi bi-hand-thumbs-up text-success"></i> ${recipe.likesCount || 0}</span>
@@ -623,6 +634,8 @@
     line-height: 1.6;
     font-size: 1rem;
     color: #6c757d;
+    white-space: pre-wrap;
+    word-wrap: break-word;
 }
 
 .profile-stats {
@@ -755,7 +768,20 @@
     font-size: 1rem;
     line-height: 1.4;
     font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.recipe-author {
     margin-bottom: 0.75rem;
+}
+
+.recipe-author a {
+    color: #6c757d;
+    transition: color 0.2s ease;
+}
+
+.recipe-author a:hover {
+    color: #28a745;
 }
 
 .recipe-actions {
