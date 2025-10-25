@@ -42,32 +42,48 @@ namespace foodbook.Controllers
                     .Select("ld_id")
                     .Get();
                 
-                // Get total comments
-                var totalComments = await _supabaseService.Client
+                // Get all comments
+                var allComments = await _supabaseService.Client
                     .From<Comment>()
-                    .Select("comment_id")
+                    .Select("comment_id, created_at")
                     .Get();
 
-                // Get recent users (last 7 days)
-                var recentUsers = await _supabaseService.Client
+                // Get all users
+                var allUsers = await _supabaseService.Client
                     .From<User>()
-                    .Select("user_id, username, created_at")
-                    .Where(x => x.created_at >= DateTime.UtcNow.AddDays(-7))
+                    .Select("user_id, username, created_at, status")
                     .Get();
 
-                // Get recent recipes (last 7 days)
-                var recentRecipes = await _supabaseService.Client
+                // Filter recent users (last 7 days) in memory
+                var recentUsers = allUsers.Models?
+                    .Where(x => x.created_at >= DateTime.UtcNow.AddDays(-7))
+                    .ToList() ?? new List<User>();
+
+                // Get all recipes
+                var allRecipes = await _supabaseService.Client
                     .From<Recipe>()
                     .Select("recipe_id, name, created_at")
-                    .Where(x => x.created_at >= DateTime.UtcNow.AddDays(-7))
                     .Get();
 
-                // Get flagged content
-                var flaggedContent = await _supabaseService.Client
+                // Filter recent recipes (last 7 days) in memory
+                var recentRecipes = allRecipes.Models?
+                    .Where(x => x.created_at >= DateTime.UtcNow.AddDays(-7))
+                    .ToList() ?? new List<Recipe>();
+
+                // Calculate new comments today
+                var newCommentsToday = allComments.Models?
+                    .Count(x => x.created_at.Date == DateTime.UtcNow.Date) ?? 0;
+
+                // Get all reports
+                var allReports = await _supabaseService.Client
                     .From<Report>()
                     .Select("user_id, recipe_id, body, status, created_at")
-                    .Where(x => x.status == "Đang xử lý")
                     .Get();
+
+                // Filter flagged content (status = "Đang xử lý") in memory
+                var flaggedContent = allReports.Models?
+                    .Where(x => x.status == "Đang xử lý")
+                    .ToList() ?? new List<Report>();
 
                 // Get categories
                 var categories = await _supabaseService.Client
@@ -81,17 +97,37 @@ namespace foodbook.Controllers
                     .Select("ingredient_id, name, created_at")
                     .Get();
 
+                // Calculate monthly user registrations for last 7 months
+                var monthLabels = new List<string>();
+                var monthlyUserCounts = new List<int>();
+                
+                for (int i = 6; i >= 0; i--)
+                {
+                    var targetMonth = DateTime.UtcNow.AddMonths(-i);
+                    var monthName = targetMonth.ToString("MMM");
+                    monthLabels.Add(monthName);
+                    
+                    var userCount = allUsers.Models?
+                        .Count(u => u.created_at.Year == targetMonth.Year && u.created_at.Month == targetMonth.Month) ?? 0;
+                    monthlyUserCounts.Add(userCount);
+                }
+
                 var dashboard = new AdminDashboardViewModel
                 {
-                    TotalUsers = totalUsers.Models.Count,
-                    TotalRecipes = totalRecipes.Models.Count,
-                    TotalLikes = totalLikes.Models.Count,
-                    TotalComments = totalComments.Models.Count,
-                    RecentUsers = recentUsers.Models.Take(5).ToList(),
-                    RecentRecipes = recentRecipes.Models.Take(5).ToList(),
-                    FlaggedContent = flaggedContent.Models.Take(5).ToList(),
-                    Categories = categories.Models.Take(5).ToList(),
-                    Ingredients = ingredients.Models.Take(5).ToList()
+                    TotalUsers = totalUsers.Models?.Count ?? 0,
+                    TotalRecipes = totalRecipes.Models?.Count ?? 0,
+                    TotalLikes = totalLikes.Models?.Count ?? 0,
+                    TotalComments = allComments.Models?.Count ?? 0,
+                    NewUsersThisWeek = recentUsers.Count,
+                    NewRecipesThisWeek = recentRecipes.Count,
+                    NewCommentsToday = newCommentsToday,
+                    RecentUsers = recentUsers.Take(5).ToList(),
+                    RecentRecipes = recentRecipes.Take(5).ToList(),
+                    FlaggedContent = flaggedContent.Take(5).ToList(),
+                    Categories = categories.Models?.Take(5).ToList() ?? new List<RecipeType>(),
+                    Ingredients = ingredients.Models?.Take(5).ToList() ?? new List<IngredientMaster>(),
+                    MonthLabels = monthLabels,
+                    MonthlyUserCounts = monthlyUserCounts
                 };
 
                 return View("Dashboard", dashboard);
