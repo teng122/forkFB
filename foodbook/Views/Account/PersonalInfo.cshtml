@@ -127,6 +127,41 @@
     }
 </div>
 
+<!-- Delete Recipe Confirmation Modal -->
+<div class="modal fade" id="deleteRecipeModal" tabindex="-1" aria-labelledby="deleteRecipeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title" id="deleteRecipeModalLabel">Xác nhận xóa công thức</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-0">Bạn có chắc chắn muốn xóa công thức này? Hành động này không thể hoàn tác.</p>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteRecipeBtn">Xóa</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Alert Modal for success/error messages -->
+<div class="modal fade" id="alertModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title" id="alertModalTitle">Thông báo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="alertModalBody"></div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     
@@ -480,12 +515,39 @@
             });
         }
 
-        // Delete recipe function
-        function deleteRecipe(recipeId) {
-            if (!confirm('Bạn có chắc chắn muốn xóa công thức này?')) {
-                return;
-            }
+        // Show alert modal
+        function showAlertModal(message, type = 'success') {
+            const alertModal = new bootstrap.Modal(document.getElementById('alertModal'));
+            document.getElementById('alertModalBody').textContent = message;
+            alertModal.show();
+        }
 
+        // Delete recipe function
+        let recipeToDelete = null;
+        
+        function deleteRecipe(recipeId) {
+            recipeToDelete = recipeId;
+            const deleteModal = new bootstrap.Modal(document.getElementById('deleteRecipeModal'));
+            deleteModal.show();
+        }
+
+        // Confirm delete handler
+        document.addEventListener('DOMContentLoaded', function() {
+            const confirmBtn = document.getElementById('confirmDeleteRecipeBtn');
+            if (confirmBtn) {
+                confirmBtn.addEventListener('click', function() {
+                    if (recipeToDelete) {
+                        performDeleteRecipe(recipeToDelete);
+                        const deleteModal = bootstrap.Modal.getInstance(document.getElementById('deleteRecipeModal'));
+                        if (deleteModal) {
+                            deleteModal.hide();
+                        }
+                    }
+                });
+            }
+        });
+
+        function performDeleteRecipe(recipeId) {
             const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
             const formData = new FormData();
             formData.append('recipeId', recipeId);
@@ -505,14 +567,14 @@
                     }
                     
                     // Show success message
-                    alert('Xóa công thức thành công!');
+                    showAlertModal('Xóa công thức thành công!');
                 } else {
-                    alert('Lỗi khi xóa công thức: ' + data.message);
+                    showAlertModal('Lỗi khi xóa công thức: ' + data.message, 'error');
                 }
             })
             .catch(error => {
                 console.error('Error deleting recipe:', error);
-                alert('Lỗi khi xóa công thức');
+                showAlertModal('Lỗi khi xóa công thức', 'error');
             });
         }
     </script>

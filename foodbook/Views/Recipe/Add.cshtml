@@ -22,21 +22,6 @@
     </div>
 }
 
-@if (!ViewData.ModelState.IsValid)
-{
-    <div class="alert alert-warning alert-dismissible fade show" role="alert">
-        <i class="bi bi-exclamation-circle-fill me-2"></i>
-        <strong>Validation Errors:</strong>
-        <ul class="mb-0 mt-2">
-            @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
-            {
-                <li>@error.ErrorMessage</li>
-            }
-        </ul>
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-}
-
 <div class="add-recipe-container">
     <div class="row">
         <!-- Left Column - Main Form -->
@@ -123,7 +108,7 @@
 
                 <div class="recipe-section">
                     <button type="submit" class="btn btn-save-recipe" id="submitBtn">
-                        <span class="btn-text">Lưu công thức</span>
+                        <span class="btn-text">Đăng công thức</span>
                         <span class="spinner-border spinner-border-sm d-none" role="status"></span>
                     </button>
                 </div>

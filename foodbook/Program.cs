@@ -11,6 +11,14 @@ namespace foodbook
             // Add services to the container.
             builder.Services.AddControllersWithViews();
             
+            // Tăng giới hạn file upload (5GB cho video)
+            builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
+            {
+                options.MultipartBodyLengthLimit = 5368709120; // 5 GB
+                options.ValueLengthLimit = int.MaxValue;
+                options.MultipartHeadersLengthLimit = int.MaxValue;
+            });
+            
             // Add Data Protection
             builder.Services.AddDataProtection()
                 .SetApplicationName("Foodbook")

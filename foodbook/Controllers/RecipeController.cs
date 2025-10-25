@@ -65,6 +65,8 @@ namespace foodbook.Controllers
         }
 
         [HttpPost]
+        [DisableRequestSizeLimit]
+        [RequestFormLimits(MultipartBodyLengthLimit = 5368709120)]
         public async Task<IActionResult> Add(AddRecipeViewModel model)
         {
             _logger.LogInformation("=== ADD RECIPE STARTED ===");
@@ -401,7 +403,70 @@ namespace foodbook.Controllers
                     _logger.LogInformation("No steps to save");
                 }
 
-                // 6. Recipe types đã được lưu qua bảng trung gian Recipe_RecipeType
+                // 6. Lưu Recipe Types vào bảng trung gian Recipe_RecipeType
+                if (model.RecipeTypes != null && model.RecipeTypes.Any())
+                {
+                    _logger.LogInformation("Saving {Count} recipe types", model.RecipeTypes.Count);
+                    
+                    foreach (var recipeTypeName in model.RecipeTypes)
+                    {
+                        try
+                        {
+                            // Tìm hoặc tạo RecipeType
+                            var existingType = await _supabaseService.Client
+                                .From<RecipeType>()
+                                .Where(x => x.content == recipeTypeName)
+                                .Get();
+
+                            int recipeTypeId;
+
+                            if (existingType.Models != null && existingType.Models.Any())
+                            {
+                                recipeTypeId = existingType.Models.First().recipe_type_id ?? 0;
+                                _logger.LogInformation("  - Found existing type: {Name} (ID: {Id})", recipeTypeName, recipeTypeId);
+                            }
+                            else
+                            {
+                                // Tạo mới RecipeType
+                                var newType = new RecipeType
+                                {
+                                    content = recipeTypeName,
+                                    created_at = DateTime.UtcNow
+                                };
+
+                                var typeResult = await _supabaseService.Client
+                                    .From<RecipeType>()
+                                    .Insert(newType);
+
+                                recipeTypeId = typeResult.Models.First().recipe_type_id ?? 0;
+                                _logger.LogInformation("  - Created new type: {Name} (ID: {Id})", recipeTypeName, recipeTypeId);
+                            }
+
+                            // Lưu vào bảng trung gian Recipe_RecipeType
+                            var recipeRecipeType = new RecipeRecipeType
+                            {
+                                recipe_id = recipeId,
+                                recipe_type_id = recipeTypeId,
+                                created_at = DateTime.UtcNow
+                            };
+
+                            await _supabaseService.Client
+                                .From<RecipeRecipeType>()
+                                .Insert(recipeRecipeType);
+
+                            _logger.LogInformation("  - Linked recipe with type: {Name}", recipeTypeName);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, "  - Failed to save recipe type: {Name}", recipeTypeName);
+                            // Continue với các types khác
+                        }
+                    }
+                }
+                else
+                {
+                    _logger.LogInformation("No recipe types to save");
+                }
 
                 _logger.LogInformation("=== ADD RECIPE COMPLETED SUCCESSFULLY ===");
                 TempData["Success"] = $"Đã thêm công thức '{model.Name}' thành công!";
@@ -412,7 +477,6 @@ namespace foodbook.Controllers
                 _logger.LogError(ex, "=== ADD RECIPE FAILED ===");
                 _logger.LogError("Exception Type: {Type}", ex.GetType().Name);
                 _logger.LogError("Message: {Message}", ex.Message);
-                _logger.LogError("StackTrace: {StackTrace}", ex.StackTrace);
                 
                 if (ex.InnerException != null)
                 {
@@ -420,13 +484,6 @@ namespace foodbook.Controllers
                 }
                 
                 TempData["Error"] = $"Có lỗi xảy ra: {ex.Message}";
-                
-                // Nếu là lỗi Supabase, log thêm
-                if (ex.Message.Contains("Supabase") || ex.Message.Contains("Postgrest"))
-                {
-                    TempData["Error"] += " - Kiểm tra kết nối Database hoặc quyền truy cập.";
-                }
-                
                 return View(model);
             }
         }
