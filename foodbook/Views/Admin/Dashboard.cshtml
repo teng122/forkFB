@@ -18,7 +18,7 @@
                                 <div class="col mr-2">
                                     <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Users</div>
                                     <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.TotalUsers</div>
-                                    <div class="text-xs text-muted">25 new users this week</div>
+                                    <div class="text-xs text-muted">@Model.NewUsersThisWeek new users this week</div>
                                 </div>
                                 <div class="col-auto">
                                     <i class="fas fa-users fa-2x text-gray-300"></i>
@@ -35,7 +35,7 @@
                                 <div class="col mr-2">
                                     <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Total Recipes</div>
                                     <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.TotalRecipes</div>
-                                    <div class="text-xs text-muted">50 new recipes submitted</div>
+                                    <div class="text-xs text-muted">@Model.NewRecipesThisWeek new recipes this week</div>
                                 </div>
                                 <div class="col-auto">
                                     <i class="fas fa-book fa-2x text-gray-300"></i>
@@ -52,7 +52,7 @@
                                 <div class="col mr-2">
                                     <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Total Likes</div>
                                     <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.TotalLikes</div>
-                                    <div class="text-xs text-muted">Up 12% from last month</div>
+                                    <div class="text-xs text-muted">All time likes</div>
                                 </div>
                                 <div class="col-auto">
                                     <i class="fas fa-heart fa-2x text-gray-300"></i>
@@ -69,7 +69,7 @@
                                 <div class="col mr-2">
                                     <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Total Comments</div>
                                     <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.TotalComments</div>
-                                    <div class="text-xs text-muted">300 new comments today</div>
+                                    <div class="text-xs text-muted">@Model.NewCommentsToday new comments today</div>
                                 </div>
                                 <div class="col-auto">
                                     <i class="fas fa-comments fa-2x text-gray-300"></i>
@@ -108,216 +108,90 @@
                 </div>
             </div>
 
-            <!-- Management Tables -->
-            <div class="row">
-                <div class="col-lg-6 mb-4">
-                    <div class="card shadow mb-4">
-                        <div class="card-header py-3">
-                            <h6 class="m-0 font-weight-bold text-primary">Quản lý người dùng</h6>
-                            <small class="text-muted">Manage user accounts and access permissions.</small>
-                        </div>
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table table-bordered" width="100%" cellspacing="0">
-                                    <thead>
-                                        <tr>
-                                            <th>User ID</th>
-                                            <th>Username</th>
-                                            <th>Status</th>
-                                            <th>Registered</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach (var user in Model.RecentUsers)
-                                        {
-                                            <tr>
-                                                <td>U@(user.user_id?.ToString().PadLeft(3, '0'))</td>
-                                                <td>@user.username</td>
-                                                <td>
-                                                    <span class="badge badge-@(user.status == "active" ? "success" : "danger")">
-                                                        @(user.status == "active" ? "Active" : "Banned")
-                                                    </span>
-                                                </td>
-                                                <td>@user.created_at.ToString("yyyy-MM-dd")</td>
-                                                <td>
-                                                    <i class="fas fa-eye text-primary"></i>
-                                                    <i class="fas fa-minus-circle text-danger"></i>
-                                                    <i class="fas fa-sync-alt text-info"></i>
-                                                </td>
-                                            </tr>
-                                        }
-                                    </tbody>
-                                </table>
+            <!-- Management Cards -->
+            <div class="row mb-4">
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <a href="@Url.Action("UserManagement", "Admin")" class="text-decoration-none">
+                        <div class="card border-left-primary shadow h-100 py-2 dashboard-card">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Quản lý người dùng</div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.TotalUsers</div>
+                                        <div class="text-xs text-muted">Tổng số người dùng</div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-users fa-2x text-gray-300"></i>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    </a>
                 </div>
 
-                <div class="col-lg-6 mb-4">
-                    <div class="card shadow mb-4">
-                        <div class="card-header py-3">
-                            <h6 class="m-0 font-weight-bold text-primary">Kiểm duyệt nội dung</h6>
-                            <small class="text-muted">Review and manage user-generated content (recipes and posts)</small>
-                        </div>
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table table-bordered" width="100%" cellspacing="0">
-                                    <thead>
-                                        <tr>
-                                            <th>Content ID</th>
-                                            <th>Author</th>
-                                            <th>Status</th>
-                                            <th>Date</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach (var report in Model.FlaggedContent)
-                                        {
-                                            <tr>
-                                                <td>R@(report.recipe_id.ToString("D3"))</td>
-                                                <td>User@(report.user_id)</td>
-                                                <td>
-                                                    <span class="badge badge-@(report.status == "Đang xử lý" ? "warning" : "success")">
-                                                        @report.status
-                                                    </span>
-                                                </td>
-                                                <td>@report.created_at.ToString("yyyy-MM-dd")</td>
-                                                <td>
-                                                    <i class="fas fa-eye text-primary"></i>
-                                                    <i class="fas fa-flag text-warning"></i>
-                                                    <i class="fas fa-trash text-danger"></i>
-                                                </td>
-                                            </tr>
-                                        }
-                                    </tbody>
-                                </table>
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <a href="@Url.Action("ContentModeration", "Admin")" class="text-decoration-none">
+                        <div class="card border-left-warning shadow h-100 py-2 dashboard-card">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Kiểm duyệt nội dung</div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.FlaggedContent.Count</div>
+                                        <div class="text-xs text-muted">Reports đang xử lý</div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-flag fa-2x text-gray-300"></i>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="row">
-                <div class="col-lg-6 mb-4">
-                    <div class="card shadow mb-4">
-                        <div class="card-header py-3">
-                            <h6 class="m-0 font-weight-bold text-primary">Quản lý phân loại</h6>
-                            <small class="text-muted">Manage recipe categories.</small>
-                        </div>
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table table-bordered" width="100%" cellspacing="0">
-                                    <thead>
-                                        <tr>
-                                            <th>Type ID</th>
-                                            <th>Name</th>
-                                            <th>Registered</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach (var category in Model.Categories)
-                                        {
-                                            <tr>
-                                                <td>T@(category.recipe_type_id.ToString().PadLeft(3, '0'))</td>
-                                                <td>@category.content</td>
-                                                <td>@category.created_at.ToString("yyyy-MM-dd")</td>
-                                                <td>
-                                                    <i class="fas fa-trash text-danger"></i>
-                                                </td>
-                                            </tr>
-                                        }
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
+                    </a>
                 </div>
 
-                <div class="col-lg-6 mb-4">
-                    <div class="card shadow mb-4">
-                        <div class="card-header py-3">
-                            <h6 class="m-0 font-weight-bold text-primary">Quản lý nguyên liệu</h6>
-                            <small class="text-muted">Manage ingredients.</small>
-                        </div>
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table table-bordered" width="100%" cellspacing="0">
-                                    <thead>
-                                        <tr>
-                                            <th>Ingredient ID</th>
-                                            <th>Name</th>
-                                            <th>Registered</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach (var ingredient in Model.Ingredients)
-                                        {
-                                            <tr>
-                                                <td>I@(ingredient.ingredient_id.ToString().PadLeft(3, '0'))</td>
-                                                <td>@ingredient.name</td>
-                                                <td>@ingredient.created_at.ToString("yyyy-MM-dd")</td>
-                                                <td>
-                                                    <i class="fas fa-trash text-danger"></i>
-                                                </td>
-                                            </tr>
-                                        }
-                                    </tbody>
-                                </table>
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <a href="@Url.Action("CategoryManagement", "Admin")" class="text-decoration-none">
+                        <div class="card border-left-info shadow h-100 py-2 dashboard-card">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Quản lý phân loại</div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.Categories.Count</div>
+                                        <div class="text-xs text-muted">Tổng số phân loại</div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-tags fa-2x text-gray-300"></i>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    </a>
+                </div>
+
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <a href="@Url.Action("IngredientManagement", "Admin")" class="text-decoration-none">
+                        <div class="card border-left-success shadow h-100 py-2 dashboard-card">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Quản lý nguyên liệu</div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.Ingredients.Count</div>
+                                        <div class="text-xs text-muted">Tổng số nguyên liệu</div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-carrot fa-2x text-gray-300"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
                 </div>
             </div>
 </div>
 
-<!-- Bootstrap CSS -->
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-<!-- Font Awesome -->
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 <!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-.sidebar {
-    position: fixed;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    z-index: 100;
-    padding: 48px 0 0;
-    box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
-}
-
-.sidebar-sticky {
-    position: relative;
-    top: 0;
-    height: calc(100vh - 48px);
-    padding-top: .5rem;
-    overflow-x: hidden;
-    overflow-y: auto;
-}
-
-.sidebar .nav-link {
-    font-weight: 500;
-    color: #333;
-}
-
-.sidebar .nav-link.active {
-    color: #007bff;
-}
-
-.sidebar .nav-link:hover {
-    color: #007bff;
-}
-
-.sidebar-heading {
-    font-size: .75rem;
-    text-transform: uppercase;
-}
 
 .border-left-primary {
     border-left: 0.25rem solid #4e73df !important;
@@ -346,18 +220,30 @@
     height: 15rem;
     width: 100%;
 }
+
+.dashboard-card {
+    transition: all 0.3s ease;
+}
+
+.dashboard-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
 </style>
 
 <script>
-// User Registrations Chart
+// User Registrations Chart - Data from DB
+const monthLabels = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.MonthLabels));
+const monthlyUserCounts = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.MonthlyUserCounts));
+
 const ctx1 = document.getElementById('userRegistrationsChart').getContext('2d');
 new Chart(ctx1, {
     type: 'bar',
     data: {
-        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
+        labels: monthLabels,
         datasets: [{
             label: 'New Users',
-            data: [12, 19, 3, 5, 2, 3, 25],
+            data: monthlyUserCounts,
             backgroundColor: '#1cc88a',
             borderColor: '#1cc88a',
             borderWidth: 1
@@ -374,14 +260,14 @@ new Chart(ctx1, {
     }
 });
 
-// Content Metrics Chart
+// Content Metrics Chart - Data from DB
 const ctx2 = document.getElementById('contentMetricsChart').getContext('2d');
 new Chart(ctx2, {
     type: 'doughnut',
     data: {
         labels: ['Recipes', 'Comments', 'Likes'],
         datasets: [{
-            data: [25, 33, 47],
+            data: [@Model.TotalRecipes, @Model.TotalComments, @Model.TotalLikes],
             backgroundColor: ['#4e73df', '#36b9cc', '#1cc88a'],
             hoverBackgroundColor: ['#2e59d9', '#2c9faf', '#17a673'],
             hoverBorderColor: "rgba(234, 236, 244, 1)",
