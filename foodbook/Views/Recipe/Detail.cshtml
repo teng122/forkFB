@@ -134,13 +134,13 @@
                         @for (int i = 0; i < mediaList.Count; i++)
                         {
                             var media = mediaList[i];
-                            var displayStyle = i == 0 ? "display: block;" : "display: none;";
+                            var displayStyle = i == 0 ? "display: inline-flex;" : "display: none;";
                             
                             <div class="step-media-item position-relative" data-step="@step.step" data-index="@i" style="@displayStyle">
                                 @if (!string.IsNullOrEmpty(media.media_img))
                                 {
                                     <img src="@media.media_img" alt="Step @step.step" 
-                                         class="step-image img-fluid rounded-3" 
+                                         class="step-image" 
                                          onclick="showImageModal('@media.media_img')">
                                     
                                     @if (mediaList.Count > 1)
@@ -150,7 +150,7 @@
                                 }
                                 else if (!string.IsNullOrEmpty(media.media_video))
                                 {
-                                    <video controls class="step-image img-fluid rounded-3">
+                                    <video controls class="step-image" preload="metadata">
                                         <source src="@media.media_video" type="video/mp4">
                                         Trình duyệt của bạn không hỗ trợ video.
                                     </video>
@@ -256,7 +256,7 @@
             <div class="modal-body p-0 position-relative">
                 <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3" 
                         data-bs-dismiss="modal" style="z-index: 1051;"></button>
-                <img id="modalImage" src="" alt="Recipe Image" class="img-fluid w-100">
+                <img id="modalImage" src="" alt="Recipe Image" style="max-width: 100%; max-height: 90vh; width: auto; height: auto; object-fit: contain;">
             </div>
         </div>
     </div>
@@ -305,11 +305,20 @@
 }
 
 /* Recipe Thumbnail */
-.recipe-thumbnail img {
+.recipe-thumbnail {
+    display: flex;
+    justify-content: center;
+    align-items: center;
     width: 100%;
+}
+
+.recipe-thumbnail img {
+    max-width: 100%;
     max-height: 500px;
+    width: auto;
     height: auto;
     object-fit: contain;
+    display: block;
 }
 
 /* Section Title */
@@ -414,12 +423,15 @@
 .step-content {
     padding: 20px 16px;
     background-color: #f5f5f5 !important;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
 }
 
 .step-description {
     background-color: transparent !important;
     padding: 0 !important;
-    margin-bottom: 15px;
+    margin: 0 !important;
 }
 
 .step-label {
@@ -442,29 +454,35 @@
 .step-media-wrapper {
     position: relative;
     width: 100%;
-    max-height: 450px;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
 .step-media-item {
-    width: 100%;
-    max-height: 450px;
-    display: flex;
+    position: relative;
+    max-width: 100%;
+    line-height: 0;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
+    overflow: hidden;
 }
 
 .step-image {
     max-width: 100%;
-    max-height: 450px;
-    width: auto;
-    height: auto;
-    object-fit: contain;
-    cursor: pointer;
+    width: auto !important;
+    height: auto !important;
     display: block;
-    margin: 0 auto;
+    border-radius: 12px;
+}
+
+img.step-image {
+    cursor: pointer;
+}
+
+video.step-image {
+    cursor: default;
 }
 
 .step-number-badge {
@@ -577,6 +595,18 @@
     color: #888;
 }
 
+/* Image Modal */
+#imageModal .modal-body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#imageModal .modal-content {
+    width: auto !important;
+    max-width: 90vw;
+}
+
 /* Utilities */
 .cursor-pointer {
     cursor: pointer;
@@ -591,18 +621,7 @@
     
     .recipe-thumbnail img {
         max-height: 350px;
-    }
-    
-    .step-media-wrapper {
-        max-height: 300px;
-    }
-    
-    .step-media-item {
-        max-height: 300px;
-    }
-    
-    .step-image {
-        max-height: 300px;
+        width: auto;
     }
     
     .media-nav-btn {
@@ -628,7 +647,7 @@
 // Store current media index for each step
 let currentMediaIndexes = {};
 
-// Initialize media indexes
+// Initialize media indexes and fit containers
 document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.step-media-wrapper').forEach(container => {
         const stepMatch = container.id.match(/mediaContainer(\d+)/);
@@ -637,7 +656,132 @@ document.addEventListener('DOMContentLoaded', function() {
             currentMediaIndexes[stepNum] = 0;
         }
     });
+    
+    // Fit all media containers to their content aspect ratio
+    fitMediaContainers();
+    
+    // Re-fit when collapse/accordion opens
+    document.querySelectorAll('.collapse').forEach(collapse => {
+        collapse.addEventListener('shown.bs.collapse', function() {
+            // Wait a bit for the collapse animation to finish
+            setTimeout(function() {
+                const mediaWrapper = collapse.querySelector('.step-media-wrapper');
+                if (mediaWrapper) {
+                    const visibleItems = mediaWrapper.querySelectorAll('.step-media-item');
+                    visibleItems.forEach(container => {
+                        if (container.style.display !== 'none') {
+                            const media = container.querySelector('.step-image');
+                            if (media) {
+                                adjustContainerToMedia(container, media);
+                            }
+                        }
+                    });
+                }
+            }, 100);
+        });
+    });
 });
+
+// Refit containers on window resize
+let resizeTimeout;
+window.addEventListener('resize', function() {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(function() {
+        // Only refit visible media containers
+        document.querySelectorAll('.step-media-item').forEach(container => {
+            if (container.style.display !== 'none') {
+                const media = container.querySelector('.step-image');
+                if (media) {
+                    adjustContainerToMedia(container, media);
+                }
+            }
+        });
+    }, 250);
+});
+
+// Function to fit media containers to media aspect ratio
+function fitMediaContainers() {
+    document.querySelectorAll('.step-media-item').forEach(container => {
+        const media = container.querySelector('.step-image');
+        if (!media) return;
+        
+        // Skip hidden containers
+        if (container.style.display === 'none') return;
+        
+        if (media.tagName === 'VIDEO') {
+            // Force load video metadata
+            if (media.readyState < 1) {
+                media.load();
+            }
+            
+            // For videos, try multiple times if needed
+            let retryCount = 0;
+            const maxRetries = 20;
+            
+            const tryAdjust = function() {
+                if (media.videoWidth && media.videoHeight) {
+                    adjustContainerToMedia(container, media);
+                    return true;
+                } else if (retryCount < maxRetries) {
+                    retryCount++;
+                    setTimeout(tryAdjust, 150);
+                    return false;
+                }
+                return false;
+            };
+            
+            // Try immediately
+            if (!tryAdjust()) {
+                // Also listen for loadedmetadata event as backup
+                media.addEventListener('loadedmetadata', function() {
+                    adjustContainerToMedia(container, media);
+                }, { once: true });
+            }
+        } else if (media.tagName === 'IMG') {
+            // For images
+            if (media.complete && media.naturalWidth) {
+                adjustContainerToMedia(container, media);
+            } else {
+                media.addEventListener('load', function() {
+                    adjustContainerToMedia(container, media);
+                });
+            }
+        }
+    });
+}
+
+// Adjust container to match media aspect ratio
+function adjustContainerToMedia(container, media) {
+    const naturalWidth = media.videoWidth || media.naturalWidth;
+    const naturalHeight = media.videoHeight || media.naturalHeight;
+    
+    if (!naturalWidth || !naturalHeight) {
+        console.log('Media dimensions not available yet');
+        return;
+    }
+    
+    const aspectRatio = naturalWidth / naturalHeight;
+    
+    // Get the wrapper width (parent container)
+    const wrapper = container.closest('.step-media-wrapper');
+    if (!wrapper) return;
+    
+    const wrapperWidth = wrapper.offsetWidth;
+    
+    // Calculate the height based on aspect ratio
+    const calculatedHeight = wrapperWidth / aspectRatio;
+    
+    // Set the container dimensions
+    container.style.width = wrapperWidth + 'px';
+    container.style.height = calculatedHeight + 'px';
+    
+    // Make sure media fills the container
+    media.style.width = '100%';
+    media.style.height = '100%';
+    media.style.objectFit = 'contain';
+    
+    console.log(`Adjusted container: ${naturalWidth}x${naturalHeight} (${aspectRatio.toFixed(2)}), wrapper: ${wrapperWidth}px, calculated height: ${calculatedHeight}px`);
+}
 
 // Navigate step media
 function navigateStepMedia(stepNumber, direction) {
@@ -661,7 +805,14 @@ function navigateStepMedia(stepNumber, direction) {
     }
     
     // Show new media
-    mediaItems[currentMediaIndexes[stepNumber]].style.display = 'block';
+    const newMediaItem = mediaItems[currentMediaIndexes[stepNumber]];
+    newMediaItem.style.display = 'inline-flex';
+    
+    // Adjust container to new media aspect ratio
+    const newMedia = newMediaItem.querySelector('.step-image');
+    if (newMedia) {
+        adjustContainerToMedia(newMediaItem, newMedia);
+    }
 }
 
 
