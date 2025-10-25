@@ -14,9 +14,6 @@ namespace foodbook.Models
         [Column("user_id")]
         public int user_id { get; set; }
         
-        [Column("recipe_type_id")]
-        public int? recipe_type_id { get; set; }
-        
         [Required]
         [Column("name")]
         public string name { get; set; } = string.Empty;
