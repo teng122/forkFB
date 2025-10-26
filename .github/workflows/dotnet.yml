@@ -10,17 +10,38 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build:
+  build-and-test:
 
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v4
+    
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 8.0.x
+    
     - name: Restore dependencies
       run: dotnet restore foodbook/foodbook.csproj
+    
     - name: Build
       run: dotnet build foodbook/foodbook.csproj --no-restore --configuration Release
+    
+    - name: Restore test dependencies
+      run: dotnet restore foodbook/foodbook.Tests/foodbook.Tests.csproj
+    
+    - name: Build tests
+      run: dotnet build foodbook/foodbook.Tests/foodbook.Tests.csproj --no-restore --configuration Release
+    
+    - name: Run tests
+      run: dotnet test foodbook/foodbook.Tests/foodbook.Tests.csproj --no-build --verbosity normal --configuration Release --logger "trx;LogFileName=test-results.trx"
+    
+    - name: Test Report
+      uses: dorny/test-reporter@v1
+      if: always()
+      with:
+        name: .NET Tests
+        path: '**/test-results.trx'
+        reporter: dotnet-trx
+        fail-on-error: true
