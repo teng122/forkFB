@@ -35,13 +35,4 @@ jobs:
       run: dotnet build foodbook/foodbook.Tests/foodbook.Tests.csproj --no-restore --configuration Release
     
     - name: Run tests
-      run: dotnet test foodbook/foodbook.Tests/foodbook.Tests.csproj --no-build --verbosity normal --configuration Release --logger "trx;LogFileName=test-results.trx"
-    
-    - name: Test Report
-      uses: dorny/test-reporter@v1
-      if: always()
-      with:
-        name: .NET Tests
-        path: '**/test-results.trx'
-        reporter: dotnet-trx
-        fail-on-error: true
+      run: dotnet test foodbook/foodbook.Tests/foodbook.Tests.csproj --no-build --verbosity normal --configuration Release
